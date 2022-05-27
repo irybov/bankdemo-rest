@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Welcome!</title>
+</head>
+<body>
+
+<h3>Welcome!</h3>
+<hr>
+<br>
+<p th:text="${account.name} + ' ' + ${account.surname}"></p>
+<hr>
+<br>
+<a th:href="@{/bankdemo/accounts/show/{phone}(phone=${account.phone})}">
+<button type="button">Proceed</button></a>
+
+</body>
+</html>

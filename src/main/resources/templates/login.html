@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+ xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+<meta charset="UTF-8">
+<title>Log In</title>
+	<style>
+	    .error {
+	        color: red;
+	    }
+	</style>
+</head>
+<body>
+
+<h3>Log In</h3>
+<hr>
+<br>
+
+<div class="container-fluid text-center">
+	<form name="f" action="/bankdemo/auth" method="post">
+		<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+	
+		<div th:if="${param.error}" class="error">
+			<p class="text-danger">[[${session.SPRING_SECURITY_LAST_EXCEPTION.message}]]</p>
+		</div>
+		
+		<div th:if="${param.logout}" class="error">
+			<p class="text-warning">You have been logged out</p>
+		</div>
+		
+		<div class="border border-secondary p-3 rounded">
+			<p>
+				<input type="text" th:name="phone" id="phone" class="form-control" pattern="^[0-9]{10}"
+				 placeholder="Phone" required autofocus/>
+			</p>
+				<input type="password" th:name="password" id="password" class="form-control" pattern=".{10,50}"
+				 placeholder="Password" required/>
+			<p>
+				<input type="submit" value="Login" class="btn btn-primary"/>
+		</div>				
+	</form>		
+</div>
+
+</body>
+</html>
