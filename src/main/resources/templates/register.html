@@ -18,8 +18,7 @@
 <hr>
 <br>
 
-<form th:action="@{/bankdemo/confirm}" th:object="${account}" method="post">
-	<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>		 
+<form th:action="@{/bankdemo/confirm}" th:object="${account}" method="post">		 
 					 
 	<input type="text" th:field="*{name}" id="name" placeholder="Name" maxlength="20">
 	<br>

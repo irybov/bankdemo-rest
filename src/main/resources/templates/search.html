@@ -22,7 +22,7 @@
 <br>
 
 <div sec:authorize="hasRole('ADMIN')">
-<form th:action="@{/bankdemo/accounts/search}" method="post">
+<form th:action="@{/bankdemo/accounts/search}" method="get">
 	<p>
 		<input type="text" th:name="phone" id="phone" class="form-control" pattern="^[0-9]{10}"
 		 placeholder="Phone" required autofocus/>
@@ -55,6 +55,14 @@
 	    <td></td>
 	    <td align="center" th:text="${#dates.format(target.birthday, 'yyyy-MM-dd')}"></td>
 	    <td align="center" th:text="${target.active}"></td>
+	    <td>
+	    	<form th:action="@{/bankdemo/accounts/status/{phone}(phone=${target.phone})}"
+			 th:method="patch">
+	    			<button type="submit" class="btn btn-danger"
+					onclick="if (!(confirm('Are you sure you want to switch the status?')))
+					return false">Switch<br/>status</button>
+			</form>						
+		</td>
 	</tr>	     
 </table>
 </div>

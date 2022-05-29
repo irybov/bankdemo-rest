@@ -23,7 +23,6 @@
 <p style="margin:0;display:inline:float:right" th:text="${action}"/>
 
 <form th:action="@{/bankdemo/bills/launch/{id}(id=${id})}" th:method="patch">
-	<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 	<input type="hidden" th:name="action" th:value="${action}"/>
 	<input type="hidden" th:name="balance" th:value="${balance}"/>
 	<label for="amount">Set amount (limit - 10000)</label>

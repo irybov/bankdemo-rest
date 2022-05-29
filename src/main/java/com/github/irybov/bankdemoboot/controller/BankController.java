@@ -8,7 +8,6 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -44,6 +43,10 @@ public class BankController {
 		currencies = EnumSet.allOf(CurrencyType.class);
 	}
 	
+	private String getPrincipalName() {
+		return SecurityContextHolder.getContext().getAuthentication().getName();
+	}
+	
 	@GetMapping("/home")
 	public String startPage() {
 		return "home";
@@ -63,9 +66,7 @@ public class BankController {
 	@GetMapping("/success")
 	public String signUp(Model model) {
 		
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String phone = authentication.getName();
-		Account account = accountService.getAccount(phone);
+		Account account = accountService.getAccount(getPrincipalName());
 		model.addAttribute("account", account);
 		return "success";
 	}
@@ -87,10 +88,8 @@ public class BankController {
 	
 	@GetMapping("/accounts/show/{phone}")
 	public String getAccount(@PathVariable String phone, ModelMap modelMap) {
-		
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String current = authentication.getName();
-		
+
+		String current = getPrincipalName();		
 		Account account = accountService.getAccount(current);
 		modelMap.addAttribute("account", account);
 		modelMap.addAttribute("currencies", currencies);
@@ -114,37 +113,25 @@ public class BankController {
 			return "private";
 		}
 		accountService.addBill(account, currency);
-		return "redirect:/bankdemo/accounts/show/{phone}";
+		return "forward:/bankdemo/accounts/show/{phone}";
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search")
-	public String searchAccount(ModelMap modelMap) {
-		
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String current = authentication.getName();
-		Account account = accountService.getAccount(current);
-		
-		Account target = null;
-		modelMap.addAttribute("target", target);
-		modelMap.addAttribute("account", account);
-		return "search";
-	}
-	
-	@PreAuthorize("hasRole('ADMIN')")
-	@PostMapping("/accounts/search")
 	public String searchAccount(@RequestParam(required = false) String phone, ModelMap modelMap) {
 		
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String current = authentication.getName();
-		Account account = accountService.getAccount(current);
-
+		Account account = accountService.getAccount(getPrincipalName());		
 		Account target = null;
 		try {
 			target = accountService.getAccount(phone);
 		}
 		catch (Exception exc) {
-			modelMap.addAttribute("message", "Account number: " + phone + " not found");
+			if(phone == null) {
+				modelMap.addAttribute("message", "");
+			}
+			else {
+				modelMap.addAttribute("message", "Account number: " + phone + " not found");
+			}
 		}
 		finally {
 			modelMap.addAttribute("account", account);
@@ -153,10 +140,17 @@ public class BankController {
 		return "search";
 	}
 	
+	@PreAuthorize("hasRole('ADMIN')")
+	@PatchMapping("/accounts/status/{phone}")
+	public String changeStatus(@PathVariable String phone, ModelMap modelMap) {
+		accountService.changeStatus(phone);
+		return searchAccount(phone, modelMap);
+	}
+	
 	@DeleteMapping("/accounts/show/{phone}")
 	public String deleteBill(@PathVariable String phone, @RequestParam int id) {
 		billService.deleteBill(id);
-		return "redirect:/bankdemo/accounts/show/{phone}";
+		return "forward:/bankdemo/accounts/show/{phone}";
 	}	
 	
 	@PatchMapping("/bills/operate/{id}")

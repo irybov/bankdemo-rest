@@ -45,4 +45,15 @@ public class AccountService {
 		accountDAO.updateAccount(account);
 	}
 	
+	public void changeStatus(String phone) {
+		Account account = accountDAO.getAccount(phone);
+		if(account.isActive()) {
+			account.setActive(false);
+		}
+		else {
+			account.setActive(true);			
+		}
+		accountDAO.updateAccount(account);
+	}
+	
 }
