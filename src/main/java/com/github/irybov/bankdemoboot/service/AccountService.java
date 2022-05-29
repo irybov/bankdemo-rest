@@ -1,7 +1,5 @@
 package com.github.irybov.bankdemoboot.service;
 
-import java.util.Collections;
-
 import javax.persistence.EntityExistsException;
 
 import org.springframework.beans.factory.annotation.Autowired;

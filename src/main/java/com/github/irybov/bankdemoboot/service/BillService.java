@@ -1,7 +1,6 @@
 package com.github.irybov.bankdemoboot.service;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -63,8 +62,7 @@ public class BillService {
 
 		if(id == to) {
 			throw new SameBillException("Source and target bills should not be the same");
-		}
-		
+		}		
 		Bill target = getBill(to);
 		if(target == null) {
 			throw new BillNotFoundException("Target bill with id: " + to + " not found");
@@ -83,10 +81,6 @@ public class BillService {
 		target.setBalance(target.getBalance().add(new BigDecimal(amount)));
 		updateBill(target);
 		return bill.getCurrency();
-	}
-	
-	public List<Integer> getAll(String currency){
-		return billDAO.getAll(currency);
 	}
 	
 }

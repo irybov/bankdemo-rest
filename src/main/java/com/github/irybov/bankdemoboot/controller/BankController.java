@@ -33,7 +33,7 @@ import com.github.irybov.bankdemoboot.service.AccountService;
 public class BankController {
 
 	@Autowired
-	private AccountService accountService;	
+	private AccountService accountService;
 	@Autowired
 	private BillService billService;
 	@Autowired
@@ -60,9 +60,14 @@ public class BankController {
 		return "login";
 	}
 	
-	@PostMapping("/login")
-	public String signUp(@RequestParam String phone) {
-		return "redirect:/bankdemo/accounts/show/{phone}";
+	@GetMapping("/success")
+	public String signUp(Model model) {
+		
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String phone = authentication.getName();
+		Account account = accountService.getAccount(phone);
+		model.addAttribute("account", account);
+		return "success";
 	}
 	
 	@PostMapping("/confirm")
@@ -74,7 +79,7 @@ public class BankController {
 		try {
 			accountService.saveAccount(account);
 		} catch (Exception exc) {
-			model.addAttribute("message", "This phone number is already in use");
+			model.addAttribute("message", exc.getMessage());
 			return "register";			
 		}
 		return "login";
@@ -113,6 +118,41 @@ public class BankController {
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/accounts/search")
+	public String searchAccount(ModelMap modelMap) {
+		
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String current = authentication.getName();
+		Account account = accountService.getAccount(current);
+		
+		Account target = null;
+		modelMap.addAttribute("target", target);
+		modelMap.addAttribute("account", account);
+		return "search";
+	}
+	
+	@PreAuthorize("hasRole('ADMIN')")
+	@PostMapping("/accounts/search")
+	public String searchAccount(@RequestParam(required = false) String phone, ModelMap modelMap) {
+		
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String current = authentication.getName();
+		Account account = accountService.getAccount(current);
+
+		Account target = null;
+		try {
+			target = accountService.getAccount(phone);
+		}
+		catch (Exception exc) {
+			modelMap.addAttribute("message", "Account number: " + phone + " not found");
+		}
+		finally {
+			modelMap.addAttribute("account", account);
+			modelMap.addAttribute("target", target);
+		}
+		return "search";
+	}
+	
 	@DeleteMapping("/accounts/show/{phone}")
 	public String deleteBill(@PathVariable String phone, @RequestParam int id) {
 		billService.deleteBill(id);
@@ -149,7 +189,8 @@ public class BankController {
 				currency = billService.withdraw(id, Double.valueOf(params.get("amount")));
 				operationService.withdraw
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id);
-			} catch (Exception exc) {
+			}
+			catch (Exception exc) {
 				modelMap.addAttribute("id", id);
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
@@ -162,7 +203,8 @@ public class BankController {
 				currency = billService.transfer(id, Double.valueOf(params.get("amount")), to);
 				operationService.transfer
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, to);
-			} catch (Exception exc) {
+			}
+			catch (Exception exc) {
 				modelMap.addAttribute("id", id);
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
@@ -173,6 +215,14 @@ public class BankController {
 		}	
 		String phone = billService.getPhone(id);
 		return "redirect:/bankdemo/accounts/show/" + phone;
+	}
+	
+	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/operations/list")
+	public String showOperations() {
+		
+		
+		return "operations";
 	}
 	
 }

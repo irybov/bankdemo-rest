@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+<meta charset="UTF-8">
+<title>Admin's area</title>
+	<style>
+	    .error {
+	        color: red;
+	    }
+	</style>
+</head>
+<body>
+
+<h3>Admin's area</h3>
+<hr>
+<br>
+	<p th:text="${account.name} + ' ' + ${account.surname}"></p>
+	<p th:text="${account.phone}"></p>
+	<p sec:authentication="principal.authorities"></p>
+<hr>
+<br>
+
+<div sec:authorize="hasRole('ADMIN')">
+<form th:action="@{/bankdemo/accounts/search}" method="post">
+	<p>
+		<input type="text" th:name="phone" id="phone" class="form-control" pattern="^[0-9]{10}"
+		 placeholder="Phone" required autofocus/>
+		 <button type="submit" class="btn btn-info">Search</button>
+	</p>
+</form>	
+</div>
+
+<hr>
+<br>
+
+<div sec:authorize="hasRole('ADMIN')" th:if="${target}">
+<table>
+	<thead>
+		<tr>
+			<th style="text-align: center;">Id</th>
+			<th style="text-align: center;">Name</th>
+			<th style="text-align: center;">Surname</th>
+			<th style="text-align: center;">Phone</th>
+			<th></th>
+			<th style="text-align: center;">Birthday</th>
+			<th style="text-align: center;">isActive</th>
+		</tr>
+	</thead>
+	<tr>
+		<td align="center" th:text="${target.id}"></td>		
+	    <td align="center" th:text="${target.name}"></td>
+	    <td align="center" th:text="${target.surname}"></td>
+	    <td align="center" th:text="${target.phone}"></td>
+	    <td></td>
+	    <td align="center" th:text="${#dates.format(target.birthday, 'yyyy-MM-dd')}"></td>
+	    <td align="center" th:text="${target.active}"></td>
+	</tr>	     
+</table>
+</div>
+
+<hr>
+
+<div sec:authorize="hasRole('ADMIN')" th:if="${target}">
+<table>
+	<thead>
+		<tr>
+			<th style="text-align: center;">Id</th>
+			<th style="text-align: center;">Balance</th>
+			<th style="text-align: center;">Currency</th>
+		</tr>
+	</thead>
+	<tr th:each="bill: ${target.bills}">
+		<td align="center" th:text="${bill.id}"></td>
+	    <td align="center" th:text="${bill.balance}"></td>
+	    <td align="center" th:text="${bill.currency}"></td>
+	</tr>    
+</table>
+</div>
+
+<p th:text="${message}" class="error"/>
+<br>
+
+<form th:action="@{/bankdemo/logout}" method="post">
+	<input type="submit" th:value="LogOut" class="btn btn-primary"/>
+</form>
+
+</body>
+</html>

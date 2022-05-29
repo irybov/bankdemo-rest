@@ -29,7 +29,10 @@ public class Bill {
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
-
+	
+	@NotNull
+	private boolean active = true;
+	
 	@NotNull
 	@Column(columnDefinition = "Decimal(19,2) default '0.00'")
 	@JsonFormat(shape=JsonFormat.Shape.NUMBER_FLOAT)

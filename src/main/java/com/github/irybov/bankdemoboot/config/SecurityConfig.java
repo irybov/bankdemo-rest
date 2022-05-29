@@ -21,7 +21,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	private DataSource dataSource;
 	
 	@Bean
-	public BCryptPasswordEncoder passwordEncoder() {
+	protected BCryptPasswordEncoder passwordEncoder() {
 	    return new BCryptPasswordEncoder();
 	}
 	
@@ -45,14 +45,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			.authorizeRequests()
 			.antMatchers("/bankdemo/bills/**", "/bankdemo/accounts/show")
 			.hasAnyRole("ADMIN", "CLIENT")
+			.antMatchers("bankdemo/accounts/search")
+			.hasRole("ADMIN")
 			.anyRequest().authenticated()
 				.and()
 			.formLogin()
 			.usernameParameter("phone")
 			.loginPage("/bankdemo/login")
 			.loginProcessingUrl("/bankdemo/auth")
-			.successHandler((request, response, authentication) ->
-			response.sendRedirect("/bankdemo/accounts/show/" + authentication.getName()))
+//			.successHandler((request, response, authentication) ->
+//			response.sendRedirect("/bankdemo/login" + authentication.getName()))
+			.defaultSuccessUrl("/bankdemo/success")
             .failureUrl("/bankdemo/login?error")
             .permitAll()
 				.and()

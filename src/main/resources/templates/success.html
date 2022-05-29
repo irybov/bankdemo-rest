@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+	  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
 <head>
 <meta charset="UTF-8">
 <title>Welcome!</title>
@@ -9,11 +10,18 @@
 <h3>Welcome!</h3>
 <hr>
 <br>
-<p th:text="${account.name} + ' ' + ${account.surname}"></p>
+	<p th:text="${account.name} + ' ' + ${account.surname}"></p>
+	<p sec:authentication="principal.authorities"></p>
 <hr>
 <br>
-<a th:href="@{/bankdemo/accounts/show/{phone}(phone=${account.phone})}">
-<button type="button">Proceed</button></a>
-
+<div sec:authorize="hasRole('CLIENT')">
+	<a th:href="@{/bankdemo/accounts/show/{phone}(phone=${account.phone})}">
+	<button type="button">Proceed</button></a>
+</div>
+<br>
+<div sec:authorize="hasRole('ADMIN')">
+	<a th:href="@{/bankdemo/accounts/search}">
+	<button type="button">Admin's</button></a>
+</div>
 </body>
 </html>
