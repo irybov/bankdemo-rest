@@ -83,4 +83,15 @@ public class BillService {
 		return bill.getCurrency();
 	}
 	
+	public void changeStatus(int id) {
+		Bill bill = getBill(id);
+		if(bill.isActive()) {
+			bill.setActive(false);
+		}
+		else {
+			bill.setActive(true);			
+		}
+		updateBill(bill);
+	}
+	
 }

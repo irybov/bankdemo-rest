@@ -96,7 +96,7 @@ public class BankController {
 		
 		if(!accountService.verifyAccount(phone, current)) {
 			modelMap.addAttribute("message", "Security restricted information");
-			return "redirect:/bankdemo/accounts/show/" + current;
+			return "forward:/bankdemo/accounts/show/" + current;
 		}
 		return "private";
 	}
@@ -113,7 +113,7 @@ public class BankController {
 			return "private";
 		}
 		accountService.addBill(account, currency);
-		return "forward:/bankdemo/accounts/show/{phone}";
+		return "redirect:/bankdemo/accounts/show/{phone}";
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
@@ -126,10 +126,7 @@ public class BankController {
 			target = accountService.getAccount(phone);
 		}
 		catch (Exception exc) {
-			if(phone == null) {
-				modelMap.addAttribute("message", "");
-			}
-			else {
+			if(phone != null) {
 				modelMap.addAttribute("message", "Account number: " + phone + " not found");
 			}
 		}
@@ -142,15 +139,23 @@ public class BankController {
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@PatchMapping("/accounts/status/{phone}")
-	public String changeStatus(@PathVariable String phone, ModelMap modelMap) {
+	public String changeAccountStatus(@PathVariable String phone, ModelMap modelMap) {
 		accountService.changeStatus(phone);
+		return searchAccount(phone, modelMap);
+	}
+	
+	@PreAuthorize("hasRole('ADMIN')")
+	@PatchMapping("/bills/status/{phone}")
+	public String changeBillStatus(@PathVariable String phone, @RequestParam int id,
+			ModelMap modelMap) {
+		billService.changeStatus(id);
 		return searchAccount(phone, modelMap);
 	}
 	
 	@DeleteMapping("/accounts/show/{phone}")
 	public String deleteBill(@PathVariable String phone, @RequestParam int id) {
 		billService.deleteBill(id);
-		return "forward:/bankdemo/accounts/show/{phone}";
+		return "redirect:/bankdemo/accounts/show/{phone}";
 	}	
 	
 	@PatchMapping("/bills/operate/{id}")

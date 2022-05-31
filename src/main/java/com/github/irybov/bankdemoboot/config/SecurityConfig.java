@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -54,13 +55,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			.loginPage("/bankdemo/login")
 			.loginProcessingUrl("/bankdemo/auth")
 //			.successHandler((request, response, authentication) ->
-//			response.sendRedirect("/bankdemo/login" + authentication.getName()))
+//			response.sendRedirect("/bankdemo/accounts/show/" + authentication.getName()))
 			.defaultSuccessUrl("/bankdemo/success")
             .failureUrl("/bankdemo/login?error")
             .permitAll()
 				.and()
 			.logout()
-            .logoutUrl("/bankdemo/logout")
+//          .logoutUrl("/bankdemo/logout")
+            .logoutRequestMatcher(new AntPathRequestMatcher("/bankdemo/logout", "POST"))
+            .invalidateHttpSession(true)
+            .clearAuthentication(true)
+            .deleteCookies("JSESSIONID")
 			.logoutSuccessUrl("/bankdemo/home")
 			.permitAll();
 	}

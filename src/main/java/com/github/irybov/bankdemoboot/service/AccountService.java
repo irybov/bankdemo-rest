@@ -46,7 +46,7 @@ public class AccountService {
 	}
 	
 	public void changeStatus(String phone) {
-		Account account = accountDAO.getAccount(phone);
+		Account account = getAccount(phone);
 		if(account.isActive()) {
 			account.setActive(false);
 		}
