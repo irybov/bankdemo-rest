@@ -56,8 +56,8 @@ public class OperationService {
 		return operationDAO.get(id);
 	}
 	
-	public List<Operation> getAll(){
-		return null;
+	public List<Operation> getAll(int id){
+		return operationDAO.getAll(id);
 	}
 	
 }

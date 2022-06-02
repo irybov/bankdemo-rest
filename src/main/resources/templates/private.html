@@ -16,7 +16,6 @@
 <hr>
 <br>
 <p th:text="${account.name} + ' ' + ${account.surname}"></p>
-<p th:text="${account.phone}"></p>
 <p sec:authentication="principal.authorities"></p>
 <hr>
 <br>
@@ -66,7 +65,6 @@
 <br>
 
 <form th:action="@{/bankdemo/accounts/show/{phone}(phone=${account.phone})}" method="post">
-<!-- 		<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/> -->
         <select class="form-control" id="currency" th:name="currency">
             <option value="">Select currency</option>
             <option th:each="currency : ${T(com.github.irybov.bankdemoboot.CurrencyType).values()}"

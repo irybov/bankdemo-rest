@@ -15,8 +15,7 @@
 <h3>Admin's area</h3>
 <hr>
 <br>
-	<p th:text="${account.name} + ' ' + ${account.surname}"></p>
-	<p th:text="${account.phone}"></p>
+	<p th:text="${admin.name} + ' ' + ${admin.surname}"></p>
 	<p sec:authentication="principal.authorities"></p>
 <hr>
 <br>
@@ -76,7 +75,8 @@
 			<th style="text-align: center;">Id</th>
 			<th style="text-align: center;">Balance</th>
 			<th style="text-align: center;">Currency</th>
-			<th style="text-align: center;">isActive</th>			
+			<th style="text-align: center;">isActive</th>
+			<th style="text-align: center;">Actions</th>									
 		</tr>
 	</thead>
 	<tr th:each="bill: ${target.bills}">
@@ -85,16 +85,57 @@
 	    <td align="center" th:text="${bill.currency}"></td>
 	    <td align="center" th:text="${bill.active}"></td>	    
 	    
-	    <td>
-	    	<form th:action="@{/bankdemo/bills/status/{phone}(phone=${target.phone})}"
+	    <td align="center">
+	    <div>
+	    	<form style='display:inline;'
+	    	 th:action="@{/bankdemo/bills/status/{phone}(phone=${target.phone})}"
 			 th:method="patch">
 			<input type="hidden" th:name="id" th:value="${bill.id}"/>			 
 	    			<button type="submit" class="btn btn-danger"
 					onclick="if (!(confirm('Are you sure you want to switch the status?')))
 					return false">Switch<br/>status</button>
-			</form>						
+			</form>
+			<form style='display:inline;'
+			 th:action="@{/bankdemo/operations/list}"
+			  method="get">
+			<input type="hidden" th:name="id" th:value="${bill.id}"/>
+			<input type="hidden" th:name="phone" th:value="${target.phone}"/>			 
+	    			<button type="submit" class="btn btn-primary">Show<br/>events</button>
+			</form>
+		</div>									
 		</td>
 	</tr>    
+</table>
+</div>
+
+<hr>
+
+<div sec:authorize="hasRole('ADMIN')" th:if="${operations}">
+<table>
+	<thead>
+		<tr>
+			<th style="text-align: center;">Id</th>
+			<th style="text-align: center;">Event</th>
+			<th></th>			
+			<th style="text-align: center;">Amount</th>			
+			<th style="text-align: center;">Currency</th>
+			<th style="text-align: center;">From</th>
+			<th style="text-align: center;">To</th>
+			<th></th>			
+			<th style="text-align: center;">TimeStamp</th>
+		</tr>
+	</thead>
+	<tr th:each="operation: ${operations}">
+		<td align="center" th:text="${operation.id}"></td>		
+	    <td align="center" th:text="${operation.action}"></td>
+	    <td></td>	    
+	    <td align="center" th:text="${operation.amount}"></td>
+	    <td align="center" th:text="${operation.currency}"></td>
+	    <td align="center" th:text="${operation.sender}"></td>
+	    <td align="center" th:text="${operation.recipient}"></td>
+	    <td></td>	    	    
+	    <td align="center" th:text="${operation.timestamp}"></td>
+	</tr>	     
 </table>
 </div>
 

@@ -1,6 +1,7 @@
 package com.github.irybov.bankdemoboot.controller;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.github.irybov.bankdemoboot.CurrencyType;
 import com.github.irybov.bankdemoboot.entity.Account;
+import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
 import com.github.irybov.bankdemoboot.service.AccountService;
@@ -64,8 +66,7 @@ public class BankController {
 	}
 	
 	@GetMapping("/success")
-	public String signUp(Model model) {
-		
+	public String signUp(Model model) {		
 		Account account = accountService.getAccount(getPrincipalName());
 		model.addAttribute("account", account);
 		return "success";
@@ -118,9 +119,10 @@ public class BankController {
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search")
-	public String searchAccount(@RequestParam(required = false) String phone, ModelMap modelMap) {
+	public String searchAccount(@RequestParam(required = false) String phone,
+			@RequestParam(required = false) List<Operation> operations, ModelMap modelMap) {
 		
-		Account account = accountService.getAccount(getPrincipalName());		
+		Account admin = accountService.getAccount(getPrincipalName());		
 		Account target = null;
 		try {
 			target = accountService.getAccount(phone);
@@ -131,25 +133,38 @@ public class BankController {
 			}
 		}
 		finally {
-			modelMap.addAttribute("account", account);
+			modelMap.addAttribute("admin", admin);
 			modelMap.addAttribute("target", target);
+			modelMap.addAttribute("operations", operations);
 		}
 		return "search";
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@PatchMapping("/accounts/status/{phone}")
-	public String changeAccountStatus(@PathVariable String phone, ModelMap modelMap) {
+	public String changeAccountStatus(@PathVariable String phone,
+			@RequestParam(required = false) List<Operation> operations, ModelMap modelMap) {
 		accountService.changeStatus(phone);
-		return searchAccount(phone, modelMap);
+		return searchAccount(phone, operations, modelMap);
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@PatchMapping("/bills/status/{phone}")
-	public String changeBillStatus(@PathVariable String phone, @RequestParam int id,
+	public String changeBillStatus(@PathVariable String phone,
+			@RequestParam(required = false) List<Operation> operations, @RequestParam int id,
 			ModelMap modelMap) {
 		billService.changeStatus(id);
-		return searchAccount(phone, modelMap);
+		return searchAccount(phone, operations, modelMap);
+	}
+	
+	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/operations/list")
+	public String showOperations(@RequestParam String phone, @RequestParam int id,
+			ModelMap modelMap) {		
+		List<Operation> operations = operationService.getAll(id);
+		modelMap.addAttribute("operations", operations);
+		modelMap.addAttribute("phone", phone);
+		return searchAccount(phone, operations, modelMap);
 	}
 	
 	@DeleteMapping("/accounts/show/{phone}")
@@ -180,8 +195,8 @@ public class BankController {
 		switch(params.get("action")) {
 		case "deposit":
 			currency = billService.deposit(id, Double.valueOf(params.get("amount")));
-				operationService.deposit
-				(Double.valueOf(params.get("amount")), params.get("action"), currency, id);
+			operationService.deposit
+			(Double.valueOf(params.get("amount")), params.get("action"), currency, id);
 			break;
 		case "withdraw":
 			try {
@@ -216,12 +231,10 @@ public class BankController {
 		return "redirect:/bankdemo/accounts/show/" + phone;
 	}
 	
-	@PreAuthorize("hasRole('ADMIN')")
-	@GetMapping("/operations/list")
-	public String showOperations() {
-		
-		
-		return "operations";
+	@PatchMapping("/accounts/password/{phone}")
+	public String changePassword(@PathVariable String phone, @RequestParam String password) {
+		accountService.changePassword(phone, password);
+		return "redirect:/bankdemo/accounts/show/{phone}";
 	}
 	
 }

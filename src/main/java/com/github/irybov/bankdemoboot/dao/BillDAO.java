@@ -1,7 +1,5 @@
 package com.github.irybov.bankdemoboot.dao;
 
-import java.util.List;
-
 import javax.persistence.EntityManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,11 +37,11 @@ public class BillDAO {
 				.getSingleResult();
 	}
 	
-	public List<Integer> getAll(String billCurrency){
+/*	public List<Integer> getAll(String billCurrency){
 		return entityManager.createQuery("SELECT id FROM Bill WHERE currency=:billCurrency",
 				Integer.class)
-				.setParameter("billCurrency", billCurrency)					
+				.setParameter("billCurrency", billCurrency)
 				.getResultList();
-	}
+	}*/
 	
 }

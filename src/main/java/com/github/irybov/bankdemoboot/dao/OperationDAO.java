@@ -28,7 +28,11 @@ public class OperationDAO {
 	}
 	
 	public List<Operation> getAll(int id){
-		return null;
+		return entityManager.createQuery
+				("SELECT o FROM Operation o WHERE o.sender=:id OR o.recipient=:id",
+				Operation.class)
+				.setParameter("id", id)					
+				.getResultList();
 	}
 	
 }

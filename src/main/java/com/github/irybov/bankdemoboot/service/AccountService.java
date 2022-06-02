@@ -33,6 +33,10 @@ public class AccountService {
 		return accountDAO.getAccount(phone);
 	}
 	
+	public void updateAccount(Account account) {
+		accountDAO.updateAccount(account);		
+	}
+	
 	public boolean verifyAccount(String phone, String current){
 		if(accountDAO.checkPhone(phone) == null || !phone.equals(current)) {
 			return false;
@@ -42,7 +46,7 @@ public class AccountService {
 	
 	public void addBill(Account account, String currency) {
 		account.addBill(new Bill(currency));
-		accountDAO.updateAccount(account);
+		updateAccount(account);
 	}
 	
 	public void changeStatus(String phone) {
@@ -53,7 +57,13 @@ public class AccountService {
 		else {
 			account.setActive(true);			
 		}
-		accountDAO.updateAccount(account);
+		updateAccount(account);
+	}
+	
+	public void changePassword(String phone, String password) {
+		Account account = getAccount(phone);
+		account.setPassword(password);
+		updateAccount(account);
 	}
 	
 }
