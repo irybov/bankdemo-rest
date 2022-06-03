@@ -1,5 +1,7 @@
 package com.github.irybov.bankdemoboot.service;
 
+import java.text.SimpleDateFormat;
+
 import javax.persistence.EntityExistsException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.irybov.bankdemoboot.Role;
+import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.dao.AccountDAO;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.entity.Account;
@@ -19,8 +23,11 @@ public class AccountService {
 	@Autowired
 	private AccountDAO accountDAO;
 	
-	public void saveAccount(Account account) throws Exception {
-		account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+	public void saveAccount(AccountRequestDTO accountRequestDTO) throws Exception {
+		Account account = new Account(accountRequestDTO.getName(), accountRequestDTO.getSurname(),
+				accountRequestDTO.getPhone(),
+				new SimpleDateFormat("yyyy-MM-dd").parse(accountRequestDTO.getBirthday()),
+				BCrypt.hashpw(accountRequestDTO.getPassword(), BCrypt.gensalt(4)));
 		account.addRole(Role.CLIENT);
 		try {
 			accountDAO.saveAccount(account);
@@ -29,8 +36,8 @@ public class AccountService {
 		}
 	}
 	
-	public Account getAccount(String phone) {
-		return accountDAO.getAccount(phone);
+	public AccountResponseDTO getAccount(String phone) {
+		return new AccountResponseDTO(accountDAO.getAccount(phone));
 	}
 	
 	public void updateAccount(Account account) {
@@ -44,13 +51,14 @@ public class AccountService {
 		return true;
 	}
 	
-	public void addBill(Account account, String currency) {
+	public void addBill(String phone, String currency) {
+		Account account = accountDAO.getAccount(phone);
 		account.addBill(new Bill(currency));
 		updateAccount(account);
 	}
 	
 	public void changeStatus(String phone) {
-		Account account = getAccount(phone);
+		Account account = accountDAO.getAccount(phone);
 		if(account.isActive()) {
 			account.setActive(false);
 		}
@@ -61,7 +69,7 @@ public class AccountService {
 	}
 	
 	public void changePassword(String phone, String password) {
-		Account account = getAccount(phone);
+		Account account = accountDAO.getAccount(phone);
 		account.setPassword(password);
 		updateAccount(account);
 	}

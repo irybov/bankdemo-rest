@@ -16,6 +16,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.github.irybov.bankdemoboot.CurrencyType;
-import com.github.irybov.bankdemoboot.entity.Account;
+import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
@@ -56,7 +58,7 @@ public class BankController {
 		
 	@GetMapping("/register")
 	public String createAccount(Model model) {
-		model.addAttribute("account", new Account());
+		model.addAttribute("account", new AccountRequestDTO());
 		return "register";
 	}
 	
@@ -67,19 +69,20 @@ public class BankController {
 	
 	@GetMapping("/success")
 	public String signUp(Model model) {		
-		Account account = accountService.getAccount(getPrincipalName());
+		AccountResponseDTO account = accountService.getAccount(getPrincipalName());
 		model.addAttribute("account", account);
 		return "success";
 	}
 	
 	@PostMapping("/confirm")
-	public String signIn(@Valid Account account, BindingResult result, Model model) {
+	public String signIn(@ModelAttribute("account") @Valid AccountRequestDTO accountRequestDTO,
+			BindingResult result, Model model) {
 		
 		if(result.hasErrors()) {
 			return "register";
 		}
 		try {
-			accountService.saveAccount(account);
+			accountService.saveAccount(accountRequestDTO);
 		} catch (Exception exc) {
 			model.addAttribute("message", exc.getMessage());
 			return "register";			
@@ -91,7 +94,7 @@ public class BankController {
 	public String getAccount(@PathVariable String phone, ModelMap modelMap) {
 
 		String current = getPrincipalName();		
-		Account account = accountService.getAccount(current);
+		AccountResponseDTO account = accountService.getAccount(current);
 		modelMap.addAttribute("account", account);
 		modelMap.addAttribute("currencies", currencies);
 		
@@ -106,14 +109,11 @@ public class BankController {
 	public String createBill(@PathVariable String phone, @RequestParam String currency,
 			ModelMap modelMap) {
 
-		Account account = accountService.getAccount(phone);		
 		if(currency.isEmpty()) {
-			modelMap.addAttribute("account", account);
-			modelMap.addAttribute("currencies", currencies);
 			modelMap.addAttribute("message", "Please choose currency type");
-			return "private";
-		}
-		accountService.addBill(account, currency);
+			return getAccount(phone, modelMap);
+		}	
+		accountService.addBill(phone, currency);
 		return "redirect:/bankdemo/accounts/show/{phone}";
 	}
 	
@@ -122,8 +122,8 @@ public class BankController {
 	public String searchAccount(@RequestParam(required = false) String phone,
 			@RequestParam(required = false) List<Operation> operations, ModelMap modelMap) {
 		
-		Account admin = accountService.getAccount(getPrincipalName());		
-		Account target = null;
+		AccountResponseDTO admin = accountService.getAccount(getPrincipalName());		
+		AccountResponseDTO target = null;
 		try {
 			target = accountService.getAccount(phone);
 		}

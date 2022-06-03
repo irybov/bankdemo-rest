@@ -91,16 +91,11 @@ public class Account implements UserDetails{
 	@Enumerated(EnumType.STRING)
 	private Set<Role> roles;
 	
-	public Account(String name, String surname, String phone, String birthday, String password) {
+	public Account(String name, String surname, String phone, Date birthday, String password) {
 		this.name = name;
 		this.surname = surname;
 		this.phone = phone;
-		try {
-			this.birthday = new SimpleDateFormat("yyyy-MM-dd").parse(birthday);
-		}
-		catch (ParseException exc) {
-			exc.printStackTrace();
-		}
+		this.birthday = birthday;
 		this.password = password;
 	}	
 	
