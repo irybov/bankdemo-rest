@@ -70,7 +70,7 @@ public class AccountService {
 	
 	public void changePassword(String phone, String password) {
 		Account account = accountDAO.getAccount(phone);
-		account.setPassword(password);
+		account.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(4)));
 		updateAccount(account);
 	}
 	

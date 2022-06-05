@@ -1,5 +1,5 @@
 package com.github.irybov.bankdemoboot.controller.dto;
 
-public class PaymentDTO {
+public class OperationResponseDTO {
 
 }
