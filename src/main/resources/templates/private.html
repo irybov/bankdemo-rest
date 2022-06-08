@@ -16,7 +16,10 @@
 <hr>
 <br>
 <p th:text="${account.name} + ' ' + ${account.surname}"></p>
-<p sec:authentication="principal.authorities"></p>
+	<p sec:authentication="principal.authorities"></p>
+<form th:action="@{/bankdemo/accounts/password/{phone}(phone=${account.phone})}" method="get">
+	<button type="submit" class="btn btn-default">Change password</button>
+</form>
 <hr>
 <br>
 
@@ -72,8 +75,7 @@
                     th:text="${currency.name()}">
             </option>
         </select>
-	<button type="submit" class="btn btn-default">
-	Add new bill</button>
+	<button type="submit" class="btn btn-default">Add new bill</button>
 
 	<p th:text="${message}" th:value="${#strings.isEmpty('currency')}" class="error"/>
 </form>

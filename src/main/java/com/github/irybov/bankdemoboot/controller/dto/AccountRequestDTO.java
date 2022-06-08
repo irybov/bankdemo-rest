@@ -35,7 +35,7 @@ public class AccountRequestDTO {
 	private String birthday;
 	
 	@NotBlank(message = "Password must not be empty")
-	@Size(min=10, message = "Password should be 10-50 symbols length")
+	@Size(min=10, max=50, message = "Password should be 10-50 symbols length")
 	private String password;
 	
 }

@@ -6,14 +6,19 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
+//import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -33,6 +38,7 @@ import com.github.irybov.bankdemoboot.service.AccountService;
 
 @Controller
 @RequestMapping("/bankdemo")
+@Validated
 public class BankController {
 
 	@Autowired
@@ -50,6 +56,7 @@ public class BankController {
 	private String getPrincipalName() {
 		return SecurityContextHolder.getContext().getAuthentication().getName();
 	}
+	private String currentURL = null;
 	
 	@GetMapping("/home")
 	public String startPage() {
@@ -69,7 +76,7 @@ public class BankController {
 	
 	@GetMapping("/success")
 	public String signUp(Model model) {		
-		AccountResponseDTO account = accountService.getAccount(getPrincipalName());
+		AccountResponseDTO account = accountService.getAccountDTO(getPrincipalName());
 		model.addAttribute("account", account);
 		return "success";
 	}
@@ -94,7 +101,7 @@ public class BankController {
 	public String getAccount(@PathVariable String phone, ModelMap modelMap) {
 
 		String current = getPrincipalName();		
-		AccountResponseDTO account = accountService.getAccount(current);
+		AccountResponseDTO account = accountService.getAccountDTO(current);
 		modelMap.addAttribute("account", account);
 		modelMap.addAttribute("currencies", currencies);
 		
@@ -117,15 +124,19 @@ public class BankController {
 		return "redirect:/bankdemo/accounts/show/{phone}";
 	}
 	
+	@Value("${admin.url}")
+	private String adminURL;
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search")
 	public String searchAccount(@RequestParam(required = false) String phone,
 			@RequestParam(required = false) List<Operation> operations, ModelMap modelMap) {
+
+		currentURL = adminURL;
 		
-		AccountResponseDTO admin = accountService.getAccount(getPrincipalName());		
+		AccountResponseDTO admin = accountService.getAccountDTO(getPrincipalName());		
 		AccountResponseDTO target = null;
 		try {
-			target = accountService.getAccount(phone);
+			target = accountService.getAccountDTO(phone);
 		}
 		catch (Exception exc) {
 			if(phone != null) {
@@ -231,9 +242,25 @@ public class BankController {
 		return "redirect:/bankdemo/accounts/show/" + phone;
 	}
 	
+	@GetMapping("/accounts/password/{phone}")
+	public String changePassword(@PathVariable String phone) {
+		return "password";
+	}
+	
 	@PatchMapping("/accounts/password/{phone}")
-	public String changePassword(@PathVariable String phone, @RequestParam String password) {
-		accountService.changePassword(phone, password);
+	public String changePassword(@PathVariable String phone, @RequestParam String oldPassword,
+			@NotBlank @Size(min=10, max=50) @RequestParam String newPassword, Model model) {
+
+		if(!accountService.comparePassword(oldPassword, phone)) {
+			model.addAttribute("message", "Old password mismatch");
+			return "password";
+		}
+		
+		if(currentURL!=null && currentURL.equals(adminURL)) {
+			accountService.changePassword(phone, newPassword);
+			return "redirect:/bankdemo/accounts/search";
+		}		
+		accountService.changePassword(phone, newPassword);
 		return "redirect:/bankdemo/accounts/show/{phone}";
 	}
 	

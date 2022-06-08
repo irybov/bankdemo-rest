@@ -6,6 +6,7 @@ import javax.persistence.EntityExistsException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,12 +24,17 @@ public class AccountService {
 	@Autowired
 	private AccountDAO accountDAO;
 	
+	@Autowired
+	private BCryptPasswordEncoder bCryptPasswordEncoder;
+	
 	public void saveAccount(AccountRequestDTO accountRequestDTO) throws Exception {
+		
 		Account account = new Account(accountRequestDTO.getName(), accountRequestDTO.getSurname(),
 				accountRequestDTO.getPhone(),
 				new SimpleDateFormat("yyyy-MM-dd").parse(accountRequestDTO.getBirthday()),
 				BCrypt.hashpw(accountRequestDTO.getPassword(), BCrypt.gensalt(4)));
 		account.addRole(Role.CLIENT);
+		
 		try {
 			accountDAO.saveAccount(account);
 		} catch (EntityExistsException exc) {
@@ -36,8 +42,11 @@ public class AccountService {
 		}
 	}
 	
-	public AccountResponseDTO getAccount(String phone) {
-		return new AccountResponseDTO(accountDAO.getAccount(phone));
+	public AccountResponseDTO getAccountDTO(String phone) {
+		return new AccountResponseDTO(getAccount(phone));
+	}
+	private Account getAccount(String phone) {
+		return accountDAO.getAccount(phone);
 	}
 	
 	public void updateAccount(Account account) {
@@ -52,13 +61,13 @@ public class AccountService {
 	}
 	
 	public void addBill(String phone, String currency) {
-		Account account = accountDAO.getAccount(phone);
+		Account account = getAccount(phone);
 		account.addBill(new Bill(currency));
 		updateAccount(account);
 	}
 	
 	public void changeStatus(String phone) {
-		Account account = accountDAO.getAccount(phone);
+		Account account = getAccount(phone);
 		if(account.isActive()) {
 			account.setActive(false);
 		}
@@ -69,9 +78,14 @@ public class AccountService {
 	}
 	
 	public void changePassword(String phone, String password) {
-		Account account = accountDAO.getAccount(phone);
+		Account account = getAccount(phone);
 		account.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(4)));
 		updateAccount(account);
+	}
+	
+	public boolean comparePassword(String oldPassword, String phone) {
+		Account account = getAccount(phone);
+		return bCryptPasswordEncoder.matches(oldPassword, account.getPassword());
 	}
 	
 }
