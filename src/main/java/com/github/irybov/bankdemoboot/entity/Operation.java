@@ -1,9 +1,6 @@
 package com.github.irybov.bankdemoboot.entity;
 
 import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -13,7 +10,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.github.irybov.bankdemoboot.Role;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,6 +30,10 @@ public class Operation {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private long id;
 	
+	@Builder.Default
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private final OffsetDateTime timestamp = OffsetDateTime.now();
+	
 	@NotNull
 	private double amount;
 
@@ -46,9 +46,5 @@ public class Operation {
 	private int sender;
 		
 	private int recipient;
-
-	@Builder.Default
-	@JsonFormat(shape = JsonFormat.Shape.STRING)
-	private final OffsetDateTime timestamp = OffsetDateTime.now();
 	
 }

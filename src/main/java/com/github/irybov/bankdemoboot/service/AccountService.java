@@ -1,6 +1,7 @@
 package com.github.irybov.bankdemoboot.service;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 import javax.persistence.EntityExistsException;
 
@@ -15,6 +16,7 @@ import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.dao.AccountDAO;
 import com.github.irybov.bankdemoboot.entity.Bill;
+import com.github.irybov.bankdemoboot.exception.NotAdultAgeException;
 import com.github.irybov.bankdemoboot.entity.Account;
 
 @Service
@@ -29,12 +31,15 @@ public class AccountService {
 	
 	public void saveAccount(AccountRequestDTO accountRequestDTO) throws Exception {
 		
-		Account account = new Account(accountRequestDTO.getName(), accountRequestDTO.getSurname(),
-				accountRequestDTO.getPhone(),
-				new SimpleDateFormat("yyyy-MM-dd").parse(accountRequestDTO.getBirthday()),
-				BCrypt.hashpw(accountRequestDTO.getPassword(), BCrypt.gensalt(4)));
-		account.addRole(Role.CLIENT);
+		LocalDate birthday = LocalDate.parse(accountRequestDTO.getBirthday());
+		if (LocalDate.from(birthday).until(LocalDate.now(), ChronoUnit.YEARS) < 18) {			
+			throw new NotAdultAgeException("You must be 18+ to register");
+		}
 		
+		Account account = new Account(accountRequestDTO.getName(), accountRequestDTO.getSurname(),
+				accountRequestDTO.getPhone(), birthday, BCrypt.hashpw
+				(accountRequestDTO.getPassword(), BCrypt.gensalt(4)));
+		account.addRole(Role.CLIENT);		
 		try {
 			accountDAO.saveAccount(account);
 		} catch (EntityExistsException exc) {

@@ -1,6 +1,7 @@
 package com.github.irybov.bankdemoboot.entity;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -29,6 +30,9 @@ public class Bill {
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
+
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private final OffsetDateTime timestamp = OffsetDateTime.now();
 	
 	@NotNull
 	private boolean active = true;

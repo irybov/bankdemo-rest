@@ -1,6 +1,6 @@
 package com.github.irybov.bankdemoboot.controller.dto;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -18,7 +18,7 @@ public class AccountResponseDTO {
 	private String name;	
 	private String surname;
 	private String phone;	
-	private Date birthday;	
+	private LocalDate birthday;	
 	private List<Bill> bills;
 	private Set<Role> roles;
 

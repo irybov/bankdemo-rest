@@ -1,8 +1,9 @@
 package com.github.irybov.bankdemoboot.entity;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +24,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Past;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
@@ -49,6 +51,9 @@ public class Account implements UserDetails{
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
+		
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private final OffsetDateTime timestamp = OffsetDateTime.now();
 	
 	@NotNull
 	private boolean active = true;
@@ -70,11 +75,12 @@ public class Account implements UserDetails{
 	@Column(unique=true)
 	private String phone;
 	
+	@Past
 	@NotNull(message = "Please select your date of birth")
 	@Column(columnDefinition = "date")
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
-	private Date birthday;
+	private LocalDate birthday;
 	
 	@NotBlank(message = "Password must not be empty")
 	@Size(min=10, message = "Password should be 10-50 symbols length")
@@ -89,7 +95,7 @@ public class Account implements UserDetails{
 	@Enumerated(EnumType.STRING)
 	private Set<Role> roles;
 	
-	public Account(String name, String surname, String phone, Date birthday, String password) {
+	public Account(String name, String surname, String phone, LocalDate birthday, String password) {
 		this.name = name;
 		this.surname = surname;
 		this.phone = phone;

@@ -6,19 +6,15 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
-//import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -31,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.github.irybov.bankdemoboot.CurrencyType;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
@@ -38,7 +35,6 @@ import com.github.irybov.bankdemoboot.service.AccountService;
 
 @Controller
 @RequestMapping("/bankdemo")
-@Validated
 public class BankController {
 
 	@Autowired
@@ -57,6 +53,8 @@ public class BankController {
 		return SecurityContextHolder.getContext().getAuthentication().getName();
 	}
 	private String currentURL = null;
+	@Value("${admin.url}")
+	private String adminURL;
 	
 	@GetMapping("/home")
 	public String startPage() {
@@ -124,8 +122,6 @@ public class BankController {
 		return "redirect:/bankdemo/accounts/show/{phone}";
 	}
 	
-	@Value("${admin.url}")
-	private String adminURL;
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search")
 	public String searchAccount(@RequestParam(required = false) String phone,
@@ -243,24 +239,28 @@ public class BankController {
 	}
 	
 	@GetMapping("/accounts/password/{phone}")
-	public String changePassword(@PathVariable String phone) {
+	public String changePassword(@PathVariable String phone, Model model) {
+		model.addAttribute("password", new PasswordRequestDTO());
 		return "password";
 	}
 	
 	@PatchMapping("/accounts/password/{phone}")
-	public String changePassword(@PathVariable String phone, @RequestParam String oldPassword,
-			@NotBlank @Size(min=10, max=50) @RequestParam String newPassword, Model model) {
+	public String changePassword(@PathVariable String phone,
+			@ModelAttribute("password") @Valid PasswordRequestDTO passwordRequestDTO,
+			BindingResult result, Model model) {
 
-		if(!accountService.comparePassword(oldPassword, phone)) {
+		if(result.hasErrors()) {
+			return "password";
+		}		
+		if(!accountService.comparePassword(passwordRequestDTO.getOldPassword(), phone)) {
 			model.addAttribute("message", "Old password mismatch");
 			return "password";
 		}
 		
+		accountService.changePassword(phone, passwordRequestDTO.getNewPassword());
 		if(currentURL!=null && currentURL.equals(adminURL)) {
-			accountService.changePassword(phone, newPassword);
 			return "redirect:/bankdemo/accounts/search";
-		}		
-		accountService.changePassword(phone, newPassword);
+		}
 		return "redirect:/bankdemo/accounts/show/{phone}";
 	}
 	
