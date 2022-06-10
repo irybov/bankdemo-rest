@@ -66,7 +66,7 @@ public class OperationService {
 /*		return operationDAO.getAll(id).stream()
 				.map(OperationResponseDTO::new)
 				.collect(Collectors.toList());*/
-		return operationRepository.findAllByOrderByIdAsc().stream()
+		return operationRepository.findBySenderOrRecipientOrderByIdAsc(id, id).stream()
 				.map(OperationResponseDTO::new)
 				.collect(Collectors.toList());
 	}

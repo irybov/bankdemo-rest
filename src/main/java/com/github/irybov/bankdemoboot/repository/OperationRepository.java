@@ -8,5 +8,5 @@ import com.github.irybov.bankdemoboot.entity.Operation;
 
 public interface OperationRepository extends JpaRepository<Operation, Long> {
 
-	List<Operation> findAllByOrderByIdAsc();
+	List<Operation> findBySenderOrRecipientOrderByIdAsc(int sender, int recipient);
 }
