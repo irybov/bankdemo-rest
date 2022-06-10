@@ -17,7 +17,7 @@ public class AccountResponseDTO {
 	private boolean active;	
 	private String name;	
 	private String surname;
-	private String phone;	
+	private String phone;
 	private LocalDate birthday;	
 	private List<Bill> bills;
 	private Set<Role> roles;

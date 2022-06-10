@@ -1,18 +1,24 @@
 package com.github.irybov.bankdemoboot.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.dao.OperationDAO;
 import com.github.irybov.bankdemoboot.entity.Operation;
+import com.github.irybov.bankdemoboot.repository.OperationRepository;
 
 @Service
 @Transactional
 public class OperationService {
 
+	@Autowired
+	private OperationRepository operationRepository;
+	
 	@Autowired
 	private OperationDAO operationDAO;
 	
@@ -56,8 +62,13 @@ public class OperationService {
 		return operationDAO.get(id);
 	}
 	
-	public List<Operation> getAll(int id){
-		return operationDAO.getAll(id);
+	public List<OperationResponseDTO> getAll(int id){
+/*		return operationDAO.getAll(id).stream()
+				.map(OperationResponseDTO::new)
+				.collect(Collectors.toList());*/
+		return operationRepository.findAllByOrderByIdAsc().stream()
+				.map(OperationResponseDTO::new)
+				.collect(Collectors.toList());
 	}
 	
 }

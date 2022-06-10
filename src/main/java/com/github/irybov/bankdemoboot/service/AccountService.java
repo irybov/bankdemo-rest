@@ -17,12 +17,16 @@ import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.dao.AccountDAO;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.exception.NotAdultAgeException;
+import com.github.irybov.bankdemoboot.repository.AccountRepository;
 import com.github.irybov.bankdemoboot.entity.Account;
 
 @Service
 @Transactional
 public class AccountService {
 
+	@Autowired
+	private AccountRepository accountRepository;
+	
 	@Autowired
 	private AccountDAO accountDAO;
 	
@@ -51,7 +55,8 @@ public class AccountService {
 		return new AccountResponseDTO(getAccount(phone));
 	}
 	private Account getAccount(String phone) {
-		return accountDAO.getAccount(phone);
+//		return accountDAO.getAccount(phone);
+		return accountRepository.findByPhone(phone);
 	}
 	
 	public void updateAccount(Account account) {

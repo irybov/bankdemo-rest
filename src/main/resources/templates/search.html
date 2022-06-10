@@ -23,6 +23,12 @@
 <hr>
 <br>
 
+<div sec:authorize="hasRole('CLIENT')">
+	<a th:href="@{/bankdemo/accounts/show/{phone}(phone=${admin.phone})}">
+	<button type="button">Proceed</button></a>
+</div>
+<br>
+
 <div sec:authorize="hasRole('ADMIN')">
 <input type="button" value="Health" onclick="window.location.href = '/bankdemo/actuator/health'">
 <input type="button" value="Info" onclick="window.location.href = '/bankdemo/actuator/info'">
@@ -62,7 +68,7 @@
 	    <td align="center" th:text="${target.surname}"></td>
 	    <td align="center" th:text="${target.phone}"></td>
 	    <td></td>
-	    <td align="center" th:text="${#dates.format(target.birthday, 'yyyy-MM-dd')}"></td>
+	    <td align="center" th:text="${#temporals.format(target.birthday, 'yyyy-MM-dd')}"></td>
 	    <td align="center" th:text="${target.active}"></td>
 	    <td>
 	    	<form th:action="@{/bankdemo/accounts/status/{phone}(phone=${target.phone})}"

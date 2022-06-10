@@ -12,11 +12,15 @@ import com.github.irybov.bankdemoboot.exception.BillNotFoundException;
 import com.github.irybov.bankdemoboot.exception.NotEnoughMoneyException;
 import com.github.irybov.bankdemoboot.exception.SameBillException;
 import com.github.irybov.bankdemoboot.exception.WrongCurrencyTypeException;
+import com.github.irybov.bankdemoboot.repository.BillRepository;
 
 @Service
 @Transactional
 public class BillService {
 
+	@Autowired
+	private BillRepository billRepository;
+	
 	@Autowired
 	private BillDAO billDAO;
 	
@@ -29,11 +33,13 @@ public class BillService {
 	}
 	
 	public void deleteBill(int id) {
-		billDAO.deleteBill(id);
+//		billDAO.deleteBill(id);
+		billRepository.deleteById(id);
 	}
 	
 	public Bill getBill(int id) {
-		return billDAO.getBill(id);
+//		return billDAO.getBill(id);
+		return billRepository.getById(id);
 	}
 	
 	public String getPhone(int id) {
@@ -58,9 +64,9 @@ public class BillService {
 		return bill.getCurrency();
 	}
 	
-	public String transfer(int id, double amount, int to) throws Exception {
+	public String transfer(int from, double amount, int to) throws Exception {
 
-		if(id == to) {
+		if(from == to) {
 			throw new SameBillException("Source and target bills should not be the same");
 		}		
 		Bill target = getBill(to);
@@ -68,7 +74,7 @@ public class BillService {
 			throw new BillNotFoundException("Target bill with id: " + to + " not found");
 		}
 		
-		Bill bill = getBill(id);
+		Bill bill = getBill(from);
 		if(!bill.getCurrency().equals(target.getCurrency())){
 			throw new WrongCurrencyTypeException("Wrong currency type of the target bill");
 		}		

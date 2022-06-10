@@ -27,8 +27,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.github.irybov.bankdemoboot.CurrencyType;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
-import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
 import com.github.irybov.bankdemoboot.service.AccountService;
@@ -125,7 +125,8 @@ public class BankController {
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search")
 	public String searchAccount(@RequestParam(required = false) String phone,
-			@RequestParam(required = false) List<Operation> operations, ModelMap modelMap) {
+			@RequestParam(required = false) List<OperationResponseDTO> operations,
+			ModelMap modelMap) {
 
 		currentURL = adminURL;
 		
@@ -150,7 +151,8 @@ public class BankController {
 	@PreAuthorize("hasRole('ADMIN')")
 	@PatchMapping("/accounts/status/{phone}")
 	public String changeAccountStatus(@PathVariable String phone,
-			@RequestParam(required = false) List<Operation> operations, ModelMap modelMap) {
+			@RequestParam(required = false) List<OperationResponseDTO> operations,
+			ModelMap modelMap) {
 		accountService.changeStatus(phone);
 		return searchAccount(phone, operations, modelMap);
 	}
@@ -158,7 +160,8 @@ public class BankController {
 	@PreAuthorize("hasRole('ADMIN')")
 	@PatchMapping("/bills/status/{phone}")
 	public String changeBillStatus(@PathVariable String phone,
-			@RequestParam(required = false) List<Operation> operations, @RequestParam int id,
+			@RequestParam(required = false) List<OperationResponseDTO> operations,
+			@RequestParam int id,
 			ModelMap modelMap) {
 		billService.changeStatus(id);
 		return searchAccount(phone, operations, modelMap);
@@ -168,7 +171,7 @@ public class BankController {
 	@GetMapping("/operations/list")
 	public String showOperations(@RequestParam String phone, @RequestParam int id,
 			ModelMap modelMap) {		
-		List<Operation> operations = operationService.getAll(id);
+		List<OperationResponseDTO> operations = operationService.getAll(id);
 		modelMap.addAttribute("operations", operations);
 		modelMap.addAttribute("phone", phone);
 		return searchAccount(phone, operations, modelMap);
@@ -194,7 +197,7 @@ public class BankController {
 	}
 	
 	@PatchMapping("/bills/launch/{id}")
-	public String driveMoney(@PathVariable int id, @RequestParam(required = false) Integer to,
+	public String driveMoney(@PathVariable int id, @RequestParam(required = false) Integer target,
 			@RequestParam Map<String, String> params, ModelMap modelMap) {
 		
 		String currency;
@@ -221,9 +224,9 @@ public class BankController {
 			break;
 		case "transfer":
 			try {
-				currency = billService.transfer(id, Double.valueOf(params.get("amount")), to);
+				currency = billService.transfer(id, Double.valueOf(params.get("amount")), target);
 				operationService.transfer
-				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, to);
+				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, target);
 			}
 			catch (Exception exc) {
 				modelMap.addAttribute("id", id);
@@ -249,13 +252,13 @@ public class BankController {
 			@ModelAttribute("password") @Valid PasswordRequestDTO passwordRequestDTO,
 			BindingResult result, Model model) {
 
-		if(result.hasErrors()) {
-			return "password";
-		}		
 		if(!accountService.comparePassword(passwordRequestDTO.getOldPassword(), phone)) {
 			model.addAttribute("message", "Old password mismatch");
 			return "password";
 		}
+		if(result.hasErrors()) {
+			return "password";
+		}		
 		
 		accountService.changePassword(phone, passwordRequestDTO.getNewPassword());
 		if(currentURL!=null && currentURL.equals(adminURL)) {
