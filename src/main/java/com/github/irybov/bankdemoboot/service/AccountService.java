@@ -25,11 +25,9 @@ import com.github.irybov.bankdemoboot.entity.Account;
 public class AccountService {
 
 	@Autowired
-	private AccountRepository accountRepository;
-	
+	private AccountRepository accountRepository;	
 	@Autowired
-	private AccountDAO accountDAO;
-	
+	private AccountDAO accountDAO;	
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
 	

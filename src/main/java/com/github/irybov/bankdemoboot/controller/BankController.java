@@ -1,15 +1,13 @@
 package com.github.irybov.bankdemoboot.controller;
 
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,20 +19,16 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.github.irybov.bankdemoboot.CurrencyType;
-import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
 import com.github.irybov.bankdemoboot.service.AccountService;
 
 @Controller
-@RequestMapping("/bankdemo")
 public class BankController {
 
 	@Autowired
@@ -44,70 +38,28 @@ public class BankController {
 	@Autowired
 	private OperationService operationService;
 	
+	private Authentication authentication() {
+		return SecurityContextHolder.getContext().getAuthentication();
+	}
+	
 	private Set<CurrencyType> currencies;
 	{
 		currencies = EnumSet.allOf(CurrencyType.class);
 	}
 	
-	private String getPrincipalName() {
-		return SecurityContextHolder.getContext().getAuthentication().getName();
-	}
-	private String currentURL = null;
-	@Value("${admin.url}")
-	private String adminURL;
-	
-	@GetMapping("/home")
-	public String startPage() {
-		return "home";
-	}
-		
-	@GetMapping("/register")
-	public String createAccount(Model model) {
-		model.addAttribute("account", new AccountRequestDTO());
-		return "register";
-	}
-	
-	@GetMapping("/login")
-	public String loginForm() {
-		return "login";
-	}
-	
-	@GetMapping("/success")
-	public String signUp(Model model) {		
-		AccountResponseDTO account = accountService.getAccountDTO(getPrincipalName());
-		model.addAttribute("account", account);
-		return "success";
-	}
-	
-	@PostMapping("/confirm")
-	public String signIn(@ModelAttribute("account") @Valid AccountRequestDTO accountRequestDTO,
-			BindingResult result, Model model) {
-		
-		if(result.hasErrors()) {
-			return "register";
-		}
-		try {
-			accountService.saveAccount(accountRequestDTO);
-		} catch (Exception exc) {
-			model.addAttribute("message", exc.getMessage());
-			return "register";			
-		}
-		return "login";
-	}
-	
 	@GetMapping("/accounts/show/{phone}")
 	public String getAccount(@PathVariable String phone, ModelMap modelMap) {
 
-		String current = getPrincipalName();		
+		String current = authentication().getName();		
 		AccountResponseDTO account = accountService.getAccountDTO(current);
 		modelMap.addAttribute("account", account);
 		modelMap.addAttribute("currencies", currencies);
 		
 		if(!accountService.verifyAccount(phone, current)) {
 			modelMap.addAttribute("message", "Security restricted information");
-			return "forward:/bankdemo/accounts/show/" + current;
+			return "forward:/accounts/show/" + current;
 		}
-		return "private";
+		return "/account/private";
 	}
 	
 	@PostMapping("/accounts/show/{phone}")
@@ -119,68 +71,13 @@ public class BankController {
 			return getAccount(phone, modelMap);
 		}	
 		accountService.addBill(phone, currency);
-		return "redirect:/bankdemo/accounts/show/{phone}";
-	}
-	
-	@PreAuthorize("hasRole('ADMIN')")
-	@GetMapping("/accounts/search")
-	public String searchAccount(@RequestParam(required = false) String phone,
-			@RequestParam(required = false) List<OperationResponseDTO> operations,
-			ModelMap modelMap) {
-
-		currentURL = adminURL;
-		
-		AccountResponseDTO admin = accountService.getAccountDTO(getPrincipalName());		
-		AccountResponseDTO target = null;
-		try {
-			target = accountService.getAccountDTO(phone);
-		}
-		catch (Exception exc) {
-			if(phone != null) {
-				modelMap.addAttribute("message", "Account number: " + phone + " not found");
-			}
-		}
-		finally {
-			modelMap.addAttribute("admin", admin);
-			modelMap.addAttribute("target", target);
-			modelMap.addAttribute("operations", operations);
-		}
-		return "search";
-	}
-	
-	@PreAuthorize("hasRole('ADMIN')")
-	@PatchMapping("/accounts/status/{phone}")
-	public String changeAccountStatus(@PathVariable String phone,
-			@RequestParam(required = false) List<OperationResponseDTO> operations,
-			ModelMap modelMap) {
-		accountService.changeStatus(phone);
-		return searchAccount(phone, operations, modelMap);
-	}
-	
-	@PreAuthorize("hasRole('ADMIN')")
-	@PatchMapping("/bills/status/{phone}")
-	public String changeBillStatus(@PathVariable String phone,
-			@RequestParam(required = false) List<OperationResponseDTO> operations,
-			@RequestParam int id,
-			ModelMap modelMap) {
-		billService.changeStatus(id);
-		return searchAccount(phone, operations, modelMap);
-	}
-	
-	@PreAuthorize("hasRole('ADMIN')")
-	@GetMapping("/operations/list")
-	public String showOperations(@RequestParam String phone, @RequestParam int id,
-			ModelMap modelMap) {		
-		List<OperationResponseDTO> operations = operationService.getAll(id);
-		modelMap.addAttribute("operations", operations);
-		modelMap.addAttribute("phone", phone);
-		return searchAccount(phone, operations, modelMap);
+		return "redirect:/accounts/show/{phone}";
 	}
 	
 	@DeleteMapping("/accounts/show/{phone}")
 	public String deleteBill(@PathVariable String phone, @RequestParam int id) {
 		billService.deleteBill(id);
-		return "redirect:/bankdemo/accounts/show/{phone}";
+		return "redirect:/accounts/show/{phone}";
 	}	
 	
 	@PatchMapping("/bills/operate/{id}")
@@ -191,9 +88,9 @@ public class BankController {
 		modelMap.addAttribute("action", action);
 		modelMap.addAttribute("balance", balance);
 		if(action.equals("transfer")) {
-			return "transfer";
+			return "bill/transfer";
 		}
-		return "payment";
+		return "/bill/payment";
 	}
 	
 	@PatchMapping("/bills/launch/{id}")
@@ -219,7 +116,7 @@ public class BankController {
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", exc.getMessage());
-				return "payment";
+				return "/bill/payment";
 			}
 			break;
 		case "transfer":
@@ -233,18 +130,18 @@ public class BankController {
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", exc.getMessage());
-				return "transfer";
+				return "/bill/transfer";
 			}
 			break;			
 		}	
 		String phone = billService.getPhone(id);
-		return "redirect:/bankdemo/accounts/show/" + phone;
+		return "redirect:/accounts/show/" + phone;
 	}
 	
 	@GetMapping("/accounts/password/{phone}")
 	public String changePassword(@PathVariable String phone, Model model) {
 		model.addAttribute("password", new PasswordRequestDTO());
-		return "password";
+		return "/account/password";
 	}
 	
 	@PatchMapping("/accounts/password/{phone}")
@@ -254,17 +151,18 @@ public class BankController {
 
 		if(!accountService.comparePassword(passwordRequestDTO.getOldPassword(), phone)) {
 			model.addAttribute("message", "Old password mismatch");
-			return "password";
+			return "/account/password";
 		}
 		if(result.hasErrors()) {
-			return "password";
-		}		
+			return "/account/password";
+		}
 		
 		accountService.changePassword(phone, passwordRequestDTO.getNewPassword());
-		if(currentURL!=null && currentURL.equals(adminURL)) {
-			return "redirect:/bankdemo/accounts/search";
+		if(authentication().getAuthorities().stream()
+				.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+			return "redirect:/accounts/search";
 		}
-		return "redirect:/bankdemo/accounts/show/{phone}";
+		return "redirect:/accounts/show/{phone}";
 	}
 	
 }

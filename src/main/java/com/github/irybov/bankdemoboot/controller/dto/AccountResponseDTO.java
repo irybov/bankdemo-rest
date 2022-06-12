@@ -3,10 +3,11 @@ package com.github.irybov.bankdemoboot.controller.dto;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.github.irybov.bankdemoboot.Role;
 import com.github.irybov.bankdemoboot.entity.Account;
-import com.github.irybov.bankdemoboot.entity.Bill;
+//import com.github.irybov.bankdemoboot.entity.Bill;
 
 import lombok.Getter;
 
@@ -19,7 +20,7 @@ public class AccountResponseDTO {
 	private String surname;
 	private String phone;
 	private LocalDate birthday;	
-	private List<Bill> bills;
+	private List<BillResponseDTO> bills;
 	private Set<Role> roles;
 
 	public AccountResponseDTO(Account account) {
@@ -29,7 +30,11 @@ public class AccountResponseDTO {
 		this.surname = account.getSurname();
 		this.phone = account.getPhone();
 		this.birthday = account.getBirthday();
-		this.bills = account.getBills();
+		this.bills = account.getBills()
+				.stream()
+//				.filter(Bill::isActive)
+				.map(BillResponseDTO::new)
+				.collect(Collectors.toList());
 		this.roles = account.getRoles();
 	}
 	

@@ -15,17 +15,17 @@
 <hr>
 <br>
 <div sec:authorize="hasRole('CLIENT')">
-	<a th:href="@{/bankdemo/accounts/show/{phone}(phone=${account.phone})}">
+	<a th:href="@{/accounts/show/{phone}(phone=${account.phone})}">
 	<button type="button">Proceed</button></a>
 </div>
 <br>
 <div sec:authorize="hasRole('ADMIN')">
-	<a th:href="@{/bankdemo/accounts/search}">
+	<a th:href="@{/accounts/search}">
 	<button type="button">Admin's</button></a>
 </div>
 </body>
 <br>
-<form th:action="@{/bankdemo/logout}" method="post">
+<form th:action="@{/logout}" method="post">
 	<input type="submit" th:value="LogOut" class="btn btn-success"/>
 </form>
 </html>

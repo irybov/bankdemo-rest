@@ -17,8 +17,7 @@ import com.github.irybov.bankdemoboot.repository.OperationRepository;
 public class OperationService {
 
 	@Autowired
-	private OperationRepository operationRepository;
-	
+	private OperationRepository operationRepository;	
 	@Autowired
 	private OperationDAO operationDAO;
 	
@@ -63,10 +62,12 @@ public class OperationService {
 	}
 	
 	public List<OperationResponseDTO> getAll(int id){
-/*		return operationDAO.getAll(id).stream()
+/*		return operationDAO.getAll(id)
+				.stream()
 				.map(OperationResponseDTO::new)
 				.collect(Collectors.toList());*/
-		return operationRepository.findBySenderOrRecipientOrderByIdAsc(id, id).stream()
+		return operationRepository.findBySenderOrRecipientOrderByIdAsc(id, id)
+				.stream()
 				.map(OperationResponseDTO::new)
 				.collect(Collectors.toList());
 	}

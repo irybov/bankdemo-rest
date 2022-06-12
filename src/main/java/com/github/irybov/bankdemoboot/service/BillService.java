@@ -19,8 +19,7 @@ import com.github.irybov.bankdemoboot.repository.BillRepository;
 public class BillService {
 
 	@Autowired
-	private BillRepository billRepository;
-	
+	private BillRepository billRepository;	
 	@Autowired
 	private BillDAO billDAO;
 	
@@ -95,7 +94,7 @@ public class BillService {
 			bill.setActive(false);
 		}
 		else {
-			bill.setActive(true);			
+			bill.setActive(true);
 		}
 		updateBill(bill);
 	}

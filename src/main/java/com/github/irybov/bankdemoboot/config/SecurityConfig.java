@@ -24,7 +24,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	@Bean
 	protected BCryptPasswordEncoder passwordEncoder() {
 	    return new BCryptPasswordEncoder();
-	}
+	}	
 	
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {		
@@ -41,33 +41,33 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 
 		http
 			.authorizeRequests()
-			.antMatchers("/bankdemo/home", "/bankdemo/register", "/bankdemo/confirm").permitAll()
+			.antMatchers("/home", "/register", "/confirm").permitAll()
 				.and()	
 			.authorizeRequests()
-			.antMatchers("/bankdemo/bills/**", "/bankdemo/accounts/show", "/bankdemo/operations/*",
-					"/bankdemo/accounts/password")
+			.antMatchers("/bills/**", "/accounts/show", "/operations/*",
+					"/accounts/password")
 			.hasAnyRole("ADMIN", "CLIENT")
-			.antMatchers("/bankdemo/accounts/search", "/bankdemo/actuator/**")
+			.antMatchers("/accounts/search", "/actuator/**")
 			.hasRole("ADMIN")
 			.anyRequest().authenticated()
 				.and()
 			.formLogin()
 			.usernameParameter("phone")
-			.loginPage("/bankdemo/login")
-			.loginProcessingUrl("/bankdemo/auth")
+			.loginPage("/login")
+			.loginProcessingUrl("/auth")
 //			.successHandler((request, response, authentication) ->
-//			response.sendRedirect("/bankdemo/accounts/show/" + authentication.getName()))
-			.defaultSuccessUrl("/bankdemo/success")
-            .failureUrl("/bankdemo/login?error")
+//			response.sendRedirect("/accounts/show/" + authentication.getName()))
+			.defaultSuccessUrl("/success")
+            .failureUrl("/login?error")
             .permitAll()
 				.and()
 			.logout()
-//          .logoutUrl("/bankdemo/logout")
-            .logoutRequestMatcher(new AntPathRequestMatcher("/bankdemo/logout", "POST"))
+//          .logoutUrl("/logout")
+            .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "POST"))
             .invalidateHttpSession(true)
             .clearAuthentication(true)
             .deleteCookies("JSESSIONID")
-			.logoutSuccessUrl("/bankdemo/home")
+			.logoutSuccessUrl("/home")
 			.permitAll();
 	}
 	
