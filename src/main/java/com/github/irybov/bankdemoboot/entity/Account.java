@@ -3,7 +3,6 @@ package com.github.irybov.bankdemoboot.entity;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,8 +28,6 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.github.irybov.bankdemoboot.Role;
@@ -46,7 +43,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class Account implements UserDetails{
+public class Account{
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -115,39 +112,6 @@ public class Account implements UserDetails{
 			roles = new HashSet<>();
 		}
 		roles.add(role);
-	}
-	
-	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return roles;
-	}
-
-	@Override
-	public String getUsername() {
-		return this.phone;
-	}
-
-	@Override
-	public boolean isAccountNonExpired() {
-		// TODO Auto-generated method stub
-		return true;
-	}
-
-	@Override
-	public boolean isAccountNonLocked() {
-		// TODO Auto-generated method stub
-		return true;
-	}
-
-	@Override
-	public boolean isCredentialsNonExpired() {
-		// TODO Auto-generated method stub
-		return true;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return active;
 	}
 
 }
