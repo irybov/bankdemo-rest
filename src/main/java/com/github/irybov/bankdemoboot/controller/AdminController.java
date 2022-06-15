@@ -46,7 +46,7 @@ public class AdminController {
 		}
 		catch (Exception exc) {
 			if(phone != null) {
-				modelMap.addAttribute("message", "Account number: " + phone + " not found");
+				modelMap.addAttribute("message", "Account with number: " + phone + " not found");
 			}
 		}
 		finally {

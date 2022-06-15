@@ -101,9 +101,18 @@ public class BankController {
 		
 		switch(params.get("action")) {
 		case "deposit":
-			currency = billService.deposit(id, Double.valueOf(params.get("amount")));
-			operationService.deposit
-			(Double.valueOf(params.get("amount")), params.get("action"), currency, id);
+			try {
+				currency = billService.deposit(id, Double.valueOf(params.get("amount")));
+				operationService.deposit
+				(Double.valueOf(params.get("amount")), params.get("action"), currency, id);
+			}
+			catch (Exception exc) {
+				modelMap.addAttribute("id", id);
+				modelMap.addAttribute("action", params.get("action"));
+				modelMap.addAttribute("balance", params.get("balance"));
+				modelMap.addAttribute("message", exc.getMessage());
+				return "/bill/payment";
+			}
 			break;
 		case "withdraw":
 			try {

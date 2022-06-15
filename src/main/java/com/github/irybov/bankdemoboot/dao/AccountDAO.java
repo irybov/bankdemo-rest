@@ -12,7 +12,7 @@ public class AccountDAO {
 
 	@Autowired
 	private EntityManager entityManager;
-	
+
 	public void saveAccount(Account account) {
 		entityManager.persist(account);
 	}

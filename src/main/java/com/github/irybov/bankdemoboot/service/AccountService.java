@@ -25,11 +25,19 @@ import com.github.irybov.bankdemoboot.entity.Account;
 public class AccountService {
 
 	@Autowired
-	private AccountRepository accountRepository;	
+	private AccountRepository accountRepository;
 	@Autowired
-	private AccountDAO accountDAO;	
+	private AccountDAO accountDAO;
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
+	
+/*	private final AccountRepository accountRepository;
+	private final AccountDAO accountDAO;
+	@Autowired
+	public AccountService(AccountRepository accountRepository, AccountDAO accountDAO) {
+		this.accountRepository = accountRepository;
+		this.accountDAO = accountDAO;
+	}*/
 	
 	public void saveAccount(AccountRequestDTO accountRequestDTO) throws Exception {
 		
@@ -52,7 +60,7 @@ public class AccountService {
 	public AccountResponseDTO getAccountDTO(String phone) {
 		return new AccountResponseDTO(getAccount(phone));
 	}
-	private Account getAccount(String phone) {
+	Account getAccount(String phone) {
 //		return accountDAO.getAccount(phone);
 		return accountRepository.findByPhone(phone);
 	}
