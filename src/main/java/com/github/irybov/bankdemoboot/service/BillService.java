@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.github.irybov.bankdemoboot.dao.BillDAO;
+//import com.github.irybov.bankdemoboot.dao.BillDAO;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.exception.BillNotFoundException;
 import com.github.irybov.bankdemoboot.exception.NegativeAmountException;
@@ -21,15 +21,17 @@ public class BillService {
 
 	@Autowired
 	private BillRepository billRepository;	
-	@Autowired
-	private BillDAO billDAO;
+//	@Autowired
+//	private BillDAO billDAO;
 	
 	public void saveBill(Bill bill) {
-		billDAO.saveBill(bill);
+//		billDAO.saveBill(bill);
+		billRepository.save(bill);
 	}
 	
 	public void updateBill(Bill bill) {
-		billDAO.updateBill(bill);
+//		billDAO.updateBill(bill);
+		billRepository.save(bill);		
 	}
 	
 	public void deleteBill(int id) {
@@ -37,14 +39,15 @@ public class BillService {
 		billRepository.deleteById(id);
 	}
 	
-	public Bill getBill(int id) {
+	public Bill getBill(int id) throws Exception {
 //		return billDAO.getBill(id);
-		return billRepository.getById(id);
+		return billRepository.findById(id).orElseThrow
+				(()-> new BillNotFoundException("Target bill with id: " + id + " not found"));
 	}
 	
-	public String getPhone(int id) {
-		return billDAO.getPhone(id);
-	}
+/*	public String getPhone(int id) {
+		return billDAO.getPhone(id);		
+	}*/
 	
 	public String deposit(int id, double amount) throws Exception {
 		
@@ -102,7 +105,7 @@ public class BillService {
 		return bill.getCurrency();
 	}
 	
-	public void changeStatus(int id) {
+	public void changeStatus(int id) throws Exception {
 		Bill bill = getBill(id);
 		if(bill.isActive()) {
 			bill.setActive(false);

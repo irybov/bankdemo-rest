@@ -143,7 +143,7 @@ public class BankController {
 			}
 			break;			
 		}	
-		String phone = billService.getPhone(id);
+		String phone = authentication().getName();
 		return "redirect:/accounts/show/" + phone;
 	}
 	

@@ -9,14 +9,16 @@ import javax.persistence.PersistenceContext;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.mockito.InjectMocks;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.github.irybov.bankdemoboot.entity.Account;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DataJpaTest
-public class AccountDAOTest {
+class AccountDAOTest {
 	
 	@PersistenceContext
 	private EntityManager entityManager;
@@ -30,7 +32,7 @@ public class AccountDAOTest {
 	}
 	
 	@Test
-	void checkIfAccountDAOWorskFine() {	
+	void check_save_and_search_for_account_phone() {	
 	
 		String search = new String("0000000000");
 		Account account = new Account

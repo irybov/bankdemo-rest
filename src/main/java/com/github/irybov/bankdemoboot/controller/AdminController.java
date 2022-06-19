@@ -72,7 +72,11 @@ public class AdminController {
 			@RequestParam(required = false) List<OperationResponseDTO> operations,
 			@RequestParam int id,
 			ModelMap modelMap) {
-		billService.changeStatus(id);
+		try {
+			billService.changeStatus(id);
+		} catch (Exception exc) {
+			exc.printStackTrace();
+		}
 		return searchAccount(phone, operations, modelMap);
 	}
 	
