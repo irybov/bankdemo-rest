@@ -1,50 +1,60 @@
 package com.github.irybov.bankdemoboot.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.Mockito.verify;
 
-//import javax.persistence.EntityManager;
-//import javax.persistence.PersistenceContext;
+import java.time.LocalDate;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+//import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
-//import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+//import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
-//import com.github.irybov.bankdemoboot.dao.AccountDAO;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.repository.AccountRepository;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@DataJpaTest
+//@ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
 
-	@Autowired
-//	@Mock
+	@Mock
 	private AccountRepository accountRepository;
-//	@PersistenceContext
-//	private EntityManager entityManager;
-//	@InjectMocks
-//	private AccountDAO accountDAO;
 	@InjectMocks
 	private AccountService accountService;
 	
+	private static String search;
+	
+	@BeforeAll
+	static void prepare() {
+		search = new String("0000000000");
+	}
+	
     @BeforeEach
     void setUp() {
+    	MockitoAnnotations.openMocks(this);
     	accountService = new AccountService();
-//		ReflectionTestUtils.setField(accountDAO, "entityManager", entityManager);
-//		ReflectionTestUtils.setField(accountService, "accountDAO", accountDAO);
 		ReflectionTestUtils.setField(accountService, "accountRepository", accountRepository);		
     }
 	
+    @Test
+    void can_get_account() {
+    	accountService.getAccount(search);
+        verify(accountRepository).findByPhone(search);
+    }
+    
 	@Test
-	void check_save_and_exist_for_account() {
+	void save_and_check_equality() {
 
-		String search = new String("0000000000");
 		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
 		accountRequestDTO.setBirthday("2001-01-01");
 		accountRequestDTO.setName("Admin");
@@ -57,13 +67,26 @@ class AccountServiceTest {
 			exc.printStackTrace();
 		}
 		
-		/*		ArgumentCaptor<Account> argumentCaptor = ArgumentCaptor.forClass(Account.class);
+		ArgumentCaptor<Account> argumentCaptor = ArgumentCaptor.forClass(Account.class);
         verify(accountRepository).save(argumentCaptor.capture());
-
+        
         Account captured = argumentCaptor.getValue();
-        assertThat(captured).isEqualTo(account);*/
+		Account account = new Account
+			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), captured.getPassword());
+        assertThat(captured).isEqualTo(account);
 		
-		Account account = accountService.getAccount(search);
-        assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
-	}	
+//		account = accountService.getAccount(search);
+//      assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
+	}
+    
+    @AfterEach
+    void tear_down() {
+    	accountService = null;
+    }
+    
+    @AfterAll
+    static void clear() {    	
+    	search = null;
+    }
+    
 }

@@ -32,7 +32,7 @@ class AccountDAOTest {
 	}
 	
 	@Test
-	void check_save_and_search_for_account_phone() {	
+	void save_and_search_for_account_phone() {	
 	
 		String search = new String("0000000000");
 		Account account = new Account

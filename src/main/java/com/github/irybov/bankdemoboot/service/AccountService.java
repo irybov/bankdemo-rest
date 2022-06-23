@@ -91,7 +91,7 @@ public class AccountService {
 			account.setActive(false);
 		}
 		else {
-			account.setActive(true);			
+			account.setActive(true);
 		}
 		updateAccount(account);
 	}
@@ -101,7 +101,6 @@ public class AccountService {
 		account.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(4)));
 		updateAccount(account);
 	}
-	
 	public boolean comparePassword(String oldPassword, String phone) {
 		Account account = getAccount(phone);
 		return bCryptPasswordEncoder.matches(oldPassword, account.getPassword());

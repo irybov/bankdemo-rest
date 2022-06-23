@@ -14,17 +14,13 @@ import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 @Entity
-@Table(name="bills")
+@Table(name="bills", schema = "public")
+@Data
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString
 public class Bill {
 
 	@Id
@@ -38,7 +34,7 @@ public class Bill {
 	private boolean active = true;
 	
 	@NotNull
-	@Column(columnDefinition = "Decimal(19,2) default '0.00'")
+	@Column(columnDefinition = "Decimal(19,2) default '0.00'", precision = 2)
 	@JsonFormat(shape=JsonFormat.Shape.NUMBER_FLOAT)
 	private BigDecimal balance = new BigDecimal(0.00);
 
