@@ -27,7 +27,7 @@ class AccountRepositoryTest {
 	
 	@BeforeAll
 	static void prepare() {		
-		search = new String("0000000000");		
+		search = new String("0000000000");
 	}
 	
 	@BeforeEach
@@ -46,7 +46,7 @@ class AccountRepositoryTest {
     @Test
     void check_if_phone_exists() {   	
         String phone = "0000000000";
-        String expected = accountRepository.checkPhone(phone);
+        String expected = accountRepository.getPhone(phone);
         assertThat(expected).isEqualTo(phone);
     }
 		

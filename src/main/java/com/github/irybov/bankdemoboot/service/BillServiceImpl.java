@@ -8,16 +8,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 //import com.github.irybov.bankdemoboot.dao.BillDAO;
 import com.github.irybov.bankdemoboot.entity.Bill;
-import com.github.irybov.bankdemoboot.exception.BillNotFoundException;
-import com.github.irybov.bankdemoboot.exception.NegativeAmountException;
-import com.github.irybov.bankdemoboot.exception.NotEnoughMoneyException;
-import com.github.irybov.bankdemoboot.exception.SameBillException;
-import com.github.irybov.bankdemoboot.exception.WrongCurrencyTypeException;
+import com.github.irybov.bankdemoboot.exception.PaymentException;
 import com.github.irybov.bankdemoboot.repository.BillRepository;
 
 @Service
 @Transactional
-public class BillService {
+public class BillServiceImpl {
 
 	@Autowired
 	private BillRepository billRepository;	
@@ -42,7 +38,7 @@ public class BillService {
 	public Bill getBill(int id) throws Exception {
 //		return billDAO.getBill(id);
 		return billRepository.findById(id).orElseThrow
-				(()-> new BillNotFoundException("Target bill with id: " + id + " not found"));
+				(()-> new PaymentException("Target bill with id: " + id + " not found"));
 	}
 	
 /*	public String getPhone(int id) {
@@ -52,7 +48,7 @@ public class BillService {
 	public String deposit(int id, double amount) throws Exception {
 		
 		if(amount < 0.01) {
-			throw new NegativeAmountException("Amount of money should be higher than zero");
+			throw new PaymentException("Amount of money should be higher than zero");
 		}		
 		
 		Bill bill = getBill(id);
@@ -64,12 +60,12 @@ public class BillService {
 	public String withdraw(int id, double amount) throws Exception {
 		
 		if(amount < 0.01) {
-			throw new NegativeAmountException("Amount of money should be higher than zero");
+			throw new PaymentException("Amount of money should be higher than zero");
 		}
 		
 		Bill bill = getBill(id);
 		if(bill.getBalance().compareTo(BigDecimal.valueOf(amount)) == -1) {
-			throw new NotEnoughMoneyException("Not enough money to complete operation");
+			throw new PaymentException("Not enough money to complete operation");
 		}
 		bill.setBalance(bill.getBalance().subtract(new BigDecimal(amount)));
 		updateBill(bill);
@@ -79,23 +75,23 @@ public class BillService {
 	public String transfer(int from, double amount, int to) throws Exception {
 
 		if(amount < 0.01) {
-			throw new NegativeAmountException("Amount of money should be higher than zero");
+			throw new PaymentException("Amount of money should be higher than zero");
 		}
 		
 		if(from == to) {
-			throw new SameBillException("Source and target bills should not be the same");
+			throw new PaymentException("Source and target bills should not be the same");
 		}		
 		Bill target = getBill(to);
 		if(target == null) {
-			throw new BillNotFoundException("Target bill with id: " + to + " not found");
+			throw new PaymentException("Target bill with id: " + to + " not found");
 		}
 		
 		Bill bill = getBill(from);
 		if(!bill.getCurrency().equals(target.getCurrency())){
-			throw new WrongCurrencyTypeException("Wrong currency type of the target bill");
+			throw new PaymentException("Wrong currency type of the target bill");
 		}		
 		if(bill.getBalance().compareTo(BigDecimal.valueOf(amount)) == -1) {
-			throw new NotEnoughMoneyException("Not enough money to complete the operation");
+			throw new PaymentException("Not enough money to complete the operation");
 		}
 		
 		bill.setBalance(bill.getBalance().subtract(new BigDecimal(amount)));

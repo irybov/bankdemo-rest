@@ -19,17 +19,13 @@ public class OperationDAO {
 		entityManager.persist(operation);
 	}
 	
-	public Operation get(long id) {
+	public Operation getById(long id) {
 		return entityManager.find(Operation.class, id);
-	}
-	
-	public void undo() {
-		
 	}
 	
 	public List<Operation> getAll(int id){
 		return entityManager.createQuery
-				("SELECT o FROM Operation o WHERE o.sender=:id OR o.recipient=:id",
+				("SELECT o FROM Operation o WHERE o.sender=:id OR o.recipient=:id ORDER BY id ASC",
 				Operation.class)
 				.setParameter("id", id)					
 				.getResultList();

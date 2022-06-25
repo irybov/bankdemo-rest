@@ -32,7 +32,8 @@ public class BillDAO {
 
 	public String getPhone(int billId) {
 		return (String) entityManager.createNativeQuery
-		("SELECT phone FROM accounts WHERE id = (SELECT account_id FROM bills WHERE id=:billId)")
+		("SELECT phone FROM {h-schema}accounts WHERE id = "
+				+ "(SELECT account_id FROM {h-schema}bills WHERE id=:billId)")
 				.setParameter("billId", billId)				
 				.getSingleResult();
 	}

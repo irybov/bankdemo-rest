@@ -24,19 +24,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.github.irybov.bankdemoboot.CurrencyType;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
-import com.github.irybov.bankdemoboot.service.BillService;
-import com.github.irybov.bankdemoboot.service.OperationService;
-import com.github.irybov.bankdemoboot.service.AccountService;
+import com.github.irybov.bankdemoboot.service.BillServiceImpl;
+import com.github.irybov.bankdemoboot.service.OperationServiceImpl;
+import com.github.irybov.bankdemoboot.service.AccountServiceImpl;
 
 @Controller
 public class BankController {
 
 	@Autowired
-	private AccountService accountService;
+	private AccountServiceImpl accountService;
 	@Autowired
-	private BillService billService;
+	private BillServiceImpl billService;
 	@Autowired
-	private OperationService operationService;
+	private OperationServiceImpl operationService;
 	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();

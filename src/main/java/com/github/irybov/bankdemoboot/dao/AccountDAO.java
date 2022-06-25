@@ -28,9 +28,9 @@ public class AccountDAO {
 				.getSingleResult();
 	}
 	
-	public String checkPhone(String check) {
+	public String getPhone(String check) {
 		return (String) entityManager.createNativeQuery
-				("SELECT phone FROM accounts WHERE phone=:check")
+				("SELECT phone FROM {h-schema}accounts WHERE phone=:check")
 				.setParameter("check", check)
 				.getSingleResult();
 	}

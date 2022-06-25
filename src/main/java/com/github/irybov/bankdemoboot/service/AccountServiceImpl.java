@@ -16,13 +16,13 @@ import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 //import com.github.irybov.bankdemoboot.dao.AccountDAO;
 import com.github.irybov.bankdemoboot.entity.Bill;
-import com.github.irybov.bankdemoboot.exception.NotAdultAgeException;
+import com.github.irybov.bankdemoboot.exception.RegistrationException;
 import com.github.irybov.bankdemoboot.repository.AccountRepository;
 import com.github.irybov.bankdemoboot.entity.Account;
 
 @Service
 @Transactional
-public class AccountService {
+public class AccountServiceImpl {
 
 	@Autowired
 	private AccountRepository accountRepository;
@@ -43,7 +43,7 @@ public class AccountService {
 		
 		LocalDate birthday = LocalDate.parse(accountRequestDTO.getBirthday());
 		if (LocalDate.from(birthday).until(LocalDate.now(), ChronoUnit.YEARS) < 18) {			
-			throw new NotAdultAgeException("You must be 18+ to register");
+			throw new RegistrationException("You must be 18+ to register");
 		}
 		
 		Account account = new Account(accountRequestDTO.getName(), accountRequestDTO.getSurname(),
@@ -72,7 +72,7 @@ public class AccountService {
 	}
 	
 	public boolean verifyAccount(String phone, String current){
-		if(accountRepository.checkPhone(phone) == null || !phone.equals(current)) {
+		if(accountRepository.getPhone(phone) == null || !phone.equals(current)) {
 //		if(accountDAO.checkPhone(phone) == null || !phone.equals(current)) {
 			return false;
 		}

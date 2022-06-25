@@ -10,5 +10,5 @@ public interface AccountRepository extends JpaRepository<Account, String> {
 	Account findByPhone(String phone);
 	
 	@Query("SELECT phone FROM Account accounts WHERE phone=:check")
-	String checkPhone(String check);
+	String getPhone(String check);
 }

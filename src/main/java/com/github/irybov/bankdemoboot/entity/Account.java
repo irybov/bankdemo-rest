@@ -39,7 +39,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
-@Table(name="accounts", schema = "public",
+@Table(name="accounts", schema = "bankdemo",
 uniqueConstraints={@UniqueConstraint(columnNames={"phone"})})
 @Data
 @NoArgsConstructor

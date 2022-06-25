@@ -6,15 +6,18 @@ spring:
     username: postgres
     password: 2309
   jpa:
-    database: POSTGRESQL
     hibernate:
       ddl-auto: update
-    generate-ddl: true
     show-sql: true
+    generate-ddl: true    
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format-sql: true
+        default_schema: bankdemo
+      javax:
+        persistence:
+          create-database-schemas: true
   mvc:
     hiddenmethod:
       filter:

@@ -29,9 +29,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {		
 		auth.jdbcAuthentication().dataSource(dataSource)
-			.usersByUsernameQuery("SELECT phone, password, active::int FROM accounts WHERE phone=?")
+			.usersByUsernameQuery("SELECT phone, password, active::int FROM bankdemo.accounts WHERE phone=?")
 		    .authoritiesByUsernameQuery
-		    ("SELECT phone, roles FROM accounts AS a INNER JOIN roles AS r"
+		    ("SELECT phone, roles FROM bankdemo.accounts AS a INNER JOIN bankdemo.roles AS r"
 		    + " ON a.id=r.account_id WHERE a.phone=?")
 		    .passwordEncoder(passwordEncoder()).rolePrefix("ROLE_");
 	}

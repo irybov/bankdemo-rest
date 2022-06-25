@@ -26,7 +26,7 @@ class AccountDAOTest {
 	private AccountDAO accountDAO;
 	
 	@BeforeEach
-	void setUp() {
+	void set_up() {
 		accountDAO = new AccountDAO();
 		ReflectionTestUtils.setField(accountDAO, "entityManager", entityManager);
 	}
@@ -38,7 +38,7 @@ class AccountDAOTest {
 		Account account = new Account
 				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin");
 		accountDAO.saveAccount(account);		
-        assertThat(accountDAO.checkPhone(search).equals(account.getPhone())).isTrue();
+        assertThat(accountDAO.getPhone(search).equals(account.getPhone())).isTrue();
 	}	
 
 }

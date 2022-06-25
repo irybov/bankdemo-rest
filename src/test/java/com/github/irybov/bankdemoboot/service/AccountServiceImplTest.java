@@ -1,6 +1,7 @@
 package com.github.irybov.bankdemoboot.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import java.time.LocalDate;
@@ -25,12 +26,12 @@ import com.github.irybov.bankdemoboot.repository.AccountRepository;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 //@ExtendWith(MockitoExtension.class)
-class AccountServiceTest {
+class AccountServiceImplTest {
 
 	@Mock
 	private AccountRepository accountRepository;
 	@InjectMocks
-	private AccountService accountService;
+	private AccountServiceImpl accountService;
 	
 	private static String search;
 	
@@ -42,7 +43,7 @@ class AccountServiceTest {
     @BeforeEach
     void setUp() {
     	MockitoAnnotations.openMocks(this);
-    	accountService = new AccountService();
+    	accountService = new AccountServiceImpl();
 		ReflectionTestUtils.setField(accountService, "accountRepository", accountRepository);		
     }
 	
@@ -53,7 +54,7 @@ class AccountServiceTest {
     }
     
 	@Test
-	void save_and_check_equality() {
+	void save_and_check_identity() {
 
 		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
 		accountRequestDTO.setBirthday("2001-01-01");
@@ -69,14 +70,12 @@ class AccountServiceTest {
 		
 		ArgumentCaptor<Account> argumentCaptor = ArgumentCaptor.forClass(Account.class);
         verify(accountRepository).save(argumentCaptor.capture());
-        
-        Account captured = argumentCaptor.getValue();
+
 		Account account = new Account
-			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), captured.getPassword());
-        assertThat(captured).isEqualTo(account);
-		
-//		account = accountService.getAccount(search);
-//      assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
+			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin");
+		given(accountRepository.getPhone(search)).willReturn("0000000000");
+		assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
+        verify(accountRepository).getPhone(search);
 	}
     
     @AfterEach

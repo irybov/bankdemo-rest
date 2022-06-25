@@ -22,7 +22,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-@Table(name="operations", schema = "public")
+@Table(name="operations", schema = "bankdemo")
 @ToString
 public class Operation {
 

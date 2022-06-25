@@ -18,7 +18,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name="bills", schema = "public")
+@Table(name="bills", schema = "bankdemo")
 @Data
 @NoArgsConstructor
 public class Bill {

@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
-import com.github.irybov.bankdemoboot.service.AccountService;
+import com.github.irybov.bankdemoboot.service.AccountServiceImpl;
 
 @Controller
 public class AuthController {
 	
 	@Autowired
-	private AccountService accountService;
+	private AccountServiceImpl accountService;
 	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
