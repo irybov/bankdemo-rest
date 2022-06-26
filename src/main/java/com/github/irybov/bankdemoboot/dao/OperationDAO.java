@@ -8,9 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.github.irybov.bankdemoboot.entity.Operation;
+import com.github.irybov.bankdemoboot.service.OperationAgent;
 
 @Repository
-public class OperationDAO {
+public class OperationDAO implements OperationAgent {
 	
 	@Autowired
 	private EntityManager entityManager;

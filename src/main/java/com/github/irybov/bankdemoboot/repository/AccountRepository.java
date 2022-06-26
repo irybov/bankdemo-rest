@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.github.irybov.bankdemoboot.entity.Account;
 
-public interface AccountRepository extends JpaRepository<Account, String> {
+public interface AccountRepository extends JpaRepository<Account, Integer> {
 	
 	Account findByPhone(String phone);
 	

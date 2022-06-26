@@ -59,7 +59,7 @@ public class AuthController {
 		try {
 			accountService.saveAccount(accountRequestDTO);
 		} catch (Exception exc) {
-			model.addAttribute("message", "This phone number is already in use!");
+			model.addAttribute("message", exc.getMessage());
 			return "/auth/register";			
 		}
 		return "/auth/login";

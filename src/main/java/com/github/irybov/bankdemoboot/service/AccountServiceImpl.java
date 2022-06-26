@@ -49,12 +49,12 @@ public class AccountServiceImpl {
 		Account account = new Account(accountRequestDTO.getName(), accountRequestDTO.getSurname(),
 				accountRequestDTO.getPhone(), birthday, BCrypt.hashpw
 				(accountRequestDTO.getPassword(), BCrypt.gensalt(4)));
-		account.addRole(Role.CLIENT);		
+		account.addRole(Role.CLIENT);
 		try {
 //			accountDAO.saveAccount(account);
 			accountRepository.save(account);
 		} catch (EntityExistsException exc) {
-			exc.printStackTrace();
+			throw new EntityExistsException("This phone number is already in use!");
 		}
 	}
 	

@@ -93,7 +93,7 @@ public class Account{
 
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
-	@ElementCollection(targetClass = Role.class)
+	@ElementCollection(targetClass = Role.class, fetch=FetchType.EAGER)
 	@CollectionTable(name="roles", joinColumns = @JoinColumn(name="account_id"))
 	@Enumerated(EnumType.STRING)
 	private Set<Role> roles;
