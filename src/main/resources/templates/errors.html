@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+<meta charset="UTF-8">
+<title>Errors page</title>
+	<style>
+	    .error {
+	        color: red;
+	    }
+	</style>
+</head>
+<body>
+
+<h3>Personal area</h3>
+<hr>
+<br>
+
+<div th:each="violation: ${violations}">
+	<ul>
+		<li th:text="${violation.message}" class="error"/>
+	</ul>
+</div>
+
+</body>
+</html>

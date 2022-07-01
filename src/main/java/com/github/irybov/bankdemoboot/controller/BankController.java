@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -28,6 +29,7 @@ import com.github.irybov.bankdemoboot.service.BillServiceImpl;
 import com.github.irybov.bankdemoboot.service.OperationServiceImpl;
 import com.github.irybov.bankdemoboot.service.AccountServiceImpl;
 
+//@Validated
 @Controller
 public class BankController {
 

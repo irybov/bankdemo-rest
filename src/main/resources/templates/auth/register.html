@@ -18,7 +18,7 @@
 <hr>
 <br>
 
-<form th:action="@{/confirm}" th:object="${account}" method="post">	 
+<form th:action="@{/confirm}" th:object="${account}" method="post">
 					 
 	<input type="text" th:field="*{name}" id="name" placeholder="Name" maxlength="20">
 	<br>
@@ -43,9 +43,6 @@
 </form>
 <br>
 
-<form th:action="@{/logout}" method="post">
-	<input type="submit" th:value="LogOut" class="btn btn-primary"/>
-</form>
 </body>
 
 </html>

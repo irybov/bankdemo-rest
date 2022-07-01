@@ -45,6 +45,7 @@ uniqueConstraints={@UniqueConstraint(columnNames={"phone"})})
 @NoArgsConstructor
 public class Account{
 
+	@EqualsAndHashCode.Exclude
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;

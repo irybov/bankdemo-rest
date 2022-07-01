@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,7 @@ import com.github.irybov.bankdemoboot.service.AccountServiceImpl;
 import com.github.irybov.bankdemoboot.service.BillServiceImpl;
 import com.github.irybov.bankdemoboot.service.OperationServiceImpl;
 
+//@Validated
 @Controller
 public class AdminController {
 
