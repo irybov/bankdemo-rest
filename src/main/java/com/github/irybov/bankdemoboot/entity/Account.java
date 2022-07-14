@@ -43,14 +43,15 @@ import lombok.ToString;
 uniqueConstraints={@UniqueConstraint(columnNames={"phone"})})
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(of = "phone")
 public class Account{
 
-	@EqualsAndHashCode.Exclude
+//	@EqualsAndHashCode.Exclude
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
 
-	@EqualsAndHashCode.Exclude
+//	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
 	@JsonFormat(shape = JsonFormat.Shape.STRING)
 	private final OffsetDateTime timestamp = OffsetDateTime.now();
@@ -86,13 +87,13 @@ public class Account{
 	@Size(min=10, message = "Password should be 10-50 symbols length")
 	private String password;
 	
-	@EqualsAndHashCode.Exclude
+//	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
 	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
 	@JoinColumn(name="account_id")
 	private List<Bill> bills;
 
-	@EqualsAndHashCode.Exclude
+//	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
 	@ElementCollection(targetClass = Role.class, fetch=FetchType.EAGER)
 	@CollectionTable(name="roles", joinColumns = @JoinColumn(name="account_id"))

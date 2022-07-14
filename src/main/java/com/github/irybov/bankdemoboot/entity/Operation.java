@@ -8,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -43,6 +44,7 @@ public class Operation {
 	private String action;
 	
 	@NotNull
+	@Size(min=3, max=3)
 	private String currency;
 	
 	private int sender;

@@ -26,12 +26,12 @@ import com.github.irybov.bankdemoboot.repository.AccountRepository;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 //@ExtendWith(MockitoExtension.class)
-class AccountServiceImplTest {
+class AccountServiceJPATest {
 
 	@Mock
 	private AccountRepository accountRepository;
 	@InjectMocks
-	private AccountServiceImpl accountService;
+	private AccountServiceJPA accountService;
 	
 	private static String search;
 	
@@ -43,7 +43,7 @@ class AccountServiceImplTest {
     @BeforeEach
     void setUp() {
     	MockitoAnnotations.openMocks(this);
-    	accountService = new AccountServiceImpl();
+    	accountService = new AccountServiceJPA();
 		ReflectionTestUtils.setField(accountService, "accountRepository", accountRepository);		
     }
 	

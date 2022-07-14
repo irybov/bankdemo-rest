@@ -1,7 +1,6 @@
 package com.github.irybov.bankdemoboot.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.entity.Operation;
@@ -13,5 +12,4 @@ public interface OperationService {
 	public void withdraw(double amount, String action, String currency, int sender);
 	public Operation get(long id);
 	public List<OperationResponseDTO> getAll(int id);
-	
 }

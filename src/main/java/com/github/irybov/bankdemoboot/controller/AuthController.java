@@ -8,21 +8,21 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
+//import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
-import com.github.irybov.bankdemoboot.service.AccountServiceImpl;
+import com.github.irybov.bankdemoboot.service.AccountService;
 
 //@Validated
 @Controller
 public class AuthController {
 	
 	@Autowired
-	private AccountServiceImpl accountService;
+	private AccountService accountService;
 	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();

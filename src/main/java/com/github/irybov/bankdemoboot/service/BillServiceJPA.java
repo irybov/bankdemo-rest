@@ -13,37 +13,30 @@ import com.github.irybov.bankdemoboot.repository.BillRepository;
 
 @Service
 @Transactional
-public class BillServiceImpl {
+public class BillServiceJPA implements BillService {
+	
+	@Autowired
+	BillServiceJPA billService;
 
 	@Autowired
 	private BillRepository billRepository;	
-//	@Autowired
-//	private BillDAO billDAO;
 	
 	public void saveBill(Bill bill) {
-//		billDAO.saveBill(bill);
 		billRepository.save(bill);
 	}
 	
 	public void updateBill(Bill bill) {
-//		billDAO.updateBill(bill);
-		billRepository.save(bill);		
+		billRepository.save(bill);
 	}
 	
 	public void deleteBill(int id) {
-//		billDAO.deleteBill(id);
 		billRepository.deleteById(id);
 	}
 	
 	public Bill getBill(int id) throws Exception {
-//		return billDAO.getBill(id);
 		return billRepository.findById(id).orElseThrow
 				(()-> new PaymentException("Target bill with id: " + id + " not found"));
 	}
-	
-/*	public String getPhone(int id) {
-		return billDAO.getPhone(id);		
-	}*/
 	
 	public String deposit(int id, double amount) throws Exception {
 		
@@ -51,9 +44,9 @@ public class BillServiceImpl {
 			throw new PaymentException("Amount of money should be higher than zero");
 		}		
 		
-		Bill bill = getBill(id);
+		Bill bill = billService.getBill(id);
 		bill.setBalance(bill.getBalance().add(new BigDecimal(amount)));
-		updateBill(bill);
+		billService.updateBill(bill);
 		return bill.getCurrency();
 	}
 	
@@ -63,12 +56,12 @@ public class BillServiceImpl {
 			throw new PaymentException("Amount of money should be higher than zero");
 		}
 		
-		Bill bill = getBill(id);
+		Bill bill = billService.getBill(id);
 		if(bill.getBalance().compareTo(BigDecimal.valueOf(amount)) == -1) {
 			throw new PaymentException("Not enough money to complete operation");
 		}
 		bill.setBalance(bill.getBalance().subtract(new BigDecimal(amount)));
-		updateBill(bill);
+		billService.updateBill(bill);
 		return bill.getCurrency();
 	}
 	
@@ -81,12 +74,12 @@ public class BillServiceImpl {
 		if(from == to) {
 			throw new PaymentException("Source and target bills should not be the same");
 		}		
-		Bill target = getBill(to);
+		Bill target = billService.getBill(to);
 		if(target == null) {
 			throw new PaymentException("Target bill with id: " + to + " not found");
 		}
 		
-		Bill bill = getBill(from);
+		Bill bill = billService.getBill(from);
 		if(!bill.getCurrency().equals(target.getCurrency())){
 			throw new PaymentException("Wrong currency type of the target bill");
 		}		
@@ -94,22 +87,20 @@ public class BillServiceImpl {
 			throw new PaymentException("Not enough money to complete the operation");
 		}
 		
-		bill.setBalance(bill.getBalance().subtract(new BigDecimal(amount)));
-		updateBill(bill);
-		target.setBalance(target.getBalance().add(new BigDecimal(amount)));
-		updateBill(target);
+		billService.withdraw(from, amount);
+		billService.deposit(to, amount);
 		return bill.getCurrency();
 	}
 	
 	public void changeStatus(int id) throws Exception {
-		Bill bill = getBill(id);
+		Bill bill = billService.getBill(id);
 		if(bill.isActive()) {
 			bill.setActive(false);
 		}
 		else {
 			bill.setActive(true);
 		}
-		updateBill(bill);
+		billService.updateBill(bill);
 	}
 	
 }
