@@ -3,6 +3,7 @@ package com.github.irybov.bankdemoboot.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,12 +26,14 @@ import com.github.irybov.bankdemoboot.service.OperationService;
 public class AdminController {
 
 	@Autowired
+	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 	@Autowired
+	@Qualifier("billServiceAlias")
 	private BillService billService;
 	
 	private OperationService operationService;
-	public AdminController(OperationService operationService) {
+	public AdminController(@Qualifier("operationServiceAlias")OperationService operationService) {
 		this.operationService = operationService;
 	}
 

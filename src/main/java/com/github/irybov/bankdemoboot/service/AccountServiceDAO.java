@@ -21,7 +21,7 @@ import com.github.irybov.bankdemoboot.entity.Account;
 
 @Service
 @Transactional
-public class AccountServiceDAO {
+public class AccountServiceDAO implements AccountService {
 
 	@Autowired
 	AccountServiceDAO accountService;

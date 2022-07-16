@@ -3,6 +3,7 @@ package com.github.irybov.bankdemoboot.controller;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -22,6 +23,7 @@ import com.github.irybov.bankdemoboot.service.AccountService;
 public class AuthController {
 	
 	@Autowired
+	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 	
 	private Authentication authentication() {

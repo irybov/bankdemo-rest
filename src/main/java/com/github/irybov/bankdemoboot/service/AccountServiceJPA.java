@@ -22,7 +22,7 @@ import com.github.irybov.bankdemoboot.entity.Account;
 
 @Service
 @Transactional
-public class AccountServiceJPA {
+public class AccountServiceJPA implements AccountService {
 
 	@Autowired
 	AccountServiceJPA accountService;

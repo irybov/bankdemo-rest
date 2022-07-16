@@ -7,6 +7,7 @@ import java.util.Set;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -34,12 +35,14 @@ import com.github.irybov.bankdemoboot.service.BillService;
 public class BankController {
 
 	@Autowired
+	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 	@Autowired
+	@Qualifier("billServiceAlias")
 	private BillService billService;
 
 	private OperationService operationService;
-	public BankController(OperationService operationService) {
+	public BankController(@Qualifier("operationServiceAlias")OperationService operationService) {
 		this.operationService = operationService;
 	}
 		
