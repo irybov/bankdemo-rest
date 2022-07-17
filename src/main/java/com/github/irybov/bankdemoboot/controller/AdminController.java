@@ -32,7 +32,7 @@ public class AdminController {
 	@Qualifier("billServiceAlias")
 	private BillService billService;
 	
-	private OperationService operationService;
+	private final OperationService operationService;
 	public AdminController(@Qualifier("operationServiceAlias")OperationService operationService) {
 		this.operationService = operationService;
 	}

@@ -5,7 +5,7 @@ import java.util.List;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
-import org.springframework.web.bind.annotation.ControllerAdvice;
+//import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
@@ -22,8 +22,7 @@ public class ConstraintViolationExceptionHandler {
 	    for (ConstraintViolation<?> violation : e.getConstraintViolations()) {
 	      error.getViolations().add(new Violation(violation.getMessage()));
 	    }
-//	    return error;
-		
+//	    return error;		
 		ModelAndView mav = new ModelAndView("errors");
 		List<Violation> violations = error.getViolations();
 		mav.addObject("violations", violations);

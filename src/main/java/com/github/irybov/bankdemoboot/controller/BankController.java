@@ -41,7 +41,7 @@ public class BankController {
 	@Qualifier("billServiceAlias")
 	private BillService billService;
 
-	private OperationService operationService;
+	private final OperationService operationService;
 	public BankController(@Qualifier("operationServiceAlias")OperationService operationService) {
 		this.operationService = operationService;
 	}
