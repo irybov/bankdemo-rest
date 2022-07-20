@@ -1,38 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-    <property name="HOME_LOG" value="logs/bankdemoboot-logback.log"/>
+<configuration scan="true">
+	<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <property name="HOME_LOG" value="./logs"/>
     
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-    <layout class="ch.qos.logback.classic.PatternLayout">
-        <Pattern>
-            %black(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1.}): %msg%n%throwable
-        </Pattern>
-    </layout>
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
     </appender>
-    <appender name="FILE-ROLLING" class="ch.qos.logback.core.RollingFileAppender">
-        <file>${HOME_LOG}</file>
+    <appender name="Scribe" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${HOME_LOG}/bankdemoboot-logback-diary.log</file>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
         </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+	        <level>WARN</level>
+	        <onMatch>ACCEPT</onMatch>
+<!-- 	        <onMismatch>DENY</onMismatch> -->
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+	        <level>INFO</level>
+	        <onMatch>ACCEPT</onMatch>
+<!-- 	        <onMismatch>DENY</onMismatch> -->
+        </filter>        
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- rollover daily and when the file reaches 10 MegaBytes -->
-            <fileNamePattern>${HOME_LOG}/archived/bankdemoboot-logback-%d{yyyy-MM-dd}.%i.log
+            <fileNamePattern>${HOME_LOG}/archived/bankdemoboot-logback-diary-%d{yyyy-MM-dd}.%i.log
             </fileNamePattern>
-            <!-- each archived file, size max 10MB -->
-            <maxFileSize>10MB</maxFileSize>
-            <!-- total size of all archive files, if total size > 100MB, 
+            <!-- each archived file, size max 100MB -->
+            <maxFileSize>100MB</maxFileSize>
+            <!-- total size of all archive files, if total size > 1GB, 
 				it will delete old archived file -->
-            <totalSizeCap>100MB</totalSizeCap>
+            <totalSizeCap>1GB</totalSizeCap>
             <!-- 10 days to keep -->
             <maxHistory>10</maxHistory>
-        </rollingPolicy>        
-    </appender>
+        </rollingPolicy>
+    </appender>      
+    <appender name="Watcher" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${HOME_LOG}/bankdemoboot-logback-errors.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+          <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- rollover daily and when the file reaches 1 MegaByte -->
+            <fileNamePattern>${HOME_LOG}/archived/bankdemoboot-logback-errors-%d{yyyy-MM-dd}.%i.log
+            </fileNamePattern>
+            <!-- each archived file, size max 1MB -->
+            <maxFileSize>1MB</maxFileSize>
+            <!-- total size of all archive files, if total size > 10MB, 
+				it will delete old archived file -->
+            <totalSizeCap>10MB</totalSizeCap>
+            <!-- 10 days to keep -->
+            <maxHistory>10</maxHistory>
+        </rollingPolicy>
+    </appender>  
 
-    <root level="info">
-        <appender-ref ref="CONSOLE"/>
+    <root level="INFO">
+        <appender-ref ref="Console"/>
+        <appender-ref ref="Scribe"/>
+        <appender-ref ref="Watcher"/>
     </root>
-    <logger name="logger" level="warn" additivity="false">
-        <appender-ref ref="FILE-ROLLING"/>
-    </logger>    
 
 </configuration>

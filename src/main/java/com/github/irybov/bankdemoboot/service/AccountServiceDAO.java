@@ -35,7 +35,7 @@ public class AccountServiceDAO implements AccountService {
 	public void saveAccount(AccountRequestDTO accountRequestDTO) throws Exception {
 		
 		LocalDate birthday = LocalDate.parse(accountRequestDTO.getBirthday());
-		if (LocalDate.from(birthday).until(LocalDate.now(), ChronoUnit.YEARS) < 18) {			
+		if (LocalDate.from(birthday).until(LocalDate.now(), ChronoUnit.YEARS) < 18) {
 			throw new RegistrationException("You must be 18+ to register");
 		}
 		

@@ -22,6 +22,8 @@ spring:
     hiddenmethod:
       filter:
         enabled: true
+  main:
+    allow-circular-references: true
         
 server:
   port: 8080
@@ -47,3 +49,10 @@ info:
   author: Ivan Ryabov
   name: Boot Demo
   description: Spring Boot Security Data
+  
+bean:
+  service-impl:
+    account: accountServiceJPA
+    bill: billServiceJPA
+    operation: operationServiceJPA
+  
