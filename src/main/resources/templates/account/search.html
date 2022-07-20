@@ -6,6 +6,7 @@
 <title>Admin's area</title>
 	<link th:rel="stylesheet" th:href="@{/webjars/bootstrap/5.1.3/css/bootstrap.min.css}"/>
 	<style>.error {color: red;}</style>
+	<style>input[type=text]:focus{background: #ffe}</style>	
 </head>
 <body>
 
@@ -49,7 +50,7 @@
 <br>
 
 <div sec:authorize="hasRole('ADMIN')" th:if="${target}">
-<table>
+<table class="table table-hover table-sm">
 	<thead>
 		<tr>
 			<th style="text-align: center;">Id</th>
@@ -62,13 +63,13 @@
 		</tr>
 	</thead>
 	<tr>
-		<td align="center" th:text="${target.id}"></td>		
-	    <td align="center" th:text="${target.name}"></td>
-	    <td align="center" th:text="${target.surname}"></td>
-	    <td align="center" th:text="${target.phone}"></td>
+		<td class="align-middle" align="center" th:text="${target.id}"></td>		
+	    <td class="align-middle" align="center" th:text="${target.name}"></td>
+	    <td class="align-middle" align="center" th:text="${target.surname}"></td>
+	    <td class="align-middle" align="center" th:text="${target.phone}"></td>
 	    <td></td>
-	    <td align="center" th:text="${#temporals.format(target.birthday, 'yyyy-MM-dd')}"></td>
-	    <td align="center" th:text="${target.active}"></td>
+	    <td class="align-middle" align="center" th:text="${#temporals.format(target.birthday, 'yyyy-MM-dd')}"></td>
+	    <td class="align-middle" align="center" th:text="${target.active}"></td>
 	    <td>
 	    	<form th:action="@{/accounts/status/{phone}(phone=${target.phone})}"
 			 th:method="patch">
@@ -81,10 +82,8 @@
 </table>
 </div>
 
-<hr>
-
 <div sec:authorize="hasRole('ADMIN')" th:if="${target}">
-<table>
+<table class="table table-hover table-sm">
 	<thead>
 		<tr>
 			<th style="text-align: center;">Id</th>
@@ -95,12 +94,12 @@
 		</tr>
 	</thead>
 	<tr th:each="bill: ${target.bills}">
-		<td align="center" th:text="${bill.id}"></td>
-	    <td align="center" th:text="${bill.balance}"></td>
-	    <td align="center" th:text="${bill.currency}"></td>
-	    <td align="center" th:text="${bill.active}"></td>	    
+		<td class="align-middle" align="center" th:text="${bill.id}"></td>
+	    <td class="align-middle" align="center" th:text="${bill.balance}"></td>
+	    <td class="align-middle" align="center" th:text="${bill.currency}"></td>
+	    <td class="align-middle" align="center" th:text="${bill.active}"></td>	    
 	    
-	    <td align="center">
+	    <td class="align-middle" align="center">
 	    <div>
 	    	<form style='display:inline;'
 	    	 th:action="@{/bills/status/{phone}(phone=${target.phone})}"
@@ -123,10 +122,8 @@
 </table>
 </div>
 
-<hr>
-
 <div sec:authorize="hasRole('ADMIN')" th:if="${operations}">
-<table>
+<table class="table table-hover table-sm">
 	<thead>
 		<tr>
 			<th style="text-align: center;">Id</th>
