@@ -73,7 +73,7 @@
 <br>
 
 <form th:action="@{/accounts/show/{phone}(phone=${account.phone})}" method="post">
-        <select class="form-control" id="currency" th:name="currency">
+        <select class="form-control" id="currency" th:name="currency" style="width:auto">
             <option value="">Select currency</option>
             <option th:each="currency : ${T(com.github.irybov.bankdemoboot.CurrencyType).values()}"
                     th:value="${currency.name()}"

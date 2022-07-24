@@ -14,8 +14,8 @@
 <h3>Transfer</h3>
 <hr>
 <br>
-<p>Balance:</p>
-<p th:text="${balance}"/>
+<b>Balance:</b>
+<p th:utext="'&lt;strong&gt;' + ${balance} + '&lt;/strong&gt;'"/>
 <hr>
 
 <form th:action="@{/bills/launch/{id}(id=${id})}" th:method="patch">

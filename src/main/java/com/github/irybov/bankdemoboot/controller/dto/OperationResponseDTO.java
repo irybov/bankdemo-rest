@@ -22,7 +22,7 @@ public class OperationResponseDTO {
 		this.timestamp = operation.getTimestamp();
 		this.amount = operation.getAmount();
 		this.action = operation.getAction();
-		this.currency = operation.getAction();
+		this.currency = operation.getCurrency();
 		this.sender = operation.getSender();
 		this.recipient = operation.getRecipient();
 	}

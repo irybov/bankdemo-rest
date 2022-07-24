@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
@@ -96,6 +97,14 @@ public class AdminController {
 		modelMap.addAttribute("operations", operations);
 		modelMap.addAttribute("phone", phone);
 		return searchAccount(phone, operations, modelMap);
+	}
+	
+	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/operations/json")
+	@ResponseBody
+	public List<OperationResponseDTO> getOperations(@RequestParam int id) {		
+		List<OperationResponseDTO> operations = operationService.getAll(id);
+		return operations;
 	}
 	
 }

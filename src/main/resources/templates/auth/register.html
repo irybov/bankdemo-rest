@@ -21,12 +21,19 @@
 <form th:action="@{/confirm}" th:object="${account}" method="post">
 					 
 	<input type="text" th:field="*{name}" id="name" placeholder="Name" maxlength="20">
-	<input type="text" th:field="*{surname}" id="surname" placeholder="Surame" maxlength="41">
+	<br>
+	<input type="text" th:field="*{surname}" id="surname" placeholder="Surame" maxlength="40">
+	<br>
 	<input type="text" th:field="*{phone}" id="phone" placeholder="Phone">
+	<br>
 	<input type="date" min="1900-01-01" th:field="*{birthday}" id="birthday" placeholder="Birthday">
+	<br>
 	<input type="password" th:field="*{password}" id="password" placeholder="Password">
-				
+	<br>
+	
+	<br>			
 	<button type="submit" class="btn btn-success">Confirm</button><br>
+	<br>
 
 	<div th:if="${#fields.hasAnyErrors()}" class="error">
 	    <ul>

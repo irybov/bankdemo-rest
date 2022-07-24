@@ -50,7 +50,7 @@ public class BankController {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
 	
-	private Set<CurrencyType> currencies;
+	private final Set<CurrencyType> currencies;
 	{
 		currencies = EnumSet.allOf(CurrencyType.class);
 	}
