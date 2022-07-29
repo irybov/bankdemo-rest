@@ -46,7 +46,7 @@ public class AccountServiceDAO implements AccountService {
 		try {
 			accountDAO.saveAccount(account);
 		} catch (EntityExistsException exc) {
-			throw new EntityExistsException("This phone number is already in use!");
+			throw new EntityExistsException("Database exception");
 		}
 	}
 	

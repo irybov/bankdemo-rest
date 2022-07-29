@@ -33,6 +33,7 @@ public class Operation {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private long id;
 	
+	@NotNull
 	@Builder.Default
 	@JsonFormat(shape = JsonFormat.Shape.STRING)
 	private final OffsetDateTime timestamp = OffsetDateTime.now();

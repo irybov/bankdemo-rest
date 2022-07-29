@@ -29,6 +29,7 @@ public class Bill {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
 
+	@NotNull
 	@JsonFormat(shape = JsonFormat.Shape.STRING)
 	private final OffsetDateTime timestamp = OffsetDateTime.now();
 	

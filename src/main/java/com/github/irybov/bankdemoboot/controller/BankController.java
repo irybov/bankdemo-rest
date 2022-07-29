@@ -89,21 +89,30 @@ public class BankController {
 	}	
 	
 	@PatchMapping("/bills/operate/{id}")
-	public String operateBill(@PathVariable int id, @RequestParam String action,
-			@RequestParam double balance, ModelMap modelMap) {
+	public String operateBill(@PathVariable int id, @RequestParam Map<String, String> params,
+			ModelMap modelMap) {
 		
 		modelMap.addAttribute("id", id);
-		modelMap.addAttribute("action", action);
-		modelMap.addAttribute("balance", balance);
-		if(action.equals("transfer")) {
-			return "bill/transfer";
+		modelMap.addAttribute("action",  params.get("action"));
+		modelMap.addAttribute("balance", params.get("balance"));
+		if(params.get("action").equals("transfer")) {
+			return "/bill/transfer";
 		}
 		return "/bill/payment";
 	}
 	
 	@PatchMapping("/bills/launch/{id}")
-	public String driveMoney(@PathVariable int id, @RequestParam(required = false) Integer target,
+	public String driveMoney(@PathVariable int id, @RequestParam(required = false) String recipient,
 			@RequestParam Map<String, String> params, ModelMap modelMap) {
+		
+		if(!recipient.matches("^\\d{1,9}$")) {
+			modelMap.addAttribute("id", id);
+			modelMap.addAttribute("action", params.get("action"));
+			modelMap.addAttribute("balance", params.get("balance"));
+			modelMap.addAttribute("message", "Please provide correct bill number");
+			return "/bill/transfer";
+		}
+		int target = Integer.parseInt(recipient);
 		
 		String currency;
 		

@@ -22,10 +22,10 @@
 	<input type="hidden" th:name="action" th:value="${action}"/>
 	<input type="hidden" th:name="balance" th:value="${balance}"/>
 	<label for="amount">Set amount (limit - 10000)</label>
-	<p><input type="number" th:name="amount" list="banknote" min="0.01" max="10000" step="0.01"></p>
+	<p><input type="number" th:name="amount" min="0.01" max="10000" step="0.01"></p>
 	<br>
 	<label for="target">Recepient's bill number</label>
-	<p><input type="text" th:name="target" maxlength="16"></p>
+	<p><input type="text" th:name="recipient" maxlength="9"></p>
 	<p><button type="submit" class="btn btn-success">Confirm</button></p>
 </form>
 <p th:text="${message}" class="error"/>

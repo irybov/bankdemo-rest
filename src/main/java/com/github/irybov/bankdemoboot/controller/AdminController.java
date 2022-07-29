@@ -79,8 +79,7 @@ public class AdminController {
 	@PatchMapping("/bills/status/{phone}")
 	public String changeBillStatus(@PathVariable String phone,
 			@RequestParam(required = false) List<OperationResponseDTO> operations,
-			@RequestParam int id,
-			ModelMap modelMap) {
+			@RequestParam int id, ModelMap modelMap) {
 		try {
 			billService.changeStatus(id);
 		} catch (Exception exc) {

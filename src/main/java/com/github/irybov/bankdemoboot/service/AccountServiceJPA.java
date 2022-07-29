@@ -47,7 +47,7 @@ public class AccountServiceJPA implements AccountService {
 		try {
 			accountRepository.save(account);
 		} catch (EntityExistsException exc) {
-			throw new EntityExistsException("This phone number is already in use!");
+			throw new EntityExistsException("Database exception");
 		}
 	}
 	

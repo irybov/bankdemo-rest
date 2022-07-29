@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.service.AccountService;
+import com.github.irybov.bankdemoboot.validation.AccountValidator;
 
 //@Validated
 @Controller
@@ -25,6 +26,11 @@ public class AuthController {
 	@Autowired
 	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
+	
+	private final AccountValidator accountValidator;
+	public AuthController(AccountValidator accountValidator) {
+		this.accountValidator = accountValidator;
+	}
 	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
@@ -56,6 +62,8 @@ public class AuthController {
 	@PostMapping("/confirm")
 	public String signIn(@ModelAttribute("account") @Valid AccountRequestDTO accountRequestDTO,
 			BindingResult result, Model model) {
+		
+		accountValidator.validate(accountRequestDTO, result);
 		
 		if(result.hasErrors()) {
 			return "/auth/register";

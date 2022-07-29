@@ -52,6 +52,7 @@ public class Account{
 	private int id;
 
 //	@EqualsAndHashCode.Exclude
+	@NotNull
 	@ToString.Exclude
 	@JsonFormat(shape = JsonFormat.Shape.STRING)
 	private final OffsetDateTime timestamp = OffsetDateTime.now();
@@ -62,21 +63,23 @@ public class Account{
 	@NotBlank(message = "Name must not be empty")
 	@Size(min=2, max=20, message = "Name should be 2-20 chars length")
 	@Pattern(regexp = "^[A-Z][a-z]{1,19}", message = "Please input name like Xx")
+	@Column(nullable = false)
 	private String name;
 	
 	@NotBlank(message = "Surname must not be empty")
 	@Size(min=2, max=40, message = "Surname should be 2-40 chars length")
 	@Pattern(regexp = "^[A-Z][a-z]{1,19}([-][A-Z][a-z]{1,19})?",
 			message = "Please input surname like Xx or Xx-Xx")
+	@Column(nullable = false)
 	private String surname;
 	
 	@NotBlank(message = "Phone number must not be empty")
 	@Size(min=10, max=10, message = "Phone number should be 10 digits length")
 	@Pattern(regexp = "^\\d{10}", message = "Please input phone like XXXXXXXXXX")
-	@Column(unique=true)
+	@Column(unique=true, nullable = false)
 	private String phone;
 	
-	@Past
+	@Past(message = "Birthday cant be future time")
 	@NotNull(message = "Please select your date of birth")
 	@Column(columnDefinition = "date")
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
@@ -84,7 +87,8 @@ public class Account{
 	private LocalDate birthday;
 	
 	@NotBlank(message = "Password must not be empty")
-	@Size(min=10, message = "Password should be 10-50 symbols length")
+	@Size(min=10, max=100, message = "Password should be 10-50 symbols length")
+	@Column(nullable = false)
 	private String password;
 	
 //	@EqualsAndHashCode.Exclude
