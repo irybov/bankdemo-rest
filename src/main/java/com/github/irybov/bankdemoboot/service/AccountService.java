@@ -14,4 +14,5 @@ public interface AccountService {
 	public void changeStatus(String phone);
 	public void changePassword(String phone, String password);
 	public boolean comparePassword(String oldPassword, String phone);
+	public AccountResponseDTO getById(int id);
 }

@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.github.irybov.bankdemoboot.CurrencyType;
+import com.github.irybov.bankdemoboot.Currency;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 import com.github.irybov.bankdemoboot.service.OperationService;
@@ -50,9 +50,9 @@ public class BankController {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
 	
-	private final Set<CurrencyType> currencies;
+	private final Set<Currency> currencies;
 	{
-		currencies = EnumSet.allOf(CurrencyType.class);
+		currencies = EnumSet.allOf(Currency.class);
 	}
 	
 	@GetMapping("/accounts/show/{phone}")
@@ -102,17 +102,20 @@ public class BankController {
 	}
 	
 	@PatchMapping("/bills/launch/{id}")
-	public String driveMoney(@PathVariable int id, @RequestParam(required = false) String recipient,
+	public String driveMoney(@PathVariable int id, @RequestParam(required=false) String recipient,
 			@RequestParam Map<String, String> params, ModelMap modelMap) {
 		
-		if(!recipient.matches("^\\d{1,9}$")) {
-			modelMap.addAttribute("id", id);
-			modelMap.addAttribute("action", params.get("action"));
-			modelMap.addAttribute("balance", params.get("balance"));
-			modelMap.addAttribute("message", "Please provide correct bill number");
-			return "/bill/transfer";
+		int target = 0;
+		if(recipient != null) {
+			if(!recipient.matches("^\\d{1,9}$")) {
+				modelMap.addAttribute("id", id);
+				modelMap.addAttribute("action", params.get("action"));
+				modelMap.addAttribute("balance", params.get("balance"));
+				modelMap.addAttribute("message", "Please provide correct bill number");
+				return "/bill/transfer";
+			}
+			else target = Integer.parseInt(recipient);
 		}
-		int target = Integer.parseInt(recipient);
 		
 		String currency;
 		

@@ -2,6 +2,7 @@ package com.github.irybov.bankdemoboot.service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 import javax.persistence.EntityExistsException;
 
@@ -56,6 +57,10 @@ public class AccountServiceJPA implements AccountService {
 	}
 	Account getAccount(String phone) {
 		return accountRepository.findByPhone(phone);
+	}
+	public AccountResponseDTO getById(int id) {
+		Optional<Account> account = accountRepository.findById(id);
+		return new AccountResponseDTO(account.get());
 	}
 	
 	public void updateAccount(Account account) {

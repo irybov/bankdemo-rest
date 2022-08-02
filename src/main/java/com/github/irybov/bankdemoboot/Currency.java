@@ -1,5 +1,5 @@
 package com.github.irybov.bankdemoboot;
 
-public enum CurrencyType {
+public enum Currency {
 	EUR, GBP, RUB, USD;
 }

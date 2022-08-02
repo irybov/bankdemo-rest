@@ -56,6 +56,9 @@ public class AccountServiceDAO implements AccountService {
 	Account getAccount(String phone) {
 		return accountDAO.getAccount(phone);
 	}
+	public AccountResponseDTO getById(int id) {
+		return new AccountResponseDTO(accountDAO.getById(id));
+	}
 	
 	public void updateAccount(Account account) {
 		accountDAO.updateAccount(account);

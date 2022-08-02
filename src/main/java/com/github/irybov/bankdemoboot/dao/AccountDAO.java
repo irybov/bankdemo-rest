@@ -27,6 +27,9 @@ public class AccountDAO {
 				.setParameter("phone", phone)
 				.getSingleResult();
 	}
+	public Account getById(int id) {
+		return entityManager.find(Account.class, id);
+	}
 	
 	public String getPhone(String check) {
 		return (String) entityManager.createNativeQuery

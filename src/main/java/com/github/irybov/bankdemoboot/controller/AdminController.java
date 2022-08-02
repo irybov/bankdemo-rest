@@ -1,5 +1,9 @@
 package com.github.irybov.bankdemoboot.controller;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +22,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
+import com.github.irybov.bankdemoboot.entity.Account;
+import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
+import com.opencsv.CSVWriter;
 
 //@Validated
 @Controller
@@ -44,9 +51,7 @@ public class AdminController {
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search")
-	public String searchAccount(@RequestParam(required = false) String phone,
-			@RequestParam(required = false) List<OperationResponseDTO> operations,
-			ModelMap modelMap) {
+	public String searchAccount(@RequestParam(required = false) String phone, ModelMap modelMap) {
 		
 		AccountResponseDTO admin = accountService.getAccountDTO(authentication().getName());		
 		AccountResponseDTO target = null;
@@ -61,49 +66,93 @@ public class AdminController {
 		finally {
 			modelMap.addAttribute("admin", admin);
 			modelMap.addAttribute("target", target);
-			modelMap.addAttribute("operations", operations);
 		}
 		return "/account/search";
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@PatchMapping("/accounts/status/{phone}")
-	public String changeAccountStatus(@PathVariable String phone,
-			@RequestParam(required = false) List<OperationResponseDTO> operations,
-			ModelMap modelMap) {
+	public String changeAccountStatus(@PathVariable String phone, ModelMap modelMap) {
+		
 		accountService.changeStatus(phone);
-		return searchAccount(phone, operations, modelMap);
+		return searchAccount(phone, modelMap);
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@PatchMapping("/bills/status/{phone}")
-	public String changeBillStatus(@PathVariable String phone,
-			@RequestParam(required = false) List<OperationResponseDTO> operations,
-			@RequestParam int id, ModelMap modelMap) {
+	public String changeBillStatus(@PathVariable String phone, @RequestParam int id,
+			ModelMap modelMap) {
+		
 		try {
 			billService.changeStatus(id);
 		} catch (Exception exc) {
 			exc.printStackTrace();
 		}
-		return searchAccount(phone, operations, modelMap);
+		return searchAccount(phone, modelMap);
 	}
 	
-	@PreAuthorize("hasRole('ADMIN')")
+/*	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/list")
 	public String showOperations(@RequestParam String phone, @RequestParam int id,
-			ModelMap modelMap) {		
+			ModelMap modelMap) {
+		
 		List<OperationResponseDTO> operations = operationService.getAll(id);
 		modelMap.addAttribute("operations", operations);
 		modelMap.addAttribute("phone", phone);
-		return searchAccount(phone, operations, modelMap);
-	}
+		return searchAccount(phone, modelMap);
+	}*/
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/json")
 	@ResponseBody
-	public List<OperationResponseDTO> getOperations(@RequestParam int id) {		
+	public List<OperationResponseDTO> getOperations(@RequestParam int id) {
 		List<OperationResponseDTO> operations = operationService.getAll(id);
 		return operations;
+	}
+	
+	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/operations/print")
+	@ResponseBody
+	public void exportToCSV(@RequestParam int id) {
+		
+		Bill bill = null;
+		try {
+			bill = billService.getBill(id);
+		}
+		catch (Exception exc) {
+			exc.printStackTrace();
+		}
+		Account account = bill.getOwner();
+		List<OperationResponseDTO> operations = operationService.getAll(id);
+		
+		List<String[]> data = new ArrayList<>();
+		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};
+		data.add(owner);
+		data.add(new String[0]);
+		String[] info = {bill.getCurrency(), String.valueOf(bill.getBalance()),
+				bill.getTimestamp().toString()};
+		data.add(info);
+		data.add(new String[0]);
+		
+		String[] header = {"Action", "Amount", "When", "Recipient", "Sender"};
+		data.add(header);
+		for(OperationResponseDTO operation : operations) {
+			String[] row = {operation.getAction(),
+							String.valueOf(operation.getAmount()),
+							operation.getTimestamp().toString(),
+							String.valueOf(operation.getRecipient()),
+							String.valueOf(operation.getSender())};
+			data.add(row);
+		}
+		
+        try (CSVWriter writer = new CSVWriter(new FileWriter
+        		(new File(System.getProperty("user.home") + "/Desktop",
+        				"Bill-" + id +".csv")))) {
+            writer.writeAll(data);
+        }
+        catch (IOException exc) {
+			exc.printStackTrace();
+		}
 	}
 	
 }

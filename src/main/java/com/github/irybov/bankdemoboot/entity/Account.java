@@ -75,7 +75,7 @@ public class Account{
 	
 	@NotBlank(message = "Phone number must not be empty")
 	@Size(min=10, max=10, message = "Phone number should be 10 digits length")
-	@Pattern(regexp = "^\\d{10}", message = "Please input phone like XXXXXXXXXX")
+	@Pattern(regexp = "^\\d{10}$", message = "Please input phone like XXXXXXXXXX")
 	@Column(unique=true, nullable = false)
 	private String phone;
 	
@@ -93,8 +93,8 @@ public class Account{
 	
 //	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
-	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.LAZY)
-	@JoinColumn(name="account_id")
+	@OneToMany(mappedBy="owner", cascade = CascadeType.ALL, fetch=FetchType.LAZY)
+//	@JoinColumn(name="account_id")
 	private List<Bill> bills;
 
 //	@EqualsAndHashCode.Exclude
