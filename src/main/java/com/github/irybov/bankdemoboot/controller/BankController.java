@@ -22,9 +22,11 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.github.irybov.bankdemoboot.Currency;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 import com.github.irybov.bankdemoboot.service.OperationService;
 import com.github.irybov.bankdemoboot.service.AccountService;
@@ -70,25 +72,42 @@ public class BankController {
 		return "/account/private";
 	}
 	
-	@PostMapping("/accounts/show/{phone}")
-	public String createBill(@PathVariable String phone, @RequestParam String currency,
-			ModelMap modelMap) {
+/*	@PostMapping("/accounts/show")
+	public String createBill(@RequestParam String currency, ModelMap modelMap) {
 
+		String phone = authentication().getName();
 		if(currency.isEmpty()) {
 			modelMap.addAttribute("message", "Please choose currency type");
 			return getAccount(phone, modelMap);
 		}	
 		accountService.addBill(phone, currency);
 		return "redirect:/accounts/show/{phone}";
+	}*/
+	
+	@PostMapping("/bills/add")
+	@ResponseBody
+	public BillResponseDTO createBill(@RequestParam String phone, @RequestParam String currency) {
+		
+//		if(currency.isEmpty()) return "Please choose currency type";
+//		if(phone.isEmpty()) phone = authentication().getName();
+		
+		BillResponseDTO bill = accountService.addBill(phone, currency);
+		return bill;
 	}
 	
 	@DeleteMapping("/accounts/show/{phone}")
 	public String deleteBill(@PathVariable String phone, @RequestParam int id) {
 		billService.deleteBill(id);
 		return "redirect:/accounts/show/{phone}";
-	}	
+	}
 	
-	@PatchMapping("/bills/operate/{id}")
+	@DeleteMapping("/bills/delete")
+	@ResponseBody
+	public void deleteBill(@RequestParam int id) {
+		billService.deleteBill(id);
+	}
+	
+	@PostMapping("/bills/operate/{id}")
 	public String operateBill(@PathVariable int id, @RequestParam Map<String, String> params,
 			ModelMap modelMap) {
 		
@@ -117,8 +136,7 @@ public class BankController {
 			else target = Integer.parseInt(recipient);
 		}
 		
-		String currency;
-		
+		String currency;		
 		switch(params.get("action")) {
 		case "deposit":
 			try {

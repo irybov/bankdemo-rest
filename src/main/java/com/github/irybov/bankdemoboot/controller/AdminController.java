@@ -15,8 +15,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 //import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+//import org.springframework.web.bind.annotation.PatchMapping;
+//import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -70,15 +70,25 @@ public class AdminController {
 		return "/account/search";
 	}
 	
-	@PreAuthorize("hasRole('ADMIN')")
+/*	@PreAuthorize("hasRole('ADMIN')")
 	@PatchMapping("/accounts/status/{phone}")
 	public String changeAccountStatus(@PathVariable String phone, ModelMap modelMap) {
 		
 		accountService.changeStatus(phone);
 		return searchAccount(phone, modelMap);
-	}
+	}*/
 	
 	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/accounts/status")
+	@ResponseBody
+	public String changeAccountStatus(@RequestParam int id) {
+		
+		Boolean status = null;
+		status = accountService.changeStatus(id);
+		return status.toString();
+	}
+	
+/*	@PreAuthorize("hasRole('ADMIN')")
 	@PatchMapping("/bills/status/{phone}")
 	public String changeBillStatus(@PathVariable String phone, @RequestParam int id,
 			ModelMap modelMap) {
@@ -89,6 +99,20 @@ public class AdminController {
 			exc.printStackTrace();
 		}
 		return searchAccount(phone, modelMap);
+	}*/
+	
+	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/bills/status")
+	@ResponseBody
+	public String changeBillStatus(@RequestParam int id) {
+		
+		Boolean status = null;
+		try {
+			status = billService.changeStatus(id);
+		} catch (Exception exc) {
+			exc.printStackTrace();
+		}
+		return status.toString();
 	}
 	
 /*	@PreAuthorize("hasRole('ADMIN')")
@@ -103,7 +127,7 @@ public class AdminController {
 	}*/
 	
 	@PreAuthorize("hasRole('ADMIN')")
-	@GetMapping("/operations/json")
+	@GetMapping("/operations/list")
 	@ResponseBody
 	public List<OperationResponseDTO> getOperations(@RequestParam int id) {
 		List<OperationResponseDTO> operations = operationService.getAll(id);

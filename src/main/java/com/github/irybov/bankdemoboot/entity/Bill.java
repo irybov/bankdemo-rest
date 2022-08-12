@@ -42,15 +42,16 @@ public class Bill {
 	
 	@NotNull
 	@Column(columnDefinition = "Decimal(19,2) default '0.00'", precision = 2)
-	@JsonFormat(shape=JsonFormat.Shape.NUMBER_FLOAT)
+	@JsonFormat(shape = JsonFormat.Shape.NUMBER_FLOAT)
 	private BigDecimal balance = new BigDecimal(0.00);
 
 	@NotNull
 	@Size(min=3, max=3)
 	private String currency;
 	
-	@ManyToOne(cascade = CascadeType.ALL, fetch=FetchType.EAGER)
-	@JoinColumn(name="account_id")
+	@ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.DETACH,
+			CascadeType.REFRESH}, fetch=FetchType.EAGER)
+	@JoinColumn(name="account_id", updatable = false)
 	private Account owner;
 	
 	public Bill(String currency) {

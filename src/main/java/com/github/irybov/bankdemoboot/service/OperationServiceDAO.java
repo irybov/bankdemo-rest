@@ -53,10 +53,11 @@ public class OperationServiceDAO implements OperationService {
 		operationDAO.save(operation);
 	}
 	
+	@Transactional(readOnly = true)
 	public Operation get(long id) {
 		return operationDAO.getById(id);
 	}
-	
+	@Transactional(readOnly = true)
 	public List<OperationResponseDTO> getAll(int id) {
 		
 	    Comparator<Operation> compareById = Comparator.comparing(Operation::getId);	    

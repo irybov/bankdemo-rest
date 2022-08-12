@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-//import com.github.irybov.bankdemoboot.dao.BillDAO;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.exception.PaymentException;
 import com.github.irybov.bankdemoboot.repository.BillRepository;
@@ -17,7 +16,6 @@ public class BillServiceJPA implements BillService {
 	
 	@Autowired
 	BillServiceJPA billService;
-
 	@Autowired
 	private BillRepository billRepository;	
 	
@@ -33,6 +31,7 @@ public class BillServiceJPA implements BillService {
 		billRepository.deleteById(id);
 	}
 	
+	@Transactional(readOnly = true)
 	public Bill getBill(int id) throws Exception {
 		return billRepository.findById(id).orElseThrow
 				(()-> new PaymentException("Target bill with id: " + id + " not found"));
@@ -92,7 +91,8 @@ public class BillServiceJPA implements BillService {
 		return bill.getCurrency();
 	}
 	
-	public void changeStatus(int id) throws Exception {
+	public boolean changeStatus(int id) throws Exception {
+		
 		Bill bill = billService.getBill(id);
 		if(bill.isActive()) {
 			bill.setActive(false);
@@ -101,6 +101,7 @@ public class BillServiceJPA implements BillService {
 			bill.setActive(true);
 		}
 		billService.updateBill(bill);
+		return bill.isActive();
 	}
 	
 }

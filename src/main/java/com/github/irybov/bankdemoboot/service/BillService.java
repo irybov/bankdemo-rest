@@ -11,5 +11,5 @@ public interface BillService {
 	public String deposit(int id, double valueOf) throws Exception;
 	public String withdraw(int id, double valueOf) throws Exception;
 	public String transfer(int id, double valueOf, int target) throws Exception;
-	public void changeStatus(int id) throws Exception;
+	public boolean changeStatus(int id) throws Exception;
 }

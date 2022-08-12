@@ -7,6 +7,7 @@ import java.util.Optional;
 import javax.persistence.EntityExistsException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.irybov.bankdemoboot.Role;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
-//import com.github.irybov.bankdemoboot.dao.AccountDAO;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.exception.RegistrationException;
 import com.github.irybov.bankdemoboot.repository.AccountRepository;
@@ -26,10 +27,13 @@ import com.github.irybov.bankdemoboot.entity.Account;
 public class AccountServiceJPA implements AccountService {
 
 	@Autowired
-	AccountServiceJPA accountService;
-	
+	AccountServiceJPA accountService;	
 	@Autowired
 	private AccountRepository accountRepository;
+	
+	@Autowired
+	@Qualifier("billServiceAlias")
+	private BillService billService;
 
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -52,12 +56,15 @@ public class AccountServiceJPA implements AccountService {
 		}
 	}
 	
+	@Transactional(readOnly = true)
 	public AccountResponseDTO getAccountDTO(String phone) {
 		return new AccountResponseDTO(accountService.getAccount(phone));
 	}
+	@Transactional(readOnly = true)
 	Account getAccount(String phone) {
 		return accountRepository.findByPhone(phone);
 	}
+	@Transactional(readOnly = true)
 	public AccountResponseDTO getById(int id) {
 		Optional<Account> account = accountRepository.findById(id);
 		return new AccountResponseDTO(account.get());
@@ -67,6 +74,7 @@ public class AccountServiceJPA implements AccountService {
 		accountRepository.save(account);
 	}
 	
+	@Transactional(readOnly = true)
 	public boolean verifyAccount(String phone, String current){
 		if(accountRepository.getPhone(phone) == null || !phone.equals(current)) {
 			return false;
@@ -74,13 +82,18 @@ public class AccountServiceJPA implements AccountService {
 		return true;
 	}
 	
-	public void addBill(String phone, String currency) {
+	public BillResponseDTO addBill(String phone, String currency) {
 		Account account = accountService.getAccount(phone);
-		account.addBill(new Bill(currency));
+		Bill bill = new Bill(currency);
+		bill.setOwner(account);
+		billService.saveBill(bill);
+		account.addBill(bill);
 		accountService.updateAccount(account);
+		return new BillResponseDTO(bill);		
 	}
 	
 	public void changeStatus(String phone) {
+		
 		Account account = accountService.getAccount(phone);
 		if(account.isActive()) {
 			account.setActive(false);
@@ -96,9 +109,24 @@ public class AccountServiceJPA implements AccountService {
 		account.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(4)));
 		accountService.updateAccount(account);
 	}
+	@Transactional(readOnly = true)
 	public boolean comparePassword(String oldPassword, String phone) {
 		Account account = accountService.getAccount(phone);
 		return bCryptPasswordEncoder.matches(oldPassword, account.getPassword());
+	}
+
+	public Boolean changeStatus(int id) {
+
+		Optional<Account> optional = accountRepository.findById(id);
+		Account account = optional.get();
+		if(account.isActive()) {
+			account.setActive(false);
+		}
+		else {
+			account.setActive(true);
+		}
+		accountService.updateAccount(account);
+		return account.isActive();
 	}
 	
 }

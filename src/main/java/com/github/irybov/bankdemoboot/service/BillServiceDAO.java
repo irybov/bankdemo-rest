@@ -16,7 +16,6 @@ public class BillServiceDAO implements BillService {
 	
 	@Autowired
 	BillServiceDAO billService;
-
 	@Autowired
 	private BillDAO billDAO;
 	
@@ -32,6 +31,7 @@ public class BillServiceDAO implements BillService {
 		billDAO.deleteBill(id);
 	}
 	
+	@Transactional(readOnly = true)
 	public Bill getBill(int id) throws Exception {
 		return billDAO.getBill(id);
 	}
@@ -90,7 +90,8 @@ public class BillServiceDAO implements BillService {
 		return bill.getCurrency();
 	}
 	
-	public void changeStatus(int id) throws Exception {
+	public boolean changeStatus(int id) throws Exception {
+		
 		Bill bill = billService.getBill(id);
 		if(bill.isActive()) {
 			bill.setActive(false);
@@ -99,6 +100,7 @@ public class BillServiceDAO implements BillService {
 			bill.setActive(true);
 		}
 		billService.updateBill(bill);
+		return bill.isActive();
 	}
 	
 }

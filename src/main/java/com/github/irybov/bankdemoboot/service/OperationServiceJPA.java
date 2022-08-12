@@ -52,10 +52,11 @@ public class OperationServiceJPA implements OperationService {
 		operationRepository.save(operation);
 	}
 	
+	@Transactional(readOnly = true)
 	public Operation get(long id) {
 		return operationRepository.getById(id);
 	}
-	
+	@Transactional(readOnly = true)
 	public List<OperationResponseDTO> getAll(int id) {
 
 		return operationRepository.findBySenderOrRecipientOrderByIdAsc(id, id)
