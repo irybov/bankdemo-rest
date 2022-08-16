@@ -21,7 +21,7 @@ public class AccountDAO {
 		entityManager.merge(account);
 	}
 
-	public Account getAccount(String phone) {		
+	public Account getAccount(String phone) {
 		return entityManager.createQuery("SELECT a FROM Account a WHERE a.phone=:phone",
 				Account.class)
 				.setParameter("phone", phone)

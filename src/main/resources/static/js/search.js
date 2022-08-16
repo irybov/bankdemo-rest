@@ -2,7 +2,7 @@ $(document).ready(function(){
 	$('.account_status').click(function(){
  			$.ajax({
 			type: 'GET',
-			url: 'http://localhost:8080/bankdemo/accounts/status?id='+$(this).val(),
+			url: 'http://localhost:8080/bankdemo/accounts/status/'+$(this).val(),
         	success: function(bool) {
         		$('#account_bool').html(bool);
         	}
@@ -14,7 +14,7 @@ $(document).ready(function(){
 		var switcher = '#bill_bool'+$(this).val();
  			$.ajax({
 			type: 'GET',
-			url: 'http://localhost:8080/bankdemo/bills/status?id='+$(this).val(),
+			url: 'http://localhost:8080/bankdemo/bills/status/'+$(this).val(),
         	success: function(bool) {
         		$(switcher).html(bool);
         	}
@@ -23,13 +23,13 @@ $(document).ready(function(){
 });
 $(document).ready(function(){
 	$('.export_csv').click(function(){
-		$.get('http://localhost:8080/bankdemo/operations/print?id='+$(this).val());
+		$.get('http://localhost:8080/bankdemo/operations/print/'+$(this).val());
 	});
 });
 $(document).ready(function(){
 	$('.show_events').click(function(){
 		$('#info_body').empty();
- 		$.getJSON('http://localhost:8080/bankdemo/operations/list?id='+$(this).val(),
+ 		$.getJSON('http://localhost:8080/bankdemo/operations/list/'+$(this).val(),
  				function(data){
  			var information = '';
  			$.each(data, function(key, value){
@@ -45,8 +45,8 @@ $(document).ready(function(){
 				information += '<td align=center>'+value.timestamp+'</td>';				
 				information += '</tr>';
  			});
-	 	$('#info_body').append(information);
+ 			$('#info_body').append(information);
 	    });
-	$('#info_body').hide().fadeIn('slow');
+ 		$('#info_body').hide().fadeIn('slow');
     });
 });

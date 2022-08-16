@@ -86,12 +86,11 @@ public class BankController {
 	
 	@PostMapping("/bills/add")
 	@ResponseBody
-	public BillResponseDTO createBill(@RequestParam String phone, @RequestParam String currency) {
+	public BillResponseDTO createBill(@RequestParam Map<String, String> params) {
 		
-//		if(currency.isEmpty()) return "Please choose currency type";
-//		if(phone.isEmpty()) phone = authentication().getName();
-		
-		BillResponseDTO bill = accountService.addBill(phone, currency);
+//		if(params.get("currency").isEmpty()) return "Please choose currency type";
+//		if(params.get("phone").isEmpty()) phone = authentication().getName();		
+		BillResponseDTO bill = accountService.addBill(params.get("phone"), params.get("currency"));
 		return bill;
 	}
 	
@@ -101,17 +100,16 @@ public class BankController {
 		return "redirect:/accounts/show/{phone}";
 	}
 	
-	@DeleteMapping("/bills/delete")
+	@DeleteMapping("/bills/delete/{id}")
 	@ResponseBody
-	public void deleteBill(@RequestParam int id) {
+	public void deleteBill(@PathVariable int id) {
 		billService.deleteBill(id);
 	}
 	
-	@PostMapping("/bills/operate/{id}")
-	public String operateBill(@PathVariable int id, @RequestParam Map<String, String> params,
-			ModelMap modelMap) {
+	@PostMapping("/bills/operate")
+	public String operateBill(@RequestParam Map<String, String> params, ModelMap modelMap) {
 		
-		modelMap.addAttribute("id", id);
+		modelMap.addAttribute("id", params.get("id"));
 		modelMap.addAttribute("action",  params.get("action"));
 		modelMap.addAttribute("balance", params.get("balance"));
 		if(params.get("action").equals("transfer")) {
@@ -205,11 +203,13 @@ public class BankController {
 		}
 		
 		accountService.changePassword(phone, passwordRequestDTO.getNewPassword());
-		if(authentication().getAuthorities().stream()
+/*		if(authentication().getAuthorities().stream()
 				.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
 			return "redirect:/accounts/search";
 		}
-		return "redirect:/accounts/show/{phone}";
+		return "redirect:/accounts/show/{phone}";*/
+		model.addAttribute("success", "Password changed");
+		return "/account/password";
 	}
 	
 }

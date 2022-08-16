@@ -12,9 +12,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
+import org.springframework.ui.Model;
+//import org.springframework.ui.ModelMap;
 //import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 //import org.springframework.web.bind.annotation.PatchMapping;
 //import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -51,10 +53,10 @@ public class AdminController {
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search")
-	public String searchAccount(@RequestParam(required = false) String phone, ModelMap modelMap) {
+	public String searchAccount(@RequestParam(required = false) String phone, Model model) {
 		
 		AccountResponseDTO admin = accountService.getAccountDTO(authentication().getName());		
-		AccountResponseDTO target = null;
+/*		AccountResponseDTO target = null;
 		try {
 			target = accountService.getAccountDTO(phone);
 		}
@@ -66,8 +68,17 @@ public class AdminController {
 		finally {
 			modelMap.addAttribute("admin", admin);
 			modelMap.addAttribute("target", target);
-		}
+		}*/
+		model.addAttribute("admin", admin);
 		return "/account/search";
+	}
+	
+	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/accounts/search/{phone}")
+	@ResponseBody
+	public AccountResponseDTO searchAccount(@PathVariable String phone) {
+		AccountResponseDTO target = accountService.getAccountDTO(phone);
+		return target;
 	}
 	
 /*	@PreAuthorize("hasRole('ADMIN')")
@@ -79,10 +90,9 @@ public class AdminController {
 	}*/
 	
 	@PreAuthorize("hasRole('ADMIN')")
-	@GetMapping("/accounts/status")
+	@GetMapping("/accounts/status/{id}")
 	@ResponseBody
-	public String changeAccountStatus(@RequestParam int id) {
-		
+	public String changeAccountStatus(@PathVariable int id) {		
 		Boolean status = null;
 		status = accountService.changeStatus(id);
 		return status.toString();
@@ -102,9 +112,9 @@ public class AdminController {
 	}*/
 	
 	@PreAuthorize("hasRole('ADMIN')")
-	@GetMapping("/bills/status")
+	@GetMapping("/bills/status/{id}")
 	@ResponseBody
-	public String changeBillStatus(@RequestParam int id) {
+	public String changeBillStatus(@PathVariable int id) {
 		
 		Boolean status = null;
 		try {
@@ -127,17 +137,17 @@ public class AdminController {
 	}*/
 	
 	@PreAuthorize("hasRole('ADMIN')")
-	@GetMapping("/operations/list")
+	@GetMapping("/operations/list/{id}")
 	@ResponseBody
-	public List<OperationResponseDTO> getOperations(@RequestParam int id) {
+	public List<OperationResponseDTO> getOperations(@PathVariable int id) {
 		List<OperationResponseDTO> operations = operationService.getAll(id);
 		return operations;
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
-	@GetMapping("/operations/print")
+	@GetMapping("/operations/print/{id}")
 	@ResponseBody
-	public void exportToCSV(@RequestParam int id) {
+	public void exportToCSV(@PathVariable int id) {
 		
 		Bill bill = null;
 		try {

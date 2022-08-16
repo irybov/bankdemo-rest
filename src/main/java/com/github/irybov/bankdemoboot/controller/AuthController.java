@@ -63,14 +63,14 @@ public class AuthController {
 	public String signIn(@ModelAttribute("account") @Valid AccountRequestDTO accountRequestDTO,
 			BindingResult result, Model model) {
 		
-		accountValidator.validate(accountRequestDTO, result);
-		
+		accountValidator.validate(accountRequestDTO, result);		
 		if(result.hasErrors()) {
 			return "/auth/register";
 		}
 		try {
 			accountService.saveAccount(accountRequestDTO);
-		} catch (Exception exc) {
+		}
+		catch (Exception exc) {
 			model.addAttribute("message", exc.getMessage());
 			return "/auth/register";			
 		}
