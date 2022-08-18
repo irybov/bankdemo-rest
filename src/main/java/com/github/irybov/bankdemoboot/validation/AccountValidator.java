@@ -8,7 +8,7 @@ import org.springframework.validation.Validator;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.service.AccountService;
 
-@Component
+//@Component
 public class AccountValidator implements Validator {
 
 	private final AccountService accountService;
@@ -25,7 +25,7 @@ public class AccountValidator implements Validator {
 	public void validate(Object target, Errors errors) {
 		AccountRequestDTO account = (AccountRequestDTO) target;
 		if(accountService.getAccountDTO(account.getPhone()) != null){
-			errors.rejectValue("phone", "", "Validator in action!");
+			errors.rejectValue("phone", "", "Validator in action! This number is already in use.");
 		}
 	}
 

@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
+
+import javax.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -77,7 +80,16 @@ public class AdminController {
 	@GetMapping("/accounts/search/{phone}")
 	@ResponseBody
 	public AccountResponseDTO searchAccount(@PathVariable String phone) {
+		
+		if(phone != null) {
+			if(!phone.matches("^\\d{10}$")) {
+				throw new InputMismatchException("Phone number should be 10 digits length");
+			}
+		}		
 		AccountResponseDTO target = accountService.getAccountDTO(phone);
+		if(target == null) {
+			throw new EntityNotFoundException("Database exception: " + phone + " not found");
+		}
 		return target;
 	}
 	

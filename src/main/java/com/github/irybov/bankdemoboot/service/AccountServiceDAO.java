@@ -50,8 +50,9 @@ public class AccountServiceDAO implements AccountService {
 		account.addRole(Role.CLIENT);
 		try {
 			accountDAO.saveAccount(account);
-		} catch (EntityExistsException exc) {
-			throw new EntityExistsException("Database exception");
+		}
+		catch (RuntimeException exc) {
+			throw new EntityExistsException("Database exception: this number is already in use.");
 		}
 	}
 	

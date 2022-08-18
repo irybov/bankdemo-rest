@@ -51,8 +51,9 @@ public class AccountServiceJPA implements AccountService {
 		account.addRole(Role.CLIENT);
 		try {
 			accountRepository.save(account);
-		} catch (EntityExistsException exc) {
-			throw new EntityExistsException("Database exception");
+		}
+		catch (RuntimeException exc) {
+			throw new EntityExistsException("Database exception: this number is already in use.");
 		}
 	}
 	
@@ -63,6 +64,7 @@ public class AccountServiceJPA implements AccountService {
 	@Transactional(readOnly = true)
 	Account getAccount(String phone) {
 		return accountRepository.findByPhone(phone);
+//		return accountRepository.getByPhone(phone);
 	}
 	@Transactional(readOnly = true)
 	public AccountResponseDTO getById(int id) {

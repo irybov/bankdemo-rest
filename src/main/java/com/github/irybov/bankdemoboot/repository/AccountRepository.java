@@ -8,7 +8,9 @@ import com.github.irybov.bankdemoboot.entity.Account;
 public interface AccountRepository extends JpaRepository<Account, Integer> {
 	
 	Account findByPhone(String phone);
+	Account getByPhone(String phone);
 	
 	@Query("SELECT phone FROM Account accounts WHERE phone=:check")
 	String getPhone(String check);
+
 }

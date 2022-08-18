@@ -21,11 +21,11 @@ public class ConstraintViolationExceptionHandler {
 	    ValidationErrorResponse error = new ValidationErrorResponse();
 	    for (ConstraintViolation<?> violation : e.getConstraintViolations()) {
 	      error.getViolations().add(new Violation(violation.getMessage()));
-	    }
-//	    return error;		
+	    }		
 		ModelAndView mav = new ModelAndView("errors");
 		List<Violation> violations = error.getViolations();
 		mav.addObject("violations", violations);
+//	    return error;
 		return mav;
 	}
 	

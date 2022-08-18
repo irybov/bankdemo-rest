@@ -27,7 +27,7 @@ input[type=password]:focus {
 
 <div class="container pt-5">
 <h3>Log In</h3>
-	<form action="/bankdemo/auth" method="post">
+	<form th:action="@{/auth}" method="post">
 		<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 	
 		<div th:if="${param.error}" class="error">

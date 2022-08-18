@@ -9,7 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-//import org.springframework.validation.annotation.Validated;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,10 +27,10 @@ public class AuthController {
 	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 	
-	private final AccountValidator accountValidator;
+/*	private final AccountValidator accountValidator;
 	public AuthController(AccountValidator accountValidator) {
 		this.accountValidator = accountValidator;
-	}
+	}*/
 	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
@@ -53,7 +53,7 @@ public class AuthController {
 	}
 	
 	@GetMapping("/success")
-	public String signUp(Model model) {		
+	public String signUp(Model model) {
 		AccountResponseDTO account = accountService.getAccountDTO(authentication().getName());
 		model.addAttribute("account", account);
 		return "/auth/success";
@@ -63,7 +63,7 @@ public class AuthController {
 	public String signIn(@ModelAttribute("account") @Valid AccountRequestDTO accountRequestDTO,
 			BindingResult result, Model model) {
 		
-		accountValidator.validate(accountRequestDTO, result);		
+//		accountValidator.validate(accountRequestDTO, result);
 		if(result.hasErrors()) {
 			return "/auth/register";
 		}

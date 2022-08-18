@@ -30,15 +30,14 @@ input[type=number]:focus {
 		<p th:utext="'Action: ' + '&lt;strong&gt;' + ${action} + '&lt;/strong&gt;'" />
 
 		<form th:action="@{/bills/launch/{id}(id=${id})}" th:method="patch">
-			<input type="hidden" th:name="action" th:value="${action}" /> <input
-				type="hidden" th:name="balance" th:value="${balance}" /> <label
-				for="amount">Set amount (limit - 10000)</label>
+			<input type="hidden" th:name="action" th:value="${action}" />
+			<input type="hidden" th:name="balance" th:value="${balance}" />
+			<label for="amount">Set amount (limit - 10000)</label>
 			<p>
-				<input type="number" th:name="amount" list="banknote" min="50"
-					max="10000" step="50">
+			<input type="number" th:name="amount" list="banknote" min="50" max="10000" step="50">
 			</p>
 			<p>
-				<button type="submit" class="btn btn-success">Confirm</button>
+			<button type="submit" class="btn btn-success">Confirm</button>
 			</p>
 		</form>
 
