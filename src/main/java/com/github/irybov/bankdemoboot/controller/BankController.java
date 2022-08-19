@@ -1,6 +1,8 @@
 package com.github.irybov.bankdemoboot.controller;
 
-import java.util.EnumSet;
+import java.util.Currency;
+import java.util.HashSet;
+//import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,7 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.github.irybov.bankdemoboot.Currency;
+//import com.github.irybov.bankdemoboot.Currency;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
@@ -52,9 +54,18 @@ public class BankController {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
 	
-	private final Set<Currency> currencies;
+	private final Set<Currency> currencies = new HashSet<>();
+//	private final Set<Currency> currencies;
 	{
-		currencies = EnumSet.allOf(Currency.class);
+//		currencies = EnumSet.allOf(Currency.class);
+		Currency usd = Currency.getInstance("USD");
+		currencies.add(usd);
+		Currency eur = Currency.getInstance("EUR");
+		currencies.add(eur);
+		Currency gbp = Currency.getInstance("GBP");
+		currencies.add(gbp);
+		Currency rub = Currency.getInstance("RUB");
+		currencies.add(rub);
 	}
 	
 	@GetMapping("/accounts/show/{phone}")

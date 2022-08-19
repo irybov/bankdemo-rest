@@ -165,9 +165,13 @@
 <form id="currency_form">
     <select class="form-control" th:id="currency" style="width:auto" required>
         <option value="">Select currency</option>
-        <option th:each="currency : ${T(com.github.irybov.bankdemoboot.Currency).values()}"
+<!--         <option th:each="currency : ${T(com.github.irybov.bankdemoboot.Currency).values()}"
                 th:value="${currency.name()}"
                 th:text="${currency.name()}">
+        </option> -->
+        <option th:each="currency : ${currencies}"
+                th:value="${currency.getCurrencyCode()}"
+                th:text="${currency.getCurrencyCode()}">
         </option>
     </select>
     <input type="hidden" th:id="account_phone" th:value="${account.phone}"/>    

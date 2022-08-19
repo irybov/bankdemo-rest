@@ -28,6 +28,7 @@ import javax.validation.constraints.Past;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
+import org.hibernate.annotations.Type;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -76,7 +77,8 @@ public class Account{
 	@NotBlank(message = "Phone number must not be empty")
 	@Size(min=10, max=10, message = "Phone number should be 10 digits length")
 	@Pattern(regexp = "^\\d{10}$", message = "Please input phone like XXXXXXXXXX")
-	@Column(unique=true, nullable = false)
+	@Column(unique=true, nullable = false, name="phone", length=10, columnDefinition = "char")
+//	@Type(type = "char")
 	private String phone;
 	
 	@Past(message = "Birthday cant be future time")

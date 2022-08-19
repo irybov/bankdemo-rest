@@ -16,6 +16,8 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.hibernate.annotations.Type;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.Data;
@@ -47,6 +49,8 @@ public class Bill {
 
 	@NotNull
 	@Size(min=3, max=3)
+	@Column(name="currency", length=3, columnDefinition = "char")
+//	@Type(type = "char")
 	private String currency;
 	
 	@ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.DETACH,
