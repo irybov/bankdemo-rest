@@ -80,6 +80,10 @@ public class AccountServiceDAO implements AccountService {
 		}
 		return true;
 	}
+	@Transactional(readOnly = true)
+	public String getPhone(String phone){
+		return accountDAO.getPhone(phone);
+	}
 	
 	public BillResponseDTO addBill(String phone, String currency) {
 		Account account = accountService.getAccount(phone);

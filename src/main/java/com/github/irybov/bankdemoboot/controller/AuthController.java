@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.validation.Validator;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.service.AccountService;
-import com.github.irybov.bankdemoboot.validation.AccountValidator;
 
 //@Validated
 @Controller
@@ -27,10 +27,11 @@ public class AuthController {
 	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 	
-/*	private final AccountValidator accountValidator;
-	public AuthController(AccountValidator accountValidator) {
+	@Qualifier("accountValidator")
+	private final Validator accountValidator;
+	public AuthController(Validator accountValidator) {
 		this.accountValidator = accountValidator;
-	}*/
+	}
 	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
@@ -63,7 +64,7 @@ public class AuthController {
 	public String signIn(@ModelAttribute("account") @Valid AccountRequestDTO accountRequestDTO,
 			BindingResult result, Model model) {
 		
-//		accountValidator.validate(accountRequestDTO, result);
+		accountValidator.validate(accountRequestDTO, result);
 		if(result.hasErrors()) {
 			return "/auth/register";
 		}

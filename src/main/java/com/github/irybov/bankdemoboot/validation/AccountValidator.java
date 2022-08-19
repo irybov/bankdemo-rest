@@ -1,15 +1,23 @@
 package com.github.irybov.bankdemoboot.validation;
 
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
 
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.service.AccountService;
 
-//@Component
-public class AccountValidator implements Validator {
+@Component
+public class AccountValidator implements org.springframework.validation.Validator {
+	
+    @Autowired
+    private Validator validator;
 
 	private final AccountService accountService;
 	public AccountValidator(@Qualifier("accountServiceAlias")AccountService accountService) {
@@ -23,8 +31,16 @@ public class AccountValidator implements Validator {
 
 	@Override
 	public void validate(Object target, Errors errors) {
+		
+	    Set<ConstraintViolation<Object>> validates = validator.validate(target);
+	    for (ConstraintViolation<Object> constraintViolation : validates) {
+	        String propertyPath = constraintViolation.getPropertyPath().toString();
+	        String message = constraintViolation.getMessage();
+	        errors.rejectValue(propertyPath, "", message);
+	    }
+		
 		AccountRequestDTO account = (AccountRequestDTO) target;
-		if(accountService.getAccountDTO(account.getPhone()) != null){
+		if(accountService.getPhone(account.getPhone()).equals(account.getPhone())){
 			errors.rejectValue("phone", "", "Validator in action! This number is already in use.");
 		}
 	}

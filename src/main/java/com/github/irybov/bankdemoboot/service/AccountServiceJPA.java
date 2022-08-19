@@ -83,6 +83,10 @@ public class AccountServiceJPA implements AccountService {
 		}
 		return true;
 	}
+	@Transactional(readOnly = true)
+	public String getPhone(String phone){
+		return accountRepository.getPhone(phone);
+	}
 	
 	public BillResponseDTO addBill(String phone, String currency) {
 		Account account = accountService.getAccount(phone);
@@ -91,7 +95,7 @@ public class AccountServiceJPA implements AccountService {
 		billService.saveBill(bill);
 		account.addBill(bill);
 		accountService.updateAccount(account);
-		return new BillResponseDTO(bill);		
+		return new BillResponseDTO(bill);
 	}
 	
 	public void changeStatus(String phone) {
