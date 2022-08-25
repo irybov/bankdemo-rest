@@ -1,6 +1,7 @@
 package com.github.irybov.bankdemoboot.controller.dto;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +21,7 @@ public class AccountResponseDTO implements UserDetails{
 	private static final long serialVersionUID = 1L;
 	
 	private int id;
+	private OffsetDateTime createdAt;
 	private boolean active;	
 	private String name;	
 	private String surname;
@@ -31,6 +33,7 @@ public class AccountResponseDTO implements UserDetails{
 
 	public AccountResponseDTO(Account account) {
 		this.id = account.getId();
+		this.createdAt = account.getCreatedAt();
 		this.active = account.isActive();
 		this.name = account.getName();
 		this.surname = account.getSurname();

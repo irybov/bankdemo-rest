@@ -10,7 +10,7 @@ import lombok.Getter;
 public class OperationResponseDTO {
 
 	private long id;
-	private final OffsetDateTime timestamp;
+	private OffsetDateTime createdAt;
 	private double amount;
 	private String action;
 	private String currency;	
@@ -19,7 +19,7 @@ public class OperationResponseDTO {
 	
 	public OperationResponseDTO(Operation operation) {
 		this.id = operation.getId();
-		this.timestamp = operation.getTimestamp();
+		this.createdAt = operation.getCreatedAt();
 		this.amount = operation.getAmount();
 		this.action = operation.getAction();
 		this.currency = operation.getCurrency();

@@ -11,8 +11,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.hibernate.annotations.Type;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.AllArgsConstructor;
@@ -20,6 +18,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Builder
@@ -36,10 +35,11 @@ public class Operation {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private long id;
 	
-	@NotNull
-	@Builder.Default
+//	@NotNull
+//	@Builder.Default
+	@Setter
 	@JsonFormat(shape = JsonFormat.Shape.STRING)
-	private final OffsetDateTime timestamp = OffsetDateTime.now();
+	private OffsetDateTime createdAt;
 	
 	@NotNull
 	private double amount;
@@ -50,7 +50,6 @@ public class Operation {
 	@NotNull
 	@Size(min=3, max=3)
 	@Column(name="currency", length=3, columnDefinition = "char")
-//	@Type(type = "char")
 	private String currency;
 	
 	private int sender;

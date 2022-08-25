@@ -1,10 +1,11 @@
 package com.github.irybov.bankdemoboot.service;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
-import javax.persistence.EntityExistsException;
+import javax.persistence.PersistenceException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,7 +28,7 @@ import com.github.irybov.bankdemoboot.entity.Account;
 public class AccountServiceJPA implements AccountService {
 
 	@Autowired
-	AccountServiceJPA accountService;	
+	AccountServiceJPA accountService;
 	@Autowired
 	private AccountRepository accountRepository;
 	
@@ -49,11 +50,12 @@ public class AccountServiceJPA implements AccountService {
 				accountRequestDTO.getPhone(), birthday, BCrypt.hashpw
 				(accountRequestDTO.getPassword(), BCrypt.gensalt(4)));
 		account.addRole(Role.CLIENT);
+		account.setCreatedAt(OffsetDateTime.now());
 		try {
 			accountRepository.save(account);
 		}
 		catch (RuntimeException exc) {
-			throw new EntityExistsException("Database exception: this number is already in use.");
+			throw new PersistenceException("Database exception: this number is already in use.");
 		}
 	}
 	
@@ -92,6 +94,7 @@ public class AccountServiceJPA implements AccountService {
 		Account account = accountService.getAccount(phone);
 		Bill bill = new Bill(currency);
 		bill.setOwner(account);
+		bill.setCreatedAt(OffsetDateTime.now());
 		billService.saveBill(bill);
 		account.addBill(bill);
 		accountService.updateAccount(account);

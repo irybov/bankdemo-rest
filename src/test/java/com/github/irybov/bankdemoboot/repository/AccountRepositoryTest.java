@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import com.github.irybov.bankdemoboot.entity.Account;
 
+//@TestMethodOrder(OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DataJpaTest
 class AccountRepositoryTest {
@@ -26,38 +27,50 @@ class AccountRepositoryTest {
 	private Account account;
 	
 	@BeforeAll
-	static void prepare() {		
+	static void prepare() {
 		search = new String("0000000000");
 	}
 	
 	@BeforeEach
-	void set_up() {		
+	void set_up() {
 		account = new Account
 				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin");
 		accountRepository.save(account);
 	}
 	
 	@Test
-	void save_and_search_by_phone() {		
+//	@Order(1)
+	void check_if_phone_presents() {		
+        assertThat(accountRepository.getPhone(search).equals(account.getPhone())).isTrue();
+	}
+	
+	@Test
+//	@Order(2)
+	void save_and_search_by_phone() {
 		Account fromDB = accountRepository.findByPhone(search);
 		assertThat(fromDB).isEqualTo(account);
 	}
 	
     @Test
-    void check_if_phone_exists() {   	
-        String phone = "0000000000";
-        String expected = accountRepository.getPhone(phone);
-        assertThat(expected).isEqualTo(phone);
+//	@Order(3)
+    void update_and_compare() {
+    	
+		String newPhone = "9999999999";
+		Account fromDB = accountRepository.findByPhone(search);
+		fromDB.setPhone(newPhone);
+		accountRepository.save(fromDB);
+		Account updated = accountRepository.findByPhone(newPhone);
+		assertThat(fromDB).isEqualTo(updated);
     }
 		
     @AfterEach
-    void tear_down() {    	
+    void tear_down() {
     	accountRepository.deleteAll();
     	account = null;
     }
 	
     @AfterAll
-    static void clear() {    	
+    static void clear() {
     	search = null;
     }
     

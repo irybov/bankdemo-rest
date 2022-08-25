@@ -11,14 +11,14 @@ import lombok.Getter;
 public class BillResponseDTO {
 
 	private int id;
-	private final OffsetDateTime timestamp;
+	private OffsetDateTime createdAt;
 	private boolean active;
 	private BigDecimal balance;
 	private String currency;
 	
 	public BillResponseDTO(Bill bill) {
 		this.id = bill.getId();
-		this.timestamp = bill.getTimestamp();
+		this.createdAt = bill.getCreatedAt();
 		this.active = bill.isActive();
 		this.balance = bill.getBalance();
 		this.currency = bill.getCurrency();

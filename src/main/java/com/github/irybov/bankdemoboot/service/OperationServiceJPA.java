@@ -1,5 +1,6 @@
 package com.github.irybov.bankdemoboot.service;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,7 @@ public class OperationServiceJPA implements OperationService {
 				.sender(sender)
 				.recipient(recipient)
 				.build();
+		operation.setCreatedAt(OffsetDateTime.now());
 		operationRepository.save(operation);
 	}
 	
@@ -38,6 +40,7 @@ public class OperationServiceJPA implements OperationService {
 				.currency(currency)
 				.recipient(recipient)
 				.build();
+		operation.setCreatedAt(OffsetDateTime.now());
 		operationRepository.save(operation);
 	}
 	
@@ -49,6 +52,7 @@ public class OperationServiceJPA implements OperationService {
 				.currency(currency)
 				.sender(sender)
 				.build();
+		operation.setCreatedAt(OffsetDateTime.now());
 		operationRepository.save(operation);
 	}
 	

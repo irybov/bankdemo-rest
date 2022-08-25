@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,43 +36,53 @@ class AccountDAOTest {
 	private Account account;
 	
 	@BeforeAll
-	static void prepare() {		
+	static void prepare() {
 		search = new String("0000000000");
 	}
 	
 	@BeforeEach
-	void set_up() {
-		
+	void set_up() {		
 		accountDAO = new AccountDAO();
 		ReflectionTestUtils.setField(accountDAO, "entityManager", entityManager);
 		account = new Account
 				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin");
+		accountDAO.saveAccount(account);
 	}
 	
 	@Test
 //	@Order(1)
-	void save_and_search_phone() {	
-
-		accountDAO.saveAccount(account);		
+	void check_if_phone_presents() {
         assertThat(accountDAO.getPhone(search).equals(account.getPhone())).isTrue();
-	}	
-
+	}
+	
 	@Test
 //	@Order(2)
+	void save_and_search_by_phone() {
+		Account fromDB = accountDAO.getAccount(search);
+		assertThat(fromDB).isEqualTo(account);
+	}
+
+	@Test
+//	@Order(3)
 	void update_and_compare() {
 
-		accountDAO.saveAccount(account);
+		String newPhone = "9999999999";
 		Account fromDB = accountDAO.getAccount(search);
-		fromDB.setPhone("9999999999");
+		fromDB.setPhone(newPhone);
 		accountDAO.updateAccount(fromDB);
-		Account updated = accountDAO.getAccount("9999999999");		
+		Account updated = accountDAO.getAccount(newPhone);		
 		assertThat(fromDB).isEqualTo(updated);		
 	}
 	
     @AfterEach
-    void tear_down() {    	
+    void tear_down() {
     	accountDAO = null;
     	account = null;
+    }
+    
+    @AfterAll
+    static void clear() {
+    	search = null;
     }
     
 }

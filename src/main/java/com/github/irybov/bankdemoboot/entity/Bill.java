@@ -16,8 +16,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.hibernate.annotations.Type;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.Data;
@@ -35,9 +33,9 @@ public class Bill {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int id;
 
-	@NotNull
+//	@NotNull
 	@JsonFormat(shape = JsonFormat.Shape.STRING)
-	private final OffsetDateTime timestamp = OffsetDateTime.now();
+	private OffsetDateTime createdAt;
 	
 	@NotNull
 	private boolean active = true;
@@ -49,8 +47,7 @@ public class Bill {
 
 	@NotNull
 	@Size(min=3, max=3)
-	@Column(name="currency", length=3, columnDefinition = "char")
-//	@Type(type = "char")
+	@Column(length=3)
 	private String currency;
 	
 	@ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.DETACH,

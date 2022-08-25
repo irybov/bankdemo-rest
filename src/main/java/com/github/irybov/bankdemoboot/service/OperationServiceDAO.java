@@ -1,5 +1,6 @@
 package com.github.irybov.bankdemoboot.service;
 
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +29,7 @@ public class OperationServiceDAO implements OperationService {
 				.sender(sender)
 				.recipient(recipient)
 				.build();
+		operation.setCreatedAt(OffsetDateTime.now());
 		operationDAO.save(operation);
 	}
 	
@@ -39,6 +41,7 @@ public class OperationServiceDAO implements OperationService {
 				.currency(currency)
 				.recipient(recipient)
 				.build();
+		operation.setCreatedAt(OffsetDateTime.now());
 		operationDAO.save(operation);
 	}
 	
@@ -50,6 +53,7 @@ public class OperationServiceDAO implements OperationService {
 				.currency(currency)
 				.sender(sender)
 				.build();
+		operation.setCreatedAt(OffsetDateTime.now());
 		operationDAO.save(operation);
 	}
 	

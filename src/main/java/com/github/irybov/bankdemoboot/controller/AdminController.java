@@ -176,7 +176,7 @@ public class AdminController {
 		data.add(owner);
 		data.add(new String[0]);
 		String[] info = {bill.getCurrency(), String.valueOf(bill.getBalance()),
-				bill.getTimestamp().toString()};
+				bill.getCreatedAt().toString()};
 		data.add(info);
 		data.add(new String[0]);
 		
@@ -185,7 +185,7 @@ public class AdminController {
 		for(OperationResponseDTO operation : operations) {
 			String[] row = {operation.getAction(),
 							String.valueOf(operation.getAmount()),
-							operation.getTimestamp().toString(),
+							operation.getCreatedAt().toString(),
 							String.valueOf(operation.getRecipient()),
 							String.valueOf(operation.getSender())};
 			data.add(row);
