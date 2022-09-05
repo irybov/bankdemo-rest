@@ -1,6 +1,6 @@
 package com.github.irybov.bankdemoboot.controller;
 
-import javax.validation.Valid;
+//import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -9,7 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
+//import org.springframework.validation.annotation.Validated;
 import org.springframework.validation.Validator;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -27,7 +27,7 @@ public class AuthController {
 	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 	
-	@Qualifier("accountValidator")
+	@Qualifier("beforeCreateAccountValidator")
 	private final Validator accountValidator;
 	public AuthController(Validator accountValidator) {
 		this.accountValidator = accountValidator;
@@ -61,7 +61,7 @@ public class AuthController {
 	}
 	
 	@PostMapping("/confirm")
-	public String signIn(@ModelAttribute("account") @Valid AccountRequestDTO accountRequestDTO,
+	public String signIn(@ModelAttribute("account") AccountRequestDTO accountRequestDTO,
 			BindingResult result, Model model) {
 		
 		accountValidator.validate(accountRequestDTO, result);

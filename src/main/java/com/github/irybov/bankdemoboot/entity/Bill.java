@@ -38,7 +38,7 @@ public class Bill {
 	private OffsetDateTime createdAt;
 	
 	@NotNull
-	private boolean active = true;
+	private boolean isActive;
 	
 	@NotNull
 	@Column(columnDefinition = "Decimal(19,2) default '0.00'", precision = 2)
@@ -55,8 +55,11 @@ public class Bill {
 	@JoinColumn(name="account_id", updatable = false)
 	private Account owner;
 	
-	public Bill(String currency) {
+	public Bill(String currency, OffsetDateTime createdAt, boolean isActive, Account owner) {
 		this.currency = currency;
+		this.createdAt = createdAt;
+		this.isActive = isActive;
+		this.owner = owner;
 	}
 	
 }

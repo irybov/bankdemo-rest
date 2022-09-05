@@ -18,6 +18,7 @@ public class OperationResponseDTO {
 	private int recipient;
 	
 	public OperationResponseDTO(Operation operation) {
+		
 		this.id = operation.getId();
 		this.createdAt = operation.getCreatedAt();
 		this.amount = operation.getAmount();

@@ -11,6 +11,8 @@ import javax.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -99,8 +101,7 @@ public class AdminController {
 		
 		accountService.changeStatus(phone);
 		return searchAccount(phone, modelMap);
-	}*/
-	
+	}*/	
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/status/{id}")
 	@ResponseBody
@@ -121,8 +122,7 @@ public class AdminController {
 			exc.printStackTrace();
 		}
 		return searchAccount(phone, modelMap);
-	}*/
-	
+	}*/	
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/bills/status/{id}")
 	@ResponseBody
@@ -146,20 +146,25 @@ public class AdminController {
 		modelMap.addAttribute("operations", operations);
 		modelMap.addAttribute("phone", phone);
 		return searchAccount(phone, modelMap);
-	}*/
-	
-	@PreAuthorize("hasRole('ADMIN')")
+	}*/	
+/*	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/list/{id}")
 	@ResponseBody
 	public List<OperationResponseDTO> getOperations(@PathVariable int id) {
 		List<OperationResponseDTO> operations = operationService.getAll(id);
 		return operations;
+	}*/
+	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/operations/list/{id}")
+	@ResponseBody
+	public Page<OperationResponseDTO> get1page(@PathVariable int id, Pageable pageable) {
+		return operationService.getPage(id, pageable);
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/print/{id}")
 	@ResponseBody
-	public void exportToCSV(@PathVariable int id) {
+	public void export2csv(@PathVariable int id) {
 		
 		Bill bill = null;
 		try {

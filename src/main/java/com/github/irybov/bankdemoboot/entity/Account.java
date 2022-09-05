@@ -58,7 +58,7 @@ public class Account{
 	private OffsetDateTime createdAt;
 	
 	@NotNull
-	private boolean active = true;
+	private boolean isActive;
 	
 	@NotBlank(message = "Name must not be empty")
 	@Size(min=2, max=20, message = "Name should be 2-20 chars length")
@@ -104,12 +104,15 @@ public class Account{
 	@Enumerated(EnumType.STRING)
 	private Set<Role> roles;
 	
-	public Account(String name, String surname, String phone, LocalDate birthday, String password) {
+	public Account(String name, String surname, String phone, LocalDate birthday, String password,
+			OffsetDateTime createdAt, boolean isActive) {
 		this.name = name;
 		this.surname = surname;
 		this.phone = phone;
 		this.birthday = birthday;
 		this.password = password;
+		this.createdAt = createdAt;
+		this.isActive = isActive;
 	}	
 	
 	public void addBill(Bill bill) {

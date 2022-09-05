@@ -49,7 +49,7 @@ public class Operation {
 	
 	@NotNull
 	@Size(min=3, max=3)
-	@Column(name="currency", length=3, columnDefinition = "char")
+	@Column(length=3)
 	private String currency;
 	
 	private int sender;

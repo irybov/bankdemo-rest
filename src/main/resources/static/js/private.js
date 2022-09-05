@@ -1,6 +1,6 @@
 $(document).ready(function(){
-	$('#bill_body').empty();
-    var data = [[${account.bills}]];
+	$('#bill_table tbody').empty();
+//    var data = [[${account.bills}]];
     var token = $("meta[name='_csrf']").attr("content");
     var header = $("meta[name='_csrf_header']").attr("content");
     var requestHeaders = {};
@@ -19,7 +19,7 @@ $(document).ready(function(){
 			+ '</div></td>'
 			+ '<td><button class="btn btn-danger" id="erase'+rowID+'">Erase</button></td>'
 			+ '</tr>';
-    	$(info).appendTo('#bill_body');
+    	$(info).appendTo('#bill_table tbody');
 	 	
 	 	$('.btn-group .btn').click(function() {
 	 		var action = $(this).val();
@@ -57,8 +57,9 @@ $(document).ready(function(){
 			});
 		});
 	});
-	$('#bill_body').hide().fadeIn('slow');
+	$('#bill_table tbody').hide().fadeIn('slow');
 });
+
 $(document).ready(function(){
     $('#currency_form').submit(function (ev) {
         ev.preventDefault();

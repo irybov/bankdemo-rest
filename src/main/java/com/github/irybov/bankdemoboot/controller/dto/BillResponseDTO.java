@@ -17,6 +17,7 @@ public class BillResponseDTO {
 	private String currency;
 	
 	public BillResponseDTO(Bill bill) {
+		
 		this.id = bill.getId();
 		this.createdAt = bill.getCreatedAt();
 		this.active = bill.isActive();

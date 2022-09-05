@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -72,7 +73,8 @@ class AccountServiceDAOTest {
         verify(accountDAO).saveAccount(argumentCaptor.capture());
 
 		Account account = new Account
-			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin");
+			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin",
+					OffsetDateTime.now(), true);
 		given(accountDAO.getPhone(search)).willReturn("0000000000");
 		assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
         verify(accountDAO).getPhone(search);

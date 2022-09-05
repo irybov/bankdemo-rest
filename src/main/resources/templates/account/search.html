@@ -9,8 +9,12 @@
 	<script th:src="@{/webjars/jquery/3.6.0/jquery.min.js}"></script>
 	<script th:src="@{/webjars/popper.js/2.9.3/umd/popper.min.js}"></script>
 	<script th:src="@{/webjars/bootstrap/5.1.3/js/bootstrap.min.js}"></script>
-<!-- 	<style>.error {color: red; font-weight: bold;}</style>
-	<style>input[type=text]:focus{background: #ffe}</style>	 -->
+	<script th:src="@{/js/search.js}"></script>
+	<style>
+		.page-item.active .page-link {background-color: #d63384 !important;
+		 border: 1px solid black;}
+	    .page-link {color: black !important;}
+	</style>
 </head>
 <body>
 
@@ -65,8 +69,8 @@
 
 <!-- <div sec:authorize="hasRole('ADMIN')" th:if="${target}"> -->
 <div sec:authorize="hasRole('ADMIN')">
-<table class="table table-hover table-sm">
-	<thead id="client_head">
+<table class="table table-hover table-sm" id="client_table">
+	<thead>
 		<tr>
 			<th style="text-align: center;">Id</th>
 			<th style="text-align: center;">Name</th>
@@ -78,7 +82,7 @@
 			<th></th>
 		</tr>
 	</thead>
-	<tbody id="client_body">
+	<tbody>
 <!-- 	<tr>
 		<td class="align-middle" align="center" th:text="${target.id}"></td>
 	    <td class="align-middle" align="center" th:text="${target.name}"></td>
@@ -111,8 +115,8 @@
 
 <!-- <div sec:authorize="hasRole('ADMIN')" th:if="${target}"> -->
 <div sec:authorize="hasRole('ADMIN')">
-<table class="table table-hover table-sm">
-	<thead id="bill_head">
+<table class="table table-hover table-sm" id="bill_table">
+	<thead>
 		<tr>
 			<th style="text-align: center;">Id</th>
 			<th style="text-align: center;">Balance</th>
@@ -121,7 +125,7 @@
 			<th style="text-align: center;">Actions</th>									
 		</tr>
 	</thead>
-	<tbody id="bill_body">
+	<tbody>
 <!-- 		<tr th:each="bill: ${target.bills}">
 			<td class="align-middle" align="center" th:text="${bill.id}"></td>
 		    <td class="align-middle" align="center" th:text="${bill.balance}"></td>
@@ -166,175 +170,10 @@
 </div>
 <br>
 
-<script>
-	$(document).ready(function(){
-        $('#search_form').submit(function (ev) {
-            ev.preventDefault();
- 			$('#client_body').empty();
- 			$('#bill_body').empty();
-	 		$.getJSON('http://localhost:8080/bankdemo/accounts/search/'+$('#phone').val(),
-	 			function(data){
-    	 		var account = '<tr>'
-   					+ '<td class=align-middle align=center>'+data.id+'</td>'
-   					+ '<td class=align-middle align=center>'+data.name+'</td>'
-   					+ '<td class=align-middle align=center>'+data.surname+'</td>'
-   					+ '<td class=align-middle align=center>'+data.phone+'</td>'
-   					+ '<td></td>'
-   				    + '<td class=align-middle align=center>'+data.birthday+'</td>'
-   				    + '<td class=align-middle align=center id="target_bool">'+data.active+'</td>'
- 					+ '<td><button class="btn btn-danger" id="target_status">Switch<br/>status'
- 					+ '</button></td></tr>';
-    		 	$(account).appendTo('#client_body');
-    		 	
-    			$('#target_status').click(function(){
-    				if(!confirm('Are you sure to switch the status?')){
-                        return false;
-       				}
-         			$.ajax({
-        				type: 'GET',
-        				url: 'http://localhost:8080/bankdemo/accounts/status/'+data.id,
-         	        	success: function(bool) {
-         	        		$('#target_bool').html(bool);
-         	        	}
-        			});
-    			});
-    			
-	 			$.each(data.bills, function(key, value){
-	 				var rowID = value.id;
-		 			var info = '<tr id="row'+rowID+'">'
-						+ '<td class=align-middle align=center>'+value.id+'</td>'
-						+ '<td class=align-middle align=center>'+value.balance+'</td>'
-						+ '<td class=align-middle align=center>'+value.currency+'</td>'
-						+ '<td class=align-middle align=center id="bill_bool'+rowID+'">'+value.active+'</td>'
-						+ '<td class=align-middle align=center>'
-	 					+ '<button class="btn btn-danger" id="bill_status'+rowID+'">Switch<br/>status'
-	 					+ '</button>'
-	 					+ '<button class="btn btn-primary" id="show_events'+rowID+'">Show<br/>events'
-	 					+ '</button>'
-	 					+ '<button class="btn btn-success" id="export_csv'+rowID+'">Export<br/>to CSV'
-	 					+ '</button></td></tr>';
-					$(info).appendTo('#bill_body');
-					
-					var statusBTN = '#bill_status'+rowID;
-		 			$(statusBTN).click(function(){
-	    				if(!confirm('Are you sure to switch the status?')){
-	                        return false;
-	       				}
-		 				var switcher = '#bill_bool'+rowID;
-		 	     			$.ajax({
-		 					type: 'GET',
-		 					url: 'http://localhost:8080/bankdemo/bills/status/'+rowID,
-		 	 	        	success: function(bool) {
-		 	 	        		$(switcher).html(bool);
-		 	 	        	}
-		 				});
-		 			});
-		 			var eventsBTN = '#show_events'+rowID;
-		 	    	$(eventsBTN).click(function(){
-		 	 			$('#info_body').empty();
-		 		 		$.getJSON('http://localhost:8080/bankdemo/operations/list/'+rowID,
-		 		 				function(data){
-		 		 			var information = '';
-		 		 			$.each(data, function(key, value){
-		 						information += '<tr>';
-		 						information += '<td align=center>'+value.id+'</td>';
-		 						information += '<td align=center>'+value.action+'</td>';
-		 						information += '<td></td>';
-		 						information += '<td align=center>'+value.amount+'</td>';
-		 						information += '<td align=center>'+value.currency+'</td>';
-		 						information += '<td align=center>'+value.sender+'</td>';
-		 						information += '<td align=center>'+value.recipient+'</td>';
-		 						information += '<td></td>';
-		 						information += '<td align=center>'+value.createdAt+'</td>';				
-		 						information += '</tr>';
-		 		 			});
-		 			 		$('#info_body').append(information);
-		 			    });
-		 	 			$('#info_body').hide().fadeIn('slow');
-		 		    });
- 		 	    	var exportBTN = '#export_csv'+rowID;
-		 			$(exportBTN).click(function(){
-	 	     			$.ajax({
-		 					type: 'GET',
-		 					url: 'http://localhost:8080/bankdemo/operations/print/'+rowID,
-		 				});
-		 			});		 			
-	 			});    			
-		    })
-		    .done(function() { $('#message').empty(); })
-		    .fail(function() { $('#message').html
-		    	('Account with number: '+$('#phone').val()+' not found'); });
- 			$('#client_body').hide().fadeIn('fast');
- 			$('#bill_body').hide().fadeIn('slow');
-        });            
-	});
-</script>
-
-<!-- <script>
-	$(document).ready(function(){
-		$('.account_status').click(function(){
-     			$.ajax({
-				type: 'GET',
-				url: 'http://localhost:8080/bankdemo/accounts/status/'+$(this).val(),
- 	        	success: function(bool) {
- 	        		$('#account_bool').html(bool);
- 	        	}
-			});
-		});
-	});
-</script>
-<script>
-	$(document).ready(function(){
-		$('.bill_status').click(function(){
-			var switcher = '#bill_bool'+$(this).val();
-     			$.ajax({
-				type: 'GET',
-				url: 'http://localhost:8080/bankdemo/bills/status/'+$(this).val(),
- 	        	success: function(bool) {
- 	        		$(switcher).html(bool);
- 	        	}
-			});
-		});
-	});
-</script>
-<script>
-	$(document).ready(function(){
-		$('.export_csv').click(function(){
- 			$.get('http://localhost:8080/bankdemo/operations/print/'+$(this).val());
-		});
-	});
-</script>
-<script>
-	$(document).ready(function(){
-    	$('.show_events').click(function(){
- 			$('#info_body').empty();
-	 		$.getJSON('http://localhost:8080/bankdemo/operations/list/'+$(this).val(),
-	 				function(data){
-	 			var information = '';
-	 			$.each(data, function(key, value){
-					information += '<tr>';
-					information += '<td align=center>'+value.id+'</td>';
-					information += '<td align=center>'+value.action+'</td>';
-					information += '<td></td>';
-					information += '<td align=center>'+value.amount+'</td>';
-					information += '<td align=center>'+value.currency+'</td>';
-					information += '<td align=center>'+value.sender+'</td>';
-					information += '<td align=center>'+value.recipient+'</td>';
-					information += '<td></td>';
-					information += '<td align=center>'+value.timestamp+'</td>';				
-					information += '</tr>';
-	 			});
-		 		$('#info_body').append(information);
-		    });
- 			$('#info_body').hide().fadeIn('slow');
-	    });
-	});
-</script> -->
-
 <!-- <div sec:authorize="hasRole('ADMIN')" th:if="${target}"> -->
 <div sec:authorize="hasRole('ADMIN')">
 <table class="table table-hover table-sm" id="info_table">
-	<thead id="info_head">
+	<thead>
 		<tr>
 			<th style="text-align: center;">Id</th>
 			<th style="text-align: center;">Event</th>
@@ -347,7 +186,7 @@
 			<th style="text-align: center;">When</th>
 		</tr>
 	</thead>
-	<tbody id="info_body">
+	<tbody>
 <!-- 	<tr th:each="operation : ${operations}">
 		<td align="center" th:text="${operation.id}"></td>		
 	    <td align="center" th:text="${operation.action}"></td>
@@ -359,8 +198,11 @@
 	    <td></td>	    	    
 	    <td align="center" th:text="${operation.timestamp}"></td>
 		</tr> -->
-	</tbody>	
+	</tbody>
+	<tfoot>
+	</tfoot>	
 </table>
+	<ul class="pagination justify-content-center" style="cursor: pointer;"></ul>
 </div>
 <br>
 

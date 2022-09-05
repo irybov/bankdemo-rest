@@ -2,6 +2,7 @@ package com.github.irybov.bankdemoboot.config;
 
 import javax.sql.DataSource;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.Primary;
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
+import com.github.irybov.bankdemoboot.validation.AccountValidator;
 
 @Configuration
 @ComponentScan(basePackages="bankdemoboot")
@@ -45,5 +47,16 @@ public class AppConfig {
     String qualifier) {
         return (OperationService) context.getBean(qualifier);
     }    
+    
+    @Bean
+    @Primary
+    public AccountValidator beforeCreateAccountValidator() {
+        return new AccountValidator();
+    }
+    
+    @Bean
+    public ModelMapper modelmMapper() {
+    	return new ModelMapper();
+    }
     
 }

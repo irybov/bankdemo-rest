@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,8 +31,8 @@ public class OperationServiceJPA implements OperationService {
 				.currency(currency)
 				.sender(sender)
 				.recipient(recipient)
+				.createdAt(OffsetDateTime.now())
 				.build();
-		operation.setCreatedAt(OffsetDateTime.now());
 		operationRepository.save(operation);
 	}
 	
@@ -39,8 +43,8 @@ public class OperationServiceJPA implements OperationService {
 				.action(action)
 				.currency(currency)
 				.recipient(recipient)
+				.createdAt(OffsetDateTime.now())
 				.build();
-		operation.setCreatedAt(OffsetDateTime.now());
 		operationRepository.save(operation);
 	}
 	
@@ -51,8 +55,8 @@ public class OperationServiceJPA implements OperationService {
 				.action(action)
 				.currency(currency)
 				.sender(sender)
+				.createdAt(OffsetDateTime.now())
 				.build();
-		operation.setCreatedAt(OffsetDateTime.now());
 		operationRepository.save(operation);
 	}
 	
@@ -63,10 +67,18 @@ public class OperationServiceJPA implements OperationService {
 	@Transactional(readOnly = true)
 	public List<OperationResponseDTO> getAll(int id) {
 
-		return operationRepository.findBySenderOrRecipientOrderByIdAsc(id, id)
+		return operationRepository.findBySenderOrRecipientOrderByIdDesc(id, id)
 				.stream()
 				.map(OperationResponseDTO::new)
 				.collect(Collectors.toList());
+	}
+	@Transactional(readOnly = true)
+	public Page<OperationResponseDTO> getPage(int id, Pageable page){
+		
+		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
+				Sort.by(Sort.Direction.DESC, "id"));
+		return operationRepository.findBySenderOrRecipient(id, id, pageable)
+				.map(OperationResponseDTO::new);
 	}
 	
 }

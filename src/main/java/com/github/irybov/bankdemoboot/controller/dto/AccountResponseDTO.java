@@ -32,6 +32,7 @@ public class AccountResponseDTO implements UserDetails{
 	private Set<Role> roles;
 
 	public AccountResponseDTO(Account account) {
+		
 		this.id = account.getId();
 		this.createdAt = account.getCreatedAt();
 		this.active = account.isActive();

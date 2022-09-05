@@ -18,11 +18,15 @@ public class AccountValidator implements org.springframework.validation.Validato
 	
     @Autowired
     private Validator validator;
+    
+	@Autowired
+	@Qualifier("accountServiceAlias")
+	private AccountService accountService;
 
-	private final AccountService accountService;
+/*	private final AccountService accountService;
 	public AccountValidator(@Qualifier("accountServiceAlias")AccountService accountService) {
 		this.accountService = accountService;
-	}
+	}*/
 
 	@Override
 	public boolean supports(Class<?> clazz) {
@@ -40,7 +44,7 @@ public class AccountValidator implements org.springframework.validation.Validato
 	    }
 		
 		AccountRequestDTO account = (AccountRequestDTO) target;
-		if(accountService.getPhone(account.getPhone()).equals(account.getPhone())){
+		if(accountService.getPhone(account.getPhone()) != null){
 			errors.rejectValue("phone", "", "Validator in action! This number is already in use.");
 		}
 	}

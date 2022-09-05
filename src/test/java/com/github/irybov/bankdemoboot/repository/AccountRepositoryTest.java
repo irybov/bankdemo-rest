@@ -3,6 +3,7 @@ package com.github.irybov.bankdemoboot.repository;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -34,7 +35,8 @@ class AccountRepositoryTest {
 	@BeforeEach
 	void set_up() {
 		account = new Account
-				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin");
+				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin",
+						OffsetDateTime.now(), true);
 		accountRepository.save(account);
 	}
 	
@@ -62,6 +64,13 @@ class AccountRepositoryTest {
 		Account updated = accountRepository.findByPhone(newPhone);
 		assertThat(fromDB).isEqualTo(updated);
     }
+    
+    @Test
+//	@Order(4)
+	void check_if_phone_not_presents() {
+		String newPhone = "9999999999";
+		assertThat(accountRepository.getPhone(newPhone)).isNull();
+	}
 		
     @AfterEach
     void tear_down() {

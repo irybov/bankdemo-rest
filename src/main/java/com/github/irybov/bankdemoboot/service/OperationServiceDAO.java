@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,8 +30,8 @@ public class OperationServiceDAO implements OperationService {
 				.currency(currency)
 				.sender(sender)
 				.recipient(recipient)
+				.createdAt(OffsetDateTime.now())
 				.build();
-		operation.setCreatedAt(OffsetDateTime.now());
 		operationDAO.save(operation);
 	}
 	
@@ -40,8 +42,8 @@ public class OperationServiceDAO implements OperationService {
 				.action(action)
 				.currency(currency)
 				.recipient(recipient)
+				.createdAt(OffsetDateTime.now())
 				.build();
-		operation.setCreatedAt(OffsetDateTime.now());
 		operationDAO.save(operation);
 	}
 	
@@ -52,8 +54,8 @@ public class OperationServiceDAO implements OperationService {
 				.action(action)
 				.currency(currency)
 				.sender(sender)
+				.createdAt(OffsetDateTime.now())
 				.build();
-		operation.setCreatedAt(OffsetDateTime.now());
 		operationDAO.save(operation);
 	}
 	
@@ -70,6 +72,11 @@ public class OperationServiceDAO implements OperationService {
 				.sorted(compareById)
 				.map(OperationResponseDTO::new)
 				.collect(Collectors.toList());
+	}
+	@Transactional(readOnly = true)
+	public Page<OperationResponseDTO> getPage(int id, Pageable pageable) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

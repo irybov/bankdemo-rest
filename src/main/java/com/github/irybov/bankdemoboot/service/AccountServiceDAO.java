@@ -47,9 +47,8 @@ public class AccountServiceDAO implements AccountService {
 		
 		Account account = new Account(accountRequestDTO.getName(), accountRequestDTO.getSurname(),
 				accountRequestDTO.getPhone(), birthday, BCrypt.hashpw
-				(accountRequestDTO.getPassword(), BCrypt.gensalt(4)));
+				(accountRequestDTO.getPassword(), BCrypt.gensalt(4)), OffsetDateTime.now(), true);
 		account.addRole(Role.CLIENT);
-		account.setCreatedAt(OffsetDateTime.now());
 		try {
 			accountDAO.saveAccount(account);
 		}
@@ -89,9 +88,7 @@ public class AccountServiceDAO implements AccountService {
 	
 	public BillResponseDTO addBill(String phone, String currency) {
 		Account account = accountService.getAccount(phone);
-		Bill bill = new Bill(currency);
-		bill.setOwner(account);
-		bill.setCreatedAt(OffsetDateTime.now());
+		Bill bill = new Bill(currency, OffsetDateTime.now(), true, account);
 		billService.saveBill(bill);
 		account.addBill(bill);
 		accountService.updateAccount(account);
