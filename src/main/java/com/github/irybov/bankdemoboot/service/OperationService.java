@@ -15,5 +15,5 @@ public interface OperationService {
 	public void withdraw(double amount, String action, String currency, int sender);
 	public Operation get(long id);
 	public List<OperationResponseDTO> getAll(int id);
-	public Page<OperationResponseDTO> getPage(int id, Pageable pageable);
+	public Page<OperationResponseDTO> getPage(int id, Pageable page);
 }
