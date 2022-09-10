@@ -3,7 +3,6 @@ package com.github.irybov.bankdemoboot.dao;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -46,8 +45,7 @@ class AccountDAOTest {
 		accountDAO = new AccountDAO();
 		ReflectionTestUtils.setField(accountDAO, "entityManager", entityManager);
 		account = new Account
-				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin",
-						OffsetDateTime.now(), true);
+				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 		accountDAO.saveAccount(account);
 	}
 	

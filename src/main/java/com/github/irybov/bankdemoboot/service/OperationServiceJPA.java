@@ -76,7 +76,7 @@ public class OperationServiceJPA implements OperationService {
 	public Page<OperationResponseDTO> getPage(int id, Pageable page){
 		
 		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
-				Sort.by(Sort.Direction.DESC, "id"));
+				Sort.by("id").descending());
 		return operationRepository.findBySenderOrRecipient(id, id, pageable)
 				.map(OperationResponseDTO::new);
 	}

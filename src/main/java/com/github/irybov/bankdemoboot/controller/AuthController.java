@@ -32,7 +32,7 @@ public class AuthController {
 	public AuthController(Validator accountValidator) {
 		this.accountValidator = accountValidator;
 	}
-	
+
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}

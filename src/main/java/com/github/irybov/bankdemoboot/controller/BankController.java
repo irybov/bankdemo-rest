@@ -2,6 +2,7 @@ package com.github.irybov.bankdemoboot.controller;
 
 import java.util.Currency;
 import java.util.HashSet;
+import java.util.List;
 //import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
@@ -71,15 +72,17 @@ public class BankController {
 	@GetMapping("/accounts/show/{phone}")
 	public String getAccount(@PathVariable String phone, ModelMap modelMap) {
 
-		String current = authentication().getName();		
-		AccountResponseDTO account = accountService.getAccountDTO(current);
-		modelMap.addAttribute("account", account);
-		modelMap.addAttribute("currencies", currencies);
-		
+		String current = authentication().getName();
 		if(!accountService.verifyAccount(phone, current)) {
 			modelMap.addAttribute("message", "Security restricted information");
 			return "forward:/accounts/show/" + current;
 		}
+		
+		AccountResponseDTO account = accountService.getAccountDTO(current);
+		List<BillResponseDTO> bills = accountService.getBills(account.getId());
+		modelMap.addAttribute("account", account);
+		modelMap.addAttribute("bills", bills);
+		modelMap.addAttribute("currencies", currencies);		
 		return "/account/private";
 	}
 	

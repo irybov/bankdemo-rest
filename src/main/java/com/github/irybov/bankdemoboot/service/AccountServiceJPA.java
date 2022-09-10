@@ -1,9 +1,10 @@
 package com.github.irybov.bankdemoboot.service;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.persistence.PersistenceException;
 
@@ -48,7 +49,7 @@ public class AccountServiceJPA implements AccountService {
 		
 		Account account = new Account(accountRequestDTO.getName(), accountRequestDTO.getSurname(),
 				accountRequestDTO.getPhone(), birthday, BCrypt.hashpw
-				(accountRequestDTO.getPassword(), BCrypt.gensalt(4)), OffsetDateTime.now(), true);
+				(accountRequestDTO.getPassword(), BCrypt.gensalt(4)), true);
 		account.addRole(Role.CLIENT);
 		try {
 			accountRepository.save(account);
@@ -88,10 +89,15 @@ public class AccountServiceJPA implements AccountService {
 	public String getPhone(String phone){
 		return accountRepository.getPhone(phone);
 	}
+	@Transactional(readOnly = true)
+	public List<BillResponseDTO> getBills(int id){
+		List<Bill> bills = accountRepository.getById(id).getBills();
+		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());
+	}
 	
 	public BillResponseDTO addBill(String phone, String currency) {
 		Account account = accountService.getAccount(phone);
-		Bill bill = new Bill(currency, OffsetDateTime.now(), true, account);
+		Bill bill = new Bill(currency, true, account);
 		billService.saveBill(bill);
 		account.addBill(bill);
 		accountService.updateAccount(account);
@@ -133,6 +139,16 @@ public class AccountServiceJPA implements AccountService {
 		}
 		accountService.updateAccount(account);
 		return account.isActive();
+	}
+
+	@Transactional(readOnly = true)
+	public List<AccountResponseDTO> getAll() {		
+		return accountRepository.findAll()
+				.stream()
+				.filter(a -> a.getRoles().contains(Role.CLIENT))
+				.sorted((a1, a2) -> a1.getId() - a2.getId())
+				.map(AccountResponseDTO::new)
+				.collect(Collectors.toList());
 	}
 	
 }

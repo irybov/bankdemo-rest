@@ -2,7 +2,7 @@ package com.github.irybov.bankdemoboot.config;
 
 import javax.sql.DataSource;
 
-import org.modelmapper.ModelMapper;
+//import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -28,7 +28,7 @@ public class AppConfig {
 	@ConfigurationProperties(prefix = "spring.datasource")
 	@Bean
 	@Primary
-	public DataSource datasource() {			
+	public DataSource datasource() {
 		return DataSourceBuilder.create().build();
 	}
 	
@@ -54,9 +54,9 @@ public class AppConfig {
         return new AccountValidator();
     }
     
-    @Bean
+/*    @Bean
     public ModelMapper modelmMapper() {
     	return new ModelMapper();
-    }
+    }*/
     
 }

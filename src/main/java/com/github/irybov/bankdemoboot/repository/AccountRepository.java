@@ -12,5 +12,4 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
 	
 	@Query("SELECT phone FROM Account accounts WHERE phone=:check")
 	String getPhone(String check);
-
 }

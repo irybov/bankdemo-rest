@@ -20,6 +20,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotBlank;
@@ -56,6 +58,12 @@ public class Account{
 	@ToString.Exclude
 	@JsonFormat(shape = JsonFormat.Shape.STRING)
 	private OffsetDateTime createdAt;
+	
+//	@EqualsAndHashCode.Exclude
+//	@NotNull
+	@ToString.Exclude
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private OffsetDateTime updatedAt;
 	
 	@NotNull
 	private boolean isActive;
@@ -105,13 +113,12 @@ public class Account{
 	private Set<Role> roles;
 	
 	public Account(String name, String surname, String phone, LocalDate birthday, String password,
-			OffsetDateTime createdAt, boolean isActive) {
+			boolean isActive) {
 		this.name = name;
 		this.surname = surname;
 		this.phone = phone;
 		this.birthday = birthday;
 		this.password = password;
-		this.createdAt = createdAt;
 		this.isActive = isActive;
 	}	
 	
@@ -127,6 +134,15 @@ public class Account{
 			roles = new HashSet<>();
 		}
 		roles.add(role);
+	}
+	
+	@PrePersist
+	protected void onCreate() {
+		createdAt = OffsetDateTime.now();
+	}
+	@PreUpdate
+	protected void onUpdate() {
+		updatedAt = OffsetDateTime.now();
 	}
 
 }

@@ -91,7 +91,7 @@ $(document).ready(function(){
    					+ '</div></td>'
  					+ '<td><button class="btn btn-danger" id="erase'+rowID+'">Erase</button>'
  					+'</td></tr>';
-    		 	$(info).appendTo('#bill_body');
+    		 	$(info).appendTo('#bill_table tbody');
     		 	
     		 	$('.btn-group .btn').click(function() {
     		 		var action = $(this).val();

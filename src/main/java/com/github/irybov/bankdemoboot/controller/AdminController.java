@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.entity.Bill;
@@ -60,7 +61,7 @@ public class AdminController {
 	@GetMapping("/accounts/search")
 	public String searchAccount(@RequestParam(required = false) String phone, Model model) {
 		
-		AccountResponseDTO admin = accountService.getAccountDTO(authentication().getName());		
+		AccountResponseDTO admin = accountService.getAccountDTO(authentication().getName());
 /*		AccountResponseDTO target = null;
 		try {
 			target = accountService.getAccountDTO(phone);
@@ -92,8 +93,30 @@ public class AdminController {
 		if(target == null) {
 			throw new EntityNotFoundException("Database exception: " + phone + " not found");
 		}
+		List<BillResponseDTO> bills = accountService.getBills(target.getId());
+		target.setBills(bills);
 		return target;
 	}
+	
+/*	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/accounts/list")
+	@ResponseBody
+	public List<AccountResponseDTO> getClients(){
+		return accountService.getAll();
+	}*/
+	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/accounts/list")
+	public String getClients(Model model){		
+		List<AccountResponseDTO> clients = accountService.getAll();
+		model.addAttribute("clients", clients);
+		return "/account/clients";
+	}
+/*	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/accounts/list/all")
+	@ResponseBody
+	public List<AccountResponseDTO> getClients(){
+		return accountService.getAll();
+	}*/
 	
 /*	@PreAuthorize("hasRole('ADMIN')")
 	@PatchMapping("/accounts/status/{phone}")

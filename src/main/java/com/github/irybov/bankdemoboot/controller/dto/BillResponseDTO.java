@@ -12,6 +12,7 @@ public class BillResponseDTO {
 
 	private int id;
 	private OffsetDateTime createdAt;
+	private OffsetDateTime updatedAt;
 	private boolean active;
 	private BigDecimal balance;
 	private String currency;
@@ -20,6 +21,7 @@ public class BillResponseDTO {
 		
 		this.id = bill.getId();
 		this.createdAt = bill.getCreatedAt();
+		this.updatedAt = OffsetDateTime.now();		
 		this.active = bill.isActive();
 		this.balance = bill.getBalance();
 		this.currency = bill.getCurrency();

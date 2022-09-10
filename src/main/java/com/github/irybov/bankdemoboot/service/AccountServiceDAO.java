@@ -1,8 +1,9 @@
 package com.github.irybov.bankdemoboot.service;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.PersistenceException;
 
@@ -47,7 +48,7 @@ public class AccountServiceDAO implements AccountService {
 		
 		Account account = new Account(accountRequestDTO.getName(), accountRequestDTO.getSurname(),
 				accountRequestDTO.getPhone(), birthday, BCrypt.hashpw
-				(accountRequestDTO.getPassword(), BCrypt.gensalt(4)), OffsetDateTime.now(), true);
+				(accountRequestDTO.getPassword(), BCrypt.gensalt(4)), true);
 		account.addRole(Role.CLIENT);
 		try {
 			accountDAO.saveAccount(account);
@@ -85,10 +86,15 @@ public class AccountServiceDAO implements AccountService {
 	public String getPhone(String phone){
 		return accountDAO.getPhone(phone);
 	}
+	@Transactional(readOnly = true)
+	public List<BillResponseDTO> getBills(int id) {
+		List<Bill> bills = accountDAO.getById(id).getBills();
+		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());
+	}
 	
 	public BillResponseDTO addBill(String phone, String currency) {
 		Account account = accountService.getAccount(phone);
-		Bill bill = new Bill(currency, OffsetDateTime.now(), true, account);
+		Bill bill = new Bill(currency, true, account);
 		billService.saveBill(bill);
 		account.addBill(bill);
 		accountService.updateAccount(account);
@@ -129,6 +135,15 @@ public class AccountServiceDAO implements AccountService {
 		}
 		accountService.updateAccount(account);
 		return account.isActive();
+	}
+
+	@Transactional(readOnly = true)
+	public List<AccountResponseDTO> getAll() {
+		return accountDAO.getAll()
+				.stream()
+//				.filter(a -> a.getRoles().contains(Role.CLIENT))
+				.map(AccountResponseDTO::new)
+				.collect(Collectors.toList());
 	}
 	
 }

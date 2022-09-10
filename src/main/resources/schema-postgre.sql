@@ -1,7 +1,8 @@
 CREATE SCHEMA IF NOT EXISTS bankdemo;
 CREATE TABLE IF NOT EXISTS bankdemo.accounts(
 	id SERIAL PRIMARY KEY,
-	created_at TIMESTAMP NOT NULL,
+	created_at TIMESTAMP,
+	updated_at TIMESTAMP,
 	is_active BOOLEAN NOT NULL,
 	name VARCHAR(20) NOT NULL,
 	surname VARCHAR(40) NOT NULL,
@@ -11,7 +12,8 @@ CREATE TABLE IF NOT EXISTS bankdemo.accounts(
 );
 CREATE TABLE IF NOT EXISTS bankdemo.bills(
 	id SERIAL PRIMARY KEY,
-	created_at TIMESTAMP NOT NULL,
+	created_at TIMESTAMP,
+	updated_at TIMESTAMP,
 	is_active BOOLEAN NOT NULL,
 	balance NUMERIC(19,2) NOT NULL,
 	currency VARCHAR(3) NOT NULL CONSTRAINT currencychk CHECK (char_length(currency) = 3),

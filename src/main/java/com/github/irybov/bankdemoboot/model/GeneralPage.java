@@ -11,7 +11,7 @@ public class GeneralPage {
 	
     private int number = 0;
     private int size = 10;
-    private Sort.Direction direction = Sort.Direction.DESC;
+    private Sort.Direction direction = Sort.Direction.ASC;
     private String sortBy = "id";
 
 }

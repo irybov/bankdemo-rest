@@ -75,8 +75,7 @@ public class OperationServiceDAO implements OperationService {
 				.collect(Collectors.toList());
 	}
 	@Transactional(readOnly = true)
-	public Page<OperationResponseDTO> getPage(int id, Pageable page) {
-		
+	public Page<OperationResponseDTO> getPage(int id, Pageable page) {		
 		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize());
 		return operationDAO.getPage(id, pageable).map(OperationResponseDTO::new);
 	}

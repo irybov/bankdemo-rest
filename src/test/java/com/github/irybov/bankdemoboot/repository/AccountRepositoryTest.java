@@ -3,7 +3,6 @@ package com.github.irybov.bankdemoboot.repository;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -35,8 +34,7 @@ class AccountRepositoryTest {
 	@BeforeEach
 	void set_up() {
 		account = new Account
-				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin",
-						OffsetDateTime.now(), true);
+				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 		accountRepository.save(account);
 	}
 	

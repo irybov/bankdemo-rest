@@ -1,5 +1,7 @@
 package com.github.irybov.bankdemoboot.service;
 
+import java.util.List;
+
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
@@ -18,5 +20,6 @@ public interface AccountService {
 	public AccountResponseDTO getById(int id);
 	public Boolean changeStatus(int id);
 	public String getPhone(String phone);
-	
+	public List<BillResponseDTO> getBills(int id);
+	public List<AccountResponseDTO> getAll();
 }

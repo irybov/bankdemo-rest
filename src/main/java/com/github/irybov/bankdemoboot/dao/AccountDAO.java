@@ -1,10 +1,13 @@
 package com.github.irybov.bankdemoboot.dao;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import com.github.irybov.bankdemoboot.Role;
 import com.github.irybov.bankdemoboot.entity.Account;
 
 @Repository
@@ -38,4 +41,11 @@ public class AccountDAO {
 				.getSingleResult();
 	}
 	
+	public List<Account> getAll(){
+		return entityManager.createQuery
+				("SELECT DISTINCT a FROM Account a JOIN a.roles r WHERE r=:role ORDER BY a.id ASC",
+				Account.class)
+				.setParameter("role", Role.CLIENT)
+				.getResultList();
+	}
 }

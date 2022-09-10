@@ -58,10 +58,14 @@
 <div sec:authorize="hasRole('ADMIN')">
 <form id="search_form">
 	<p th:text="${message}" class="error" id="message"/>
-	<input type="text" th:id="phone" class="form-control" pattern="^[0-9]{10}"
-	 placeholder="Phone" required autofocus style="width:auto"/>
+	<input type="text" th:id="phone" class="form-control" placeholder="Phone"
+	 required autofocus style="width:auto"/>
 	<button type="submit" class="btn btn-info" id="search">Search</button>
-</form>	
+</form>
+<br>	
+	<input type="button" value="Clients list"
+	 onclick="window.open('/bankdemo/accounts/list', '_blank')"
+	style="background-color: #d63384">
 </div>
 
 <hr>

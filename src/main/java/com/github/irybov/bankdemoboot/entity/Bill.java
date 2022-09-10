@@ -12,6 +12,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -37,6 +39,10 @@ public class Bill {
 	@JsonFormat(shape = JsonFormat.Shape.STRING)
 	private OffsetDateTime createdAt;
 	
+//	@NotNull
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private OffsetDateTime updatedAt;
+	
 	@NotNull
 	private boolean isActive;
 	
@@ -51,15 +57,24 @@ public class Bill {
 	private String currency;
 	
 	@ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.DETACH,
-			CascadeType.REFRESH}, fetch=FetchType.LAZY)
+			CascadeType.REFRESH}, fetch=FetchType.EAGER)
 	@JoinColumn(name="account_id", updatable = false)
 	private Account owner;
 	
-	public Bill(String currency, OffsetDateTime createdAt, boolean isActive, Account owner) {
+	public Bill(String currency, boolean isActive, Account owner) {
+		
 		this.currency = currency;
-		this.createdAt = createdAt;
 		this.isActive = isActive;
 		this.owner = owner;
+	}
+	
+	@PrePersist
+	protected void onCreate() {
+		createdAt = OffsetDateTime.now();
+	}
+	@PreUpdate
+	protected void onUpdate() {
+		updatedAt = OffsetDateTime.now();
 	}
 	
 }

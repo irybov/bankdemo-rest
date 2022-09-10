@@ -13,6 +13,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+//import com.github.irybov.bankdemoboot.security.AccountDetailsService;
+
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -25,6 +27,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	protected BCryptPasswordEncoder passwordEncoder() {
 	    return new BCryptPasswordEncoder(4);
 	}
+	
+/*    private final AccountDetailsService accountDetailsService;
+    @Autowired
+    public SecurityConfig(AccountDetailsService accountDetailsService) {
+        this.accountDetailsService = accountDetailsService;
+    }	
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(accountDetailsService)
+                .passwordEncoder(passwordEncoder());
+    }*/
 	
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -50,7 +63,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			.authorizeRequests()
 			.antMatchers("/bills/**", "/accounts/show", "/accounts/password")
 			.hasAnyRole("ADMIN", "CLIENT")
-			.antMatchers("/accounts/search", "/accounts/status", "/actuator/**", "/operations/**")
+			.antMatchers("/accounts/search", "/accounts/status", "/accounts/list/**",
+					"/actuator/**", "/operations/**")
 			.hasRole("ADMIN")
 			.anyRequest().authenticated()
 				.and()

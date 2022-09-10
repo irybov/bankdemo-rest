@@ -22,13 +22,13 @@
 		</div>
 		
 			<p><input type="text" th:name="phone" id="phone" class="form-control"
-				 pattern="^[0-9]{10}" placeholder="Phone" style="width:auto"/>
+				 pattern="^[0-9]{10}" placeholder="Phone" required autofocus style="width:auto"/>
 			<p><input type="password" th:name="password" id="password" class="form-control"
-				 pattern=".{10,50}" placeholder="Password" style="width:auto"/>
+				 pattern=".{10,50}" placeholder="Password" required autofocus style="width:auto"/>
 			<br>	 
 			<p><input type="submit" value="Log In" class="btn btn-success"/>
 	</form>		
 </div>
-
+	<p th:text="${message}" class="error"/>
 </body>
 </html>
