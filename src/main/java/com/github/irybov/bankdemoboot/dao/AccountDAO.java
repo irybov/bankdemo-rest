@@ -34,12 +34,12 @@ public class AccountDAO {
 		return entityManager.find(Account.class, id);
 	}
 	
-	public String getPhone(String check) {
+/*	public String getPhone(String check) {
 		return (String) entityManager.createNativeQuery
 				("SELECT phone FROM {h-schema}accounts WHERE phone=:check")
 				.setParameter("check", check)
 				.getSingleResult();
-	}
+	}*/
 	
 	public List<Account> getAll(){
 		return entityManager.createQuery

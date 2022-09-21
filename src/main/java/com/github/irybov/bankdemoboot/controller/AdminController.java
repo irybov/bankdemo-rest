@@ -1,6 +1,12 @@
 package com.github.irybov.bankdemoboot.controller;
 
+import java.io.BufferedInputStream;
+//import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+//import java.io.FileNotFoundException;
+//import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,11 +14,15 @@ import java.util.InputMismatchException;
 import java.util.List;
 
 import javax.persistence.EntityNotFoundException;
+//import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,8 +40,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
-import com.github.irybov.bankdemoboot.entity.Account;
-import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
@@ -117,6 +125,12 @@ public class AdminController {
 	public List<AccountResponseDTO> getClients(){
 		return accountService.getAll();
 	}*/
+	/*	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/accounts/list/{pageNumber}")
+	@ResponseBody
+	public List<AccountResponseDTO> getClients(@PathVariable int pageNumber){
+		return accountService.getAll(pageNumber);
+	}*/
 	
 /*	@PreAuthorize("hasRole('ADMIN')")
 	@PatchMapping("/accounts/status/{phone}")
@@ -185,26 +199,29 @@ public class AdminController {
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
-	@GetMapping("/operations/print/{id}")
+//	@GetMapping("/operations/print/{id}")
+	@GetMapping(value = "/operations/print/{id}",
+	produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	@ResponseBody
-	public void export2csv(@PathVariable int id) {
-		
-		Bill bill = null;
+//	public void export2csv(@PathVariable int id, HttpServletResponse response) throws IOException {
+	public Resource export2csv(@PathVariable int id) throws IOException {
+
+		BillResponseDTO bill = null;
 		try {
-			bill = billService.getBill(id);
+			bill = billService.getBillDTO(id);
 		}
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
-		Account account = bill.getOwner();
+		AccountResponseDTO account = bill.getOwner();
 		List<OperationResponseDTO> operations = operationService.getAll(id);
 		
 		List<String[]> data = new ArrayList<>();
 		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};
 		data.add(owner);
 		data.add(new String[0]);
-		String[] info = {bill.getCurrency(), String.valueOf(bill.getBalance()),
-				bill.getCreatedAt().toString()};
+		String[] info = {bill.getCurrency(), String.valueOf(bill.getBalance()), bill.getCreatedAt()
+				.toString()};
 		data.add(info);
 		data.add(new String[0]);
 		
@@ -219,14 +236,25 @@ public class AdminController {
 			data.add(row);
 		}
 		
-        try (CSVWriter writer = new CSVWriter(new FileWriter
-        		(new File(System.getProperty("user.home") + "/Desktop",
-        				"Bill-" + id +".csv")))) {
+		final String SLASH = System.getProperty("file.separator");
+		final String PATH = System.getProperty("user.dir") + SLASH + "files";
+		new File(PATH).mkdir();
+		final String FILENAME = "Bill-" + id +".csv";
+		
+        try (CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter
+        		(new File(PATH, FILENAME))))) {
             writer.writeAll(data);
         }
         catch (IOException exc) {
 			exc.printStackTrace();
 		}
+//        File file = new File(PATH + SLASH + FILENAME);
+        return new InputStreamResource(new BufferedInputStream(new FileInputStream
+        		(PATH + SLASH + FILENAME)));
+/*        response.setContentType("text/csv");
+        response.setContentLength((int)file.length());
+        response.setHeader("Content-Disposition", "attachment; filename="+FILENAME+"");
+        response.getWriter().print(file);*/
 	}
 	
 }

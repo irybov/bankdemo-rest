@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.exception.PaymentException;
 import com.github.irybov.bankdemoboot.repository.BillRepository;
@@ -32,9 +33,13 @@ public class BillServiceJPA implements BillService {
 	}
 	
 	@Transactional(readOnly = true)
-	public Bill getBill(int id) throws Exception {
+	Bill getBill(int id) throws Exception {
 		return billRepository.findById(id).orElseThrow
 				(()-> new PaymentException("Target bill with id: " + id + " not found"));
+	}
+	@Transactional(readOnly = true)
+	public BillResponseDTO getBillDTO(int id) throws Exception {
+		return new BillResponseDTO(billService.getBill(id));
 	}
 	
 	public String deposit(int id, double amount) throws Exception {

@@ -41,7 +41,8 @@ class AccountRepositoryTest {
 	@Test
 //	@Order(1)
 	void check_if_phone_presents() {		
-        assertThat(accountRepository.getPhone(search).equals(account.getPhone())).isTrue();
+        assertThat(accountRepository.findByPhone(search).getPhone()
+        		.equals(account.getPhone())).isTrue();
 	}
 	
 	@Test
@@ -67,7 +68,7 @@ class AccountRepositoryTest {
 //	@Order(4)
 	void check_if_phone_not_presents() {
 		String newPhone = "9999999999";
-		assertThat(accountRepository.getPhone(newPhone)).isNull();
+		assertThat(accountRepository.findByPhone(newPhone).getPhone()).isNull();
 	}
 		
     @AfterEach

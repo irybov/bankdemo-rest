@@ -16,6 +16,7 @@ public class BillResponseDTO {
 	private boolean active;
 	private BigDecimal balance;
 	private String currency;
+	private AccountResponseDTO owner;
 	
 	public BillResponseDTO(Bill bill) {
 		
@@ -25,6 +26,7 @@ public class BillResponseDTO {
 		this.active = bill.isActive();
 		this.balance = bill.getBalance();
 		this.currency = bill.getCurrency();
+		this.owner = new AccountResponseDTO(bill.getOwner());
 	}
 		
 }

@@ -73,9 +73,9 @@ class AccountServiceJPATest {
 
 		Account account = new Account
 			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
-		given(accountRepository.getPhone(search)).willReturn("0000000000");
+		given(accountRepository.findByPhone(search).getPhone()).willReturn("0000000000");
 		assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
-        verify(accountRepository).getPhone(search);
+        verify(accountRepository).findByPhone(search).getPhone();
 	}
     
     @AfterEach

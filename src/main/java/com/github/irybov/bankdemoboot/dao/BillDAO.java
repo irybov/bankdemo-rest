@@ -30,12 +30,16 @@ public class BillDAO {
 		return entityManager.find(Bill.class, id);
 	}
 
-	public String getPhone(int billId) {
+/*	public String getPhone(int billId) {
 		return (String) entityManager.createNativeQuery
 		("SELECT phone FROM {h-schema}accounts WHERE id = "
 				+ "(SELECT account_id FROM {h-schema}bills WHERE id=:billId)")
 				.setParameter("billId", billId)				
 				.getSingleResult();
+	}*/
+	
+	public String getPhone(int billId) {
+		return getBill(billId).getOwner().getPhone();
 	}
 	
 /*	public List<Integer> getAll(String billCurrency){

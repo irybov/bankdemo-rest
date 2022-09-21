@@ -52,7 +52,7 @@ class AccountDAOTest {
 	@Test
 //	@Order(1)
 	void check_if_phone_presents() {
-        assertThat(accountDAO.getPhone(search).equals(account.getPhone())).isTrue();
+        assertThat(accountDAO.getAccount(search).getPhone().equals(account.getPhone())).isTrue();
 	}
 	
 	@Test
@@ -78,7 +78,7 @@ class AccountDAOTest {
 //	@Order(4)
 	void check_if_phone_not_presents() {
 		String newPhone = "9999999999";
-		assertThat(accountDAO.getPhone(newPhone)).isNull();
+		assertThat(accountDAO.getAccount(newPhone).getPhone()).isNull();
 	}
 	
     @AfterEach

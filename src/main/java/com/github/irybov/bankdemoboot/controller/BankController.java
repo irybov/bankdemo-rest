@@ -11,6 +11,7 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -130,6 +131,20 @@ public class BankController {
 			return "/bill/transfer";
 		}
 		return "/bill/payment";
+	}
+	
+	@GetMapping(value = "/bills/validate/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
+	@ResponseBody
+	public String checkOwner(@PathVariable int id) {
+		
+		BillResponseDTO bill = null;
+		try {
+			bill = billService.getBillDTO(id);
+		}
+		catch (Exception exc) {
+			return exc.getMessage();
+		}		
+		return bill.getOwner().getName() + " " + bill.getOwner().getSurname();
 	}
 	
 	@PatchMapping("/bills/launch/{id}")

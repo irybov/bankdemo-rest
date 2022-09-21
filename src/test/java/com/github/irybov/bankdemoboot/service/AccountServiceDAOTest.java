@@ -73,9 +73,9 @@ class AccountServiceDAOTest {
 
 		Account account = new Account
 			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
-		given(accountDAO.getPhone(search)).willReturn("0000000000");
+		given(accountDAO.getAccount(search).getPhone()).willReturn("0000000000");
 		assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
-        verify(accountDAO).getPhone(search);
+        verify(accountDAO).getAccount(search).getPhone();
 	}
     
     @AfterEach

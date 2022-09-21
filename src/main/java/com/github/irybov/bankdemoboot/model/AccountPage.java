@@ -7,11 +7,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class GeneralPage {
-	
+public class AccountPage {
+
     private int number = 0;
-    private int size = 10;
+    private int size = 20;
     private Sort.Direction direction = Sort.Direction.ASC;
     private String sortBy = "id";
-
+	
 }

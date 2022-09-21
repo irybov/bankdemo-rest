@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.dao.BillDAO;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.exception.PaymentException;
@@ -32,8 +33,12 @@ public class BillServiceDAO implements BillService {
 	}
 	
 	@Transactional(readOnly = true)
-	public Bill getBill(int id) throws Exception {
+	Bill getBill(int id) throws Exception {
 		return billDAO.getBill(id);
+	}
+	@Transactional(readOnly = true)
+	public BillResponseDTO getBillDTO(int id) throws Exception {
+		return new BillResponseDTO(billService.getBill(id));
 	}
 	
 	public String deposit(int id, double amount) throws Exception {

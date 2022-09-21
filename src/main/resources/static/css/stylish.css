@@ -3,6 +3,11 @@
 	font-weight: bold;
 }
 
+.fine {
+	color: green;
+	font-weight: bold;
+}
+
 input[type=text]:focus {
 	background: #ffe
 }
@@ -12,5 +17,9 @@ input[type=password]:focus {
 }
 
 input[type=date]:focus {
+	background: #ffe
+}
+
+input[type=number]:focus {
 	background: #ffe
 }

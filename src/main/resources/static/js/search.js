@@ -106,6 +106,25 @@ $(document).ready(function(){
  	     			$.ajax({
 	 					type: 'GET',
 	 					url: 'http://localhost:8080/bankdemo/operations/print/'+rowID,
+	 	                success: function (data) {
+	 	                    //Convert the Byte Data to BLOB object.
+	 	                    var blob = new Blob([data], { type: "application/octetstream" });
+	 	                    var fileName = 'Bill-'+rowID+'.csv';
+	 	                    //Check the Browser type and download the File.
+	 	                    var isIE = false || !!document.documentMode;
+	 	                    if (isIE) {
+	 	                        window.navigator.msSaveBlob(blob, fileName);
+	 	                    } else {
+	 	                        var url = window.URL || window.webkitURL;
+	 	                        link = url.createObjectURL(blob);
+	 	                        var a = $("<a />");
+	 	                        a.attr("download", fileName);
+	 	                        a.attr("href", link);
+	 	                        $("body").append(a);
+	 	                        a[0].click();
+	 	                        $("body").remove(a);
+	 	                    }
+	 	                }
 	 				});
 	 			});		 			
  			});

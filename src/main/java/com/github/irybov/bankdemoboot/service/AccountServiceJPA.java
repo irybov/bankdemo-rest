@@ -80,14 +80,14 @@ public class AccountServiceJPA implements AccountService {
 	
 	@Transactional(readOnly = true)
 	public boolean verifyAccount(String phone, String current){
-		if(accountRepository.getPhone(phone) == null || !phone.equals(current)) {
+		if(getAccount(phone).getPhone() == null || !phone.equals(current)) {
 			return false;
 		}
 		return true;
 	}
 	@Transactional(readOnly = true)
 	public String getPhone(String phone){
-		return accountRepository.getPhone(phone);
+		return accountService.getAccount(phone).getPhone();
 	}
 	@Transactional(readOnly = true)
 	public List<BillResponseDTO> getBills(int id){

@@ -77,14 +77,14 @@ public class AccountServiceDAO implements AccountService {
 	
 	@Transactional(readOnly = true)
 	public boolean verifyAccount(String phone, String current){
-		if(accountDAO.getPhone(phone) == null || !phone.equals(current)) {
+		if(getAccount(phone).getPhone() == null || !phone.equals(current)) {
 			return false;
 		}
 		return true;
 	}
 	@Transactional(readOnly = true)
 	public String getPhone(String phone){
-		return accountDAO.getPhone(phone);
+		return accountService.getAccount(phone).getPhone();
 	}
 	@Transactional(readOnly = true)
 	public List<BillResponseDTO> getBills(int id) {
@@ -141,7 +141,6 @@ public class AccountServiceDAO implements AccountService {
 	public List<AccountResponseDTO> getAll() {
 		return accountDAO.getAll()
 				.stream()
-//				.filter(a -> a.getRoles().contains(Role.CLIENT))
 				.map(AccountResponseDTO::new)
 				.collect(Collectors.toList());
 	}
