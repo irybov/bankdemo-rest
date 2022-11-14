@@ -26,7 +26,10 @@
 			<p><input type="password" th:name="password" id="password" class="form-control"
 				 pattern=".{10,50}" placeholder="Password" required autofocus style="width:auto"/>
 			<br>	 
-			<p><input type="submit" value="Log In" class="btn btn-success"/>
+			<p>
+				<input type="submit" value="Log In" class="btn btn-success">
+				<input type="reset" value="Clear" class="btn btn-warning">
+			</p>
 	</form>		
 </div>
 	<p th:text="${message}" class="error"/>

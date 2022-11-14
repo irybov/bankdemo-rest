@@ -1,4 +1,5 @@
 $(document).ready(function(){
+	
 	$('#bill_table tbody').empty();
 //    var data = [[${account.bills}]];
     var token = $("meta[name='_csrf']").attr("content");
@@ -58,9 +59,11 @@ $(document).ready(function(){
 		});
 	});
 	$('#bill_table tbody').hide().fadeIn('slow');
+	
 });
 
 $(document).ready(function(){
+	
     $('#currency_form').submit(function (ev) {
         ev.preventDefault();
         var phone = $('#account_phone').val();
@@ -130,4 +133,5 @@ $(document).ready(function(){
             }
         });
     });
+    
 });

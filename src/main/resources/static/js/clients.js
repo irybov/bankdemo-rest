@@ -1,4 +1,5 @@
 $(document).ready(function(){
+	
 	$('#client_table tbody').empty();
 	$.getJSON('http://localhost:8080/bankdemo/accounts/list/0',
 		$.each(data.content, function(key, value){

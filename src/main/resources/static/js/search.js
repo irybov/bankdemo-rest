@@ -1,4 +1,5 @@
 $(document).ready(function(){
+	
     $('#search_form').submit(function (ev) {
         ev.preventDefault();
 		$('#client_table tbody').empty();
@@ -41,7 +42,7 @@ $(document).ready(function(){
 					+ '<td class=align-middle align=center>'
  					+ '<button class="btn btn-danger" id="bill_status'+rowID+'">Switch<br/>status'
  					+ '</button>'
- 					+ '<button class="btn btn-primary" id="show_events'+rowID+'">Show<br/>events'
+ 					+ '<button class="btn btn-info" id="show_events'+rowID+'">Show<br/>events'
  					+ '</button>'
  					+ '<button class="btn btn-success" id="export_csv'+rowID+'">Export<br/>to CSV'
  					+ '</button></td></tr>';
@@ -63,6 +64,16 @@ $(document).ready(function(){
 	 			});
 	 			
 	 			var eventsBTN = '#show_events'+rowID;
+	 	    	$(eventsBTN).click(function(){
+	 	    		var billId = rowID;
+	 	    		var newWindow = window.open
+	 	    		('http://localhost:8080/bankdemo/operations/list/', '_blank');
+//	 	    		location.reload();
+	 	    		$(newWindow.document.body).append
+	 	    		('<script th:inline="javascript">var rowID = '+billId+';</script>');
+	 	    	});
+	 			
+/*	 			var eventsBTN = '#show_events'+rowID;
 	 	    	$(eventsBTN).click(function(){
 	 	 			$('#info_table tbody').empty();
 //	 		 		$.getJSON('http://localhost:8080/bankdemo/operations/list/'+rowID,
@@ -99,7 +110,7 @@ $(document).ready(function(){
 		 	 		    }
 	 			    });	 	 		    
 	 	 			$('#info_table tbody').hide().fadeIn('slow');
-	 		    });
+	 		    });*/
 
 	 	    	var exportBTN = '#export_csv'+rowID;
 	 			$(exportBTN).click(function(){
@@ -270,6 +281,7 @@ $(document).ready(function(){
 		$('#client_table tbody').hide().fadeIn('fast');
 		$('#bill_table tbody').hide().fadeIn('slow');
     });
+    
 });
 
 /*$(document).ready(function(){

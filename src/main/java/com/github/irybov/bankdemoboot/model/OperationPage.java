@@ -9,9 +9,9 @@ import lombok.Setter;
 @Setter
 public class OperationPage {
 	
-    private int number = 0;
-    private int size = 10;
-    private Sort.Direction direction = Sort.Direction.DESC;
+    private int pageNumber = 0;
+    private int pageSize = 20;
+    private Sort.Direction sortDirection = Sort.Direction.DESC;
     private String sortBy = "id";
 
 }

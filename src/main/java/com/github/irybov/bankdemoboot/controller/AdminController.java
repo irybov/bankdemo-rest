@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
 //import javax.servlet.http.HttpServletResponse;
@@ -21,7 +22,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
+import com.github.irybov.bankdemoboot.model.OperationPage;
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
@@ -191,11 +192,22 @@ public class AdminController {
 		List<OperationResponseDTO> operations = operationService.getAll(id);
 		return operations;
 	}*/
+	
+	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/operations/list")
+	public String getOperations() {
+		return "/account/history";
+	}
+	
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/list/{id}")
 	@ResponseBody
-	public Page<OperationResponseDTO> get1page(@PathVariable int id, Pageable pageable) {
-		return operationService.getPage(id, pageable);
+	public Page<OperationResponseDTO> getPage(@PathVariable int id,
+			@RequestParam Optional<Double> minval, @RequestParam Optional<Double> maxval,
+			@RequestParam Optional<String> action, OperationPage page) {
+		
+		return operationService.getPage(id, action.orElse("_"),
+				minval.orElse(0.01), maxval.orElse(10000.00), page);
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")

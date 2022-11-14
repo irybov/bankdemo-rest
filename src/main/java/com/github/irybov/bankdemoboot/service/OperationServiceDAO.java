@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.dao.OperationDAO;
 import com.github.irybov.bankdemoboot.entity.Operation;
+import com.github.irybov.bankdemoboot.model.OperationPage;
 
 @Service
 @Transactional
@@ -61,7 +62,7 @@ public class OperationServiceDAO implements OperationService {
 	}
 	
 	@Transactional(readOnly = true)
-	public Operation get(long id) {
+	public Operation getOne(long id) {
 		return operationDAO.getById(id);
 	}
 	@Transactional(readOnly = true)
@@ -74,10 +75,19 @@ public class OperationServiceDAO implements OperationService {
 				.map(OperationResponseDTO::new)
 				.collect(Collectors.toList());
 	}
-	@Transactional(readOnly = true)
-	public Page<OperationResponseDTO> getPage(int id, Pageable page) {		
+/*	@Transactional(readOnly = true)
+	public Page<OperationResponseDTO> getPage(int id, OperationPage page) {		
 		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize());
 		return operationDAO.getPage(id, pageable).map(OperationResponseDTO::new);
+	}*/
+	@Transactional(readOnly = true)
+	public Page<OperationResponseDTO> getPage(int id, String action, double minval, double maxval,
+			OperationPage page) {
+		
+		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
+											page.getSortDirection(), page.getSortBy());
+		return operationDAO.getPage(id, action, minval, maxval, pageable)
+				.map(OperationResponseDTO::new);
 	}
 	
 }

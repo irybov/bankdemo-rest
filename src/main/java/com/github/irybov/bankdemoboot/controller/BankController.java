@@ -11,6 +11,8 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+//import org.springframework.data.domain.Page;
+//import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,6 +33,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 //import com.github.irybov.bankdemoboot.Currency;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
+//import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 import com.github.irybov.bankdemoboot.service.OperationService;
 import com.github.irybov.bankdemoboot.service.AccountService;
@@ -240,5 +243,17 @@ public class BankController {
 		model.addAttribute("success", "Password changed");
 		return "/account/password";
 	}
+	
+/*	@GetMapping("/operations/list")
+	public String getOperations(@RequestParam int id, Model model) {
+		model.addAttribute("billId", id);
+		return "/account/history";
+	}
+	
+	@GetMapping("/operations/list/{id}")
+	@ResponseBody
+	public Page<OperationResponseDTO> get1page(@PathVariable int id, Pageable pageable) {
+		return operationService.getPage(id, pageable);
+	}*/
 	
 }

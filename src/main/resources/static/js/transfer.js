@@ -1,4 +1,5 @@
 $(document).ready(function(){
+	
     $('#validate').click(function (ev) {
         ev.preventDefault();
 		$.ajax({
@@ -10,4 +11,5 @@ $(document).ready(function(){
     		}
     	});
     });
+    
 });

@@ -9,9 +9,9 @@ import lombok.Setter;
 @Setter
 public class AccountPage {
 
-    private int number = 0;
-    private int size = 20;
-    private Sort.Direction direction = Sort.Direction.ASC;
+    private int pageNumber = 0;
+    private int pageSize = 10;
+    private Sort.Direction sortDirection = Sort.Direction.ASC;
     private String sortBy = "id";
 	
 }

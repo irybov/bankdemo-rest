@@ -61,10 +61,10 @@
 	<input type="text" th:id="phone" class="form-control" placeholder="Phone"
 	 required autofocus style="width:auto"/>
 	 <p>
-	<button type="submit" class="btn btn-info" id="search">Search</button>
+	<button type="submit" class="btn btn-primary" id="search">Search</button>
 	<input type="button" class="btn" value="Clients list"
 	 onclick="window.open('/bankdemo/accounts/list', '_blank')"
-	style="background-color: #d63384">
+	 style="background-color: #d63384">
 	</p>
 </form>
 <br>	
@@ -202,7 +202,7 @@
 	    <td align="center" th:text="${operation.currency}"></td>
 	    <td align="center" th:text="${operation.sender}"></td>
 	    <td align="center" th:text="${operation.recipient}"></td>
-	    <td></td>	    	    
+	    <td></td>
 	    <td align="center" th:text="${operation.timestamp}"></td>
 		</tr> -->
 	</tbody>

@@ -84,7 +84,7 @@ public class AccountServiceDAO implements AccountService {
 	}
 	@Transactional(readOnly = true)
 	public String getPhone(String phone){
-		return accountService.getAccount(phone).getPhone();
+		return accountDAO.getPhone(phone);
 	}
 	@Transactional(readOnly = true)
 	public List<BillResponseDTO> getBills(int id) {
