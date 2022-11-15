@@ -31,19 +31,19 @@
 	<br><br>
 	<p><b>Select amount's range:</b></p>
 	<label for="MinValue">From</label>
-	<input type="number" th:id="MinValue" th:name="minval" th:value="minimum"
-	 min="0.01" max="10000" step="0.01">
+	<input type="number" th:id="MinValue" th:name="minval" min="0.01" max="10000" step="0.01">
 	&nbsp;<label for="MaxValue">To</label>
-	<input type="number" th:id="MaxValue" th:name="maxval" th:value="maximum"
-	 min="0.01" max="10000" step="0.01">
+	<input type="number" th:id="MaxValue" th:name="maxval" min="0.01" max="10000" step="0.01">
 	<br><br>
 	<p><b>Select event's date:</b></p>
 	<label for="StartDate">Between</label>
-	<input type="date" th:id="StartDate" th:name="mindate" th:value="start" min="1900-01-01">
+	<input type="date" th:id="StartDate" th:name="mindate" min="1900-01-01">
 	<label for="EndDate">and</label>
-	<input type="date" th:id="EndDate" th:name="maxdate" th:value="end" min="1900-01-01">
+	<input type="date" th:id="EndDate" th:name="maxdate" min="1900-01-01">
 	<br><br><br>
-	<input type="submit" value="Submit"> &nbsp;<input type="reset" value="Reset">
+	<input type="submit" value="Submit"> &nbsp;<input type="reset" value="Reset"> &nbsp;
+	<label for="Size"><b>Records per page:</b></label>
+	<input type="number" th:id="Size" th:name="size" min="1" max="20" step="1">
 </form>
 <br>
 <hr>

@@ -1,5 +1,6 @@
 package com.github.irybov.bankdemoboot.service;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -17,5 +18,5 @@ public interface OperationService {
 	public List<OperationResponseDTO> getAll(int id);
 //	public Page<OperationResponseDTO> getPage(int id, OperationPage page);
 	public Page<OperationResponseDTO> getPage(int id, String action, double minval, double maxval,
-			OperationPage page);
+			OffsetDateTime mindate, OffsetDateTime maxdate, OperationPage page);
 }

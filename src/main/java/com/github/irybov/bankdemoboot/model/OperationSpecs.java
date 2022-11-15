@@ -1,5 +1,7 @@
 package com.github.irybov.bankdemoboot.model;
 
+import java.time.OffsetDateTime;
+
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +28,12 @@ public class OperationSpecs {
 		
 		return(root, query, builder) -> {return builder.between(root.get
 									(Operation_.AMOUNT), minval, maxval);};
+	}
+	
+	public static Specification<Operation> dateBetween(OffsetDateTime mindate, OffsetDateTime maxdate){
+		
+		return(root, query, builder) -> {return builder.between(root.get
+									(Operation_.CREATED_AT), mindate, maxdate);};
 	}
 	
 }

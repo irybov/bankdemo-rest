@@ -1,5 +1,6 @@
 package com.github.irybov.bankdemoboot.dao;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -59,7 +60,7 @@ public class OperationDAO {
 	}*/
 	
 	public Page<Operation> getPage(int id, String action, double minval, double maxval,
-			Pageable pageable){
+			OffsetDateTime mindate, OffsetDateTime maxdate, Pageable pageable){
 		
 		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Operation> result = builder.createQuery(Operation.class);
@@ -69,7 +70,8 @@ public class OperationDAO {
 		Predicate hasOwner = builder.or(builder.equal(root.get(Operation_.SENDER), id),
 							 			builder.equal(root.get(Operation_.RECIPIENT), id));
 		Predicate amountBetween = builder.between(root.get(Operation_.AMOUNT), minval, maxval);
-		Predicate query = builder.and(hasAction, hasOwner, amountBetween);
+		Predicate dateBetween = builder.between(root.get(Operation_.CREATED_AT), mindate, maxdate);
+		Predicate query = builder.and(hasAction, hasOwner, amountBetween, dateBetween);
 		result.where(query);
 		result.orderBy(builder.desc(root.get(Operation_.ID)));
 		

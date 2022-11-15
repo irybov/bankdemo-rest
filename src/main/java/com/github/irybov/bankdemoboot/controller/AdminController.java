@@ -9,6 +9,10 @@ import java.io.FileInputStream;
 //import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
@@ -22,6 +26,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -203,11 +208,23 @@ public class AdminController {
 	@GetMapping("/operations/list/{id}")
 	@ResponseBody
 	public Page<OperationResponseDTO> getPage(@PathVariable int id,
+			@RequestParam Optional<String> mindate, @RequestParam Optional<String> maxdate,
 			@RequestParam Optional<Double> minval, @RequestParam Optional<Double> maxval,
-			@RequestParam Optional<String> action, OperationPage page) {
+			@RequestParam Optional<String> action, Pageable pageable) {
 		
+		final String FROM = mindate.orElse("1900-01-01");
+		final String TO = maxdate.orElse(LocalDate.now().toString());
+		LocalDate from = LocalDate.parse(FROM.isEmpty() ? "1900-01-01" : FROM);
+		LocalDate to = LocalDate.parse(TO.isEmpty() ? LocalDate.now().toString() : TO);
+		
+		OffsetDateTime dateFrom = OffsetDateTime.of(from, LocalTime.MIDNIGHT, ZoneOffset.UTC);
+		OffsetDateTime dateTo = OffsetDateTime.of(to, LocalTime.MIDNIGHT, ZoneOffset.UTC);
+		
+		OperationPage page = new OperationPage();
+		page.setPageNumber(pageable.getPageNumber());
+		page.setPageSize(pageable.getPageSize());
 		return operationService.getPage(id, action.orElse("_"),
-				minval.orElse(0.01), maxval.orElse(10000.00), page);
+				minval.orElse(0.01), maxval.orElse(10000.00), dateFrom, dateTo, page);
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")

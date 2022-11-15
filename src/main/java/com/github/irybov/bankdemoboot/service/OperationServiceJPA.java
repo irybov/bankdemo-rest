@@ -85,7 +85,7 @@ public class OperationServiceJPA implements OperationService {
 	}*/
 	@Transactional(readOnly = true)
 	public Page<OperationResponseDTO> getPage(int id, String action, double minval, double maxval,
-			OperationPage page){
+			OffsetDateTime mindate, OffsetDateTime maxdate, OperationPage page){
 		
 		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
 											page.getSortDirection(), page.getSortBy());
@@ -93,8 +93,8 @@ public class OperationServiceJPA implements OperationService {
 //				.map(OperationResponseDTO::new);
 		
 		return operationRepository.findAll(Specification.where(OperationSpecs.hasAction(action)
-				.and(OperationSpecs.hasOwner(id)).and(OperationSpecs.amountBetween(minval, maxval)))
-				, pageable)
+				.and(OperationSpecs.hasOwner(id)).and(OperationSpecs.amountBetween(minval, maxval))
+				.and(OperationSpecs.dateBetween(mindate, maxdate))), pageable)
 				.map(OperationResponseDTO::new);
 	}
 	

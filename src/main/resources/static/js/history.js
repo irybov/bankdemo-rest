@@ -35,11 +35,17 @@ $(document).ready(function(){
 	var action;
 	var minval;
 	var maxval;
+	var size;
+	var mindate;
+	var maxdate;
 	$('#filter_form').submit(function (ev){
 		ev.preventDefault();
 		action = $('input[name="optype"]:checked').val();
 		minval = $('input[name="minval"]').val();
 		maxval = $('input[name="maxval"]').val();
+		size = $('input[name="size"]').val();
+		mindate = $('input[name="mindate"]').val();
+		maxdate = $('input[name="maxdate"]').val();
 		fetchNotes(0);
 	});
 	
@@ -50,12 +56,14 @@ $(document).ready(function(){
 	        url: 'http://localhost:8080/bankdemo/operations/list/'+rowID,
 	        data: {
 	            "page": startPage,
-//	            "size": 5,
+	            "size": size,
+	            "mindate": mindate,
+	            "maxdate": maxdate,
 	            "action": action,
 	            "minval": minval,
 	            "maxval": maxval
 	        },
-	 		success: function(response){ 	 		        	
+	 		success: function(response){
 	 			var information = '';
 	 			$.each(response.content, function(key, value){
 					information += '<tr>';
