@@ -19,6 +19,9 @@ import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.service.AccountService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 //@Validated
 @Controller
 public class AuthController {
@@ -55,8 +58,16 @@ public class AuthController {
 	
 	@GetMapping("/success")
 	public String signUp(Model model) {
-		AccountResponseDTO account = accountService.getAccountDTO(authentication().getName());
-		model.addAttribute("account", account);
+		
+		AccountResponseDTO account;
+		try {
+			account = accountService.getAccountDTO(authentication().getName());
+			model.addAttribute("account", account);
+			log.info("User {} has enter the system", account.getPhone());
+		}
+		catch (Exception exc) {
+			log.error(exc.getMessage(), exc);
+		}
 		return "/auth/success";
 	}
 	
@@ -66,6 +77,7 @@ public class AuthController {
 		
 		accountValidator.validate(accountRequestDTO, result);
 		if(result.hasErrors()) {
+			log.warn(result.getFieldErrors().toString());
 			return "/auth/register";
 		}
 		try {
@@ -73,6 +85,7 @@ public class AuthController {
 		}
 		catch (Exception exc) {
 			model.addAttribute("message", exc.getMessage());
+			log.error(exc.getMessage(), exc);
 			return "/auth/register";			
 		}
 		return "/auth/login";

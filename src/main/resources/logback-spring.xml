@@ -14,25 +14,30 @@
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
         </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+	        <level>ERROR</level>
+	        <onMatch>DENY</onMatch>
+	        <onMismatch>ACCEPT</onMismatch>
+        </filter>        
+<!--         <filter class="ch.qos.logback.classic.filter.LevelFilter">
 	        <level>WARN</level>
 	        <onMatch>ACCEPT</onMatch>
-<!-- 	        <onMismatch>DENY</onMismatch> -->
+	        <onMismatch>DENY</onMismatch>
         </filter>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
 	        <level>INFO</level>
 	        <onMatch>ACCEPT</onMatch>
-<!-- 	        <onMismatch>DENY</onMismatch> -->
-        </filter>        
+	        <onMismatch>DENY</onMismatch>
+        </filter>  -->       
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <!-- rollover daily and when the file reaches 10 MegaBytes -->
+            <!-- rollover daily and when the file reaches 100 KiloBytes -->
             <fileNamePattern>${HOME_LOG}/archived/bankdemoboot-logback-diary-%d{yyyy-MM-dd}.%i.log
             </fileNamePattern>
-            <!-- each archived file, size max 100MB -->
-            <maxFileSize>100MB</maxFileSize>
-            <!-- total size of all archive files, if total size > 1GB, 
+            <!-- each archived file, size max 100KB -->
+            <maxFileSize>100KB</maxFileSize>
+            <!-- total size of all archive files, if total size > 1MB, 
 				it will delete old archived file -->
-            <totalSizeCap>1GB</totalSizeCap>
+            <totalSizeCap>1MB</totalSizeCap>
             <!-- 10 days to keep -->
             <maxHistory>10</maxHistory>
         </rollingPolicy>
@@ -46,14 +51,14 @@
           <level>ERROR</level>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <!-- rollover daily and when the file reaches 1 MegaByte -->
+            <!-- rollover daily and when the file reaches 100 KiloBytes -->
             <fileNamePattern>${HOME_LOG}/archived/bankdemoboot-logback-errors-%d{yyyy-MM-dd}.%i.log
             </fileNamePattern>
-            <!-- each archived file, size max 1MB -->
-            <maxFileSize>1MB</maxFileSize>
-            <!-- total size of all archive files, if total size > 10MB, 
+            <!-- each archived file, size max 100KB -->
+            <maxFileSize>100KB</maxFileSize>
+            <!-- total size of all archive files, if total size > 1MB, 
 				it will delete old archived file -->
-            <totalSizeCap>10MB</totalSizeCap>
+            <totalSizeCap>1MB</totalSizeCap>
             <!-- 10 days to keep -->
             <maxHistory>10</maxHistory>
         </rollingPolicy>
@@ -61,8 +66,12 @@
 
     <root level="INFO">
         <appender-ref ref="Console"/>
+    </root>
+    
+    <logger name="com.github.irybov.bankdemoboot" level="INFO" additivity="false">
+        <appender-ref ref="Console"/>
         <appender-ref ref="Scribe"/>
         <appender-ref ref="Watcher"/>
-    </root>
+    </logger>
 
 </configuration>

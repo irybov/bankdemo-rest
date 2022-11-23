@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,11 +60,16 @@ public class AccountServiceDAO implements AccountService {
 	}
 	
 	@Transactional(readOnly = true)
-	public AccountResponseDTO getAccountDTO(String phone) {
+	public AccountResponseDTO getAccountDTO(String phone) throws Exception {
 		return new AccountResponseDTO(accountService.getAccount(phone));
 	}
 	@Transactional(readOnly = true)
-	Account getAccount(String phone) {
+	Account getAccount(String phone) throws EntityNotFoundException {
+		Account account = accountDAO.getAccount(phone);
+		if(account == null) {
+			throw new EntityNotFoundException
+			("Database exception: " + "account with phone " + phone + " not found");
+		}
 		return accountDAO.getAccount(phone);
 	}
 	@Transactional(readOnly = true)
@@ -76,7 +82,7 @@ public class AccountServiceDAO implements AccountService {
 	}
 	
 	@Transactional(readOnly = true)
-	public boolean verifyAccount(String phone, String current){
+	public boolean verifyAccount(String phone, String current) throws Exception{
 		if(getAccount(phone).getPhone() == null || !phone.equals(current)) {
 			return false;
 		}
@@ -92,7 +98,7 @@ public class AccountServiceDAO implements AccountService {
 		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());
 	}
 	
-	public BillResponseDTO addBill(String phone, String currency) {
+	public BillResponseDTO addBill(String phone, String currency) throws Exception {
 		Account account = accountService.getAccount(phone);
 		Bill bill = new Bill(currency, true, account);
 		billService.saveBill(bill);
@@ -101,7 +107,7 @@ public class AccountServiceDAO implements AccountService {
 		return new BillResponseDTO(bill);
 	}
 	
-	public void changeStatus(String phone) {
+	public void changeStatus(String phone) throws Exception {
 		
 		Account account = accountService.getAccount(phone);
 		if(account.isActive()) {
@@ -113,13 +119,13 @@ public class AccountServiceDAO implements AccountService {
 		accountService.updateAccount(account);
 	}
 	
-	public void changePassword(String phone, String password) {
+	public void changePassword(String phone, String password) throws Exception {
 		Account account = accountService.getAccount(phone);
 		account.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(4)));
 		accountService.updateAccount(account);
 	}
 	@Transactional(readOnly = true)
-	public boolean comparePassword(String oldPassword, String phone) {
+	public boolean comparePassword(String oldPassword, String phone) throws Exception {
 		Account account = accountService.getAccount(phone);
 		return bCryptPasswordEncoder.matches(oldPassword, account.getPassword());
 	}

@@ -49,7 +49,12 @@ class AccountServiceJPATest {
 	
     @Test
     void can_get_account() {
-    	accountService.getAccount(search);
+    	try {
+			accountService.getAccount(search);
+		}
+    	catch (Exception exc) {
+			exc.printStackTrace();
+		}
         verify(accountRepository).findByPhone(search);
     }
     
@@ -64,7 +69,8 @@ class AccountServiceJPATest {
 		accountRequestDTO.setSurname("Adminov");
 		try {
 			accountService.saveAccount(accountRequestDTO);
-		} catch (Exception exc) {
+		}
+		catch (Exception exc) {
 			exc.printStackTrace();
 		}
 		
@@ -74,7 +80,12 @@ class AccountServiceJPATest {
 		Account account = new Account
 			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 		given(accountRepository.findByPhone(search).getPhone()).willReturn("0000000000");
-		assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
+		try {
+			assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
+		}
+		catch (Exception exc) {
+			exc.printStackTrace();
+		}
         verify(accountRepository).findByPhone(search).getPhone();
 	}
     

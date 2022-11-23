@@ -18,7 +18,7 @@ import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Optional;
 
-import javax.persistence.EntityNotFoundException;
+//import javax.persistence.EntityNotFoundException;
 //import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,9 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -51,6 +53,9 @@ import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
 import com.opencsv.CSVWriter;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 //@Validated
 @Controller
 public class AdminController {
@@ -75,7 +80,15 @@ public class AdminController {
 	@GetMapping("/accounts/search")
 	public String searchAccount(@RequestParam(required = false) String phone, Model model) {
 		
-		AccountResponseDTO admin = accountService.getAccountDTO(authentication().getName());
+		AccountResponseDTO admin;
+		try {
+			admin = accountService.getAccountDTO(authentication().getName());
+			model.addAttribute("admin", admin);
+			log.info("Admin {} has enter admin's zone", admin.getPhone());
+		}
+		catch (Exception exc) {
+			log.error(exc.getMessage(), exc);
+		}
 /*		AccountResponseDTO target = null;
 		try {
 			target = accountService.getAccountDTO(phone);
@@ -89,27 +102,43 @@ public class AdminController {
 			modelMap.addAttribute("admin", admin);
 			modelMap.addAttribute("target", target);
 		}*/
-		model.addAttribute("admin", admin);
 		return "/account/search";
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search/{phone}")
-	@ResponseBody
-	public AccountResponseDTO searchAccount(@PathVariable String phone) {
+//	@ResponseBody
+	public ResponseEntity<?> searchAccount(@PathVariable String phone) {
 		
 		if(phone != null) {
 			if(!phone.matches("^\\d{10}$")) {
-				throw new InputMismatchException("Phone number should be 10 digits length");
+				log.warn("Admin {} types phone {} in a wrong format",
+				authentication().getName(), phone);
+				throw new InputMismatchException("Phone number should be of 10 digits");
 			}
-		}		
-		AccountResponseDTO target = accountService.getAccountDTO(phone);
-		if(target == null) {
-			throw new EntityNotFoundException("Database exception: " + phone + " not found");
 		}
-		List<BillResponseDTO> bills = accountService.getBills(target.getId());
-		target.setBills(bills);
-		return target;
+		
+		AccountResponseDTO target = null;
+		try {
+			target = accountService.getAccountDTO(phone);
+			List<BillResponseDTO> bills = accountService.getBills(target.getId());
+			target.setBills(bills);
+			log.info("Admin {} requests data about client {}", authentication().getName(), phone);
+			return new ResponseEntity<AccountResponseDTO>(target, HttpStatus.OK);
+		}
+		catch (Exception exc) {
+			log.error("Database exception: account with phone {} not found", phone, exc);
+			String message = "Account with phone " + phone + " not found";
+			return new ResponseEntity<String>(message, HttpStatus.NOT_FOUND);
+		}
+/*		if(target == null) {
+			log.error("Database exception: " + phone + " not found");
+			throw new EntityNotFoundException("Database exception: " + phone + " not found");
+		}*/
+//		List<BillResponseDTO> bills = accountService.getBills(target.getId());
+//		target.setBills(bills);
+//		return target;
+//		return new ResponseEntity<>(target, HttpStatus.OK);
 	}
 	
 /*	@PreAuthorize("hasRole('ADMIN')")
@@ -151,6 +180,8 @@ public class AdminController {
 	public String changeAccountStatus(@PathVariable int id) {		
 		Boolean status = null;
 		status = accountService.changeStatus(id);
+		log.info("Admin {} changes active status of client {} to {}",
+		authentication().getName(), id, status);
 		return status.toString();
 	}
 	
@@ -174,8 +205,11 @@ public class AdminController {
 		Boolean status = null;
 		try {
 			status = billService.changeStatus(id);
-		} catch (Exception exc) {
-			exc.printStackTrace();
+			log.info("Admin {} changes active status of bill {} to {}",
+			authentication().getName(), id, status.toString());
+		}
+		catch (Exception exc) {
+			log.error(exc.getMessage(), exc);
 		}
 		return status.toString();
 	}
@@ -223,6 +257,10 @@ public class AdminController {
 		OperationPage page = new OperationPage();
 		page.setPageNumber(pageable.getPageNumber());
 		page.setPageSize(pageable.getPageSize());
+		
+		log.info("Admin {} requests list of operations with bill {}",
+		authentication().getName(), id);
+		
 		return operationService.getPage(id, action.orElse("_"),
 				minval.orElse(0.01), maxval.orElse(10000.00), dateFrom, dateTo, page);
 	}
@@ -240,7 +278,7 @@ public class AdminController {
 			bill = billService.getBillDTO(id);
 		}
 		catch (Exception exc) {
-			exc.printStackTrace();
+			log.error(exc.getMessage(), exc);
 		}
 		AccountResponseDTO account = bill.getOwner();
 		List<OperationResponseDTO> operations = operationService.getAll(id);
@@ -275,8 +313,10 @@ public class AdminController {
             writer.writeAll(data);
         }
         catch (IOException exc) {
-			exc.printStackTrace();
+        	log.error(exc.getMessage(), exc);
 		}
+        
+		log.info("Admin {} exports data about bill {} to csv", authentication().getName(), id);
 //        File file = new File(PATH + SLASH + FILENAME);
         return new InputStreamResource(new BufferedInputStream(new FileInputStream
         		(PATH + SLASH + FILENAME)));

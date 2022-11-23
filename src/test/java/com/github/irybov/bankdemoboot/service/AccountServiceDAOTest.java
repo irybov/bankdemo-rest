@@ -49,7 +49,12 @@ class AccountServiceDAOTest {
 	
     @Test
     void can_get_account() {
-    	accountService.getAccount(search);
+    	try {
+			accountService.getAccount(search);
+		}
+    	catch (Exception exc) {
+			exc.printStackTrace();
+		}
         verify(accountDAO).getAccount(search);
     }
     
@@ -74,7 +79,12 @@ class AccountServiceDAOTest {
 		Account account = new Account
 			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 		given(accountDAO.getAccount(search).getPhone()).willReturn("0000000000");
-		assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
+		try {
+			assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
+		}
+		catch (Exception exc) {
+			exc.printStackTrace();
+		}
         verify(accountDAO).getAccount(search).getPhone();
 	}
     

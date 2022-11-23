@@ -36,9 +36,13 @@ import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 //import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 import com.github.irybov.bankdemoboot.service.OperationService;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
 
+@Slf4j
 //@Validated
 @Controller
 public class BankController {
@@ -77,16 +81,29 @@ public class BankController {
 	public String getAccount(@PathVariable String phone, ModelMap modelMap) {
 
 		String current = authentication().getName();
-		if(!accountService.verifyAccount(phone, current)) {
-			modelMap.addAttribute("message", "Security restricted information");
-			return "forward:/accounts/show/" + current;
+		try {
+			if(!accountService.verifyAccount(phone, current)) {
+				modelMap.addAttribute("message", "Security restricted information");
+				log.warn("User {} tries to get protected information", current);
+				return "forward:/accounts/show/" + current;
+			}
+		}
+		catch (Exception exc) {
+			exc.printStackTrace();
 		}
 		
-		AccountResponseDTO account = accountService.getAccountDTO(current);
+		AccountResponseDTO account = null;
+		try {
+			account = accountService.getAccountDTO(current);
+		}
+		catch (Exception exc) {
+			exc.printStackTrace();
+		}
 		List<BillResponseDTO> bills = accountService.getBills(account.getId());
 		modelMap.addAttribute("account", account);
 		modelMap.addAttribute("bills", bills);
-		modelMap.addAttribute("currencies", currencies);		
+		modelMap.addAttribute("currencies", currencies);
+		log.info("User {} has enter own private area", account.getPhone());
 		return "/account/private";
 	}
 	
@@ -108,7 +125,13 @@ public class BankController {
 		
 //		if(params.get("currency").isEmpty()) return "Please choose currency type";
 //		if(params.get("phone").isEmpty()) phone = authentication().getName();		
-		BillResponseDTO bill = accountService.addBill(params.get("phone"), params.get("currency"));
+		BillResponseDTO bill = null;
+		try {
+			bill = accountService.addBill(params.get("phone"), params.get("currency"));
+		}
+		catch (Exception exc) {
+			log.error(exc.getMessage(), exc);
+		}
 		return bill;
 	}
 	
@@ -145,6 +168,7 @@ public class BankController {
 			bill = billService.getBillDTO(id);
 		}
 		catch (Exception exc) {
+			log.error(exc.getMessage(), exc);
 			return exc.getMessage();
 		}		
 		return bill.getOwner().getName() + " " + bill.getOwner().getSurname();
@@ -157,6 +181,8 @@ public class BankController {
 		int target = 0;
 		if(recipient != null) {
 			if(!recipient.matches("^\\d{1,9}$")) {
+				log.warn("Sender {} types recipient's bill number {} in a wrong format",
+				authentication().getName(), recipient);
 				modelMap.addAttribute("id", id);
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
@@ -166,6 +192,9 @@ public class BankController {
 			else target = Integer.parseInt(recipient);
 		}
 		
+		log.info("User {} performs {} operation with bill {}",
+		authentication().getName(), params.get("action"), id);
+		
 		String currency;		
 		switch(params.get("action")) {
 		case "deposit":
@@ -173,8 +202,10 @@ public class BankController {
 				currency = billService.deposit(id, Double.valueOf(params.get("amount")));
 				operationService.deposit
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id);
+				log.info("{} has been added", params.get("amount"));
 			}
 			catch (Exception exc) {
+				log.warn(exc.getMessage(), exc);
 				modelMap.addAttribute("id", id);
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
@@ -187,8 +218,10 @@ public class BankController {
 				currency = billService.withdraw(id, Double.valueOf(params.get("amount")));
 				operationService.withdraw
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id);
+				log.info("{} has been taken", params.get("amount"));
 			}
 			catch (Exception exc) {
+				log.warn(exc.getMessage(), exc);
 				modelMap.addAttribute("id", id);
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
@@ -201,8 +234,10 @@ public class BankController {
 				currency = billService.transfer(id, Double.valueOf(params.get("amount")), target);
 				operationService.transfer
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, target);
+				log.info("{} has been sent to bill {}", params.get("amount"), target);
 			}
 			catch (Exception exc) {
+				log.warn(exc.getMessage(), exc);
 				modelMap.addAttribute("id", id);
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
@@ -226,21 +261,34 @@ public class BankController {
 			@ModelAttribute("password") @Valid PasswordRequestDTO passwordRequestDTO,
 			BindingResult result, Model model) {
 
-		if(!accountService.comparePassword(passwordRequestDTO.getOldPassword(), phone)) {
-			model.addAttribute("message", "Old password mismatch");
-			return "/account/password";
+		try {
+			if(!accountService.comparePassword(passwordRequestDTO.getOldPassword(), phone)) {
+				log.warn("User {} fails to confirm old password", authentication().getName());
+				model.addAttribute("message", "Old password mismatch");
+				return "/account/password";
+			}
+		}
+		catch (Exception exc) {
+			log.error(exc.getMessage(), exc);
 		}
 		if(result.hasErrors()) {
+			log.warn(result.getFieldErrors().toString());
 			return "/account/password";
 		}
 		
-		accountService.changePassword(phone, passwordRequestDTO.getNewPassword());
+		try {
+			accountService.changePassword(phone, passwordRequestDTO.getNewPassword());
+		}
+		catch (Exception exc) {
+			log.error(exc.getMessage(), exc);
+		}
 /*		if(authentication().getAuthorities().stream()
 				.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
 			return "redirect:/accounts/search";
 		}
 		return "redirect:/accounts/show/{phone}";*/
 		model.addAttribute("success", "Password changed");
+		log.info("User {} changes password to a new one", authentication().getName());
 		return "/account/password";
 	}
 	
