@@ -1,5 +1,5 @@
 INSERT INTO bankdemo.accounts(id, is_active, birthday, name, password, phone, surname, created_at, updated_at)
-VALUES('0', '1', '1900-01-01', 'Admin', crypt('superadmin', gen_salt('bf', 4)), '0000000000', 'Adminsky', now(), now());
+VALUES('0', '1', '2001-01-01', 'Admin', crypt('superadmin', gen_salt('bf', 4)), '0000000000', 'Adminsky', now(), now());
 INSERT INTO bankdemo.accounts(is_active, birthday, name, password, phone, surname, created_at, updated_at)
 VALUES('1', '1948-08-15', 'Ursula', crypt('supervixen', gen_salt('bf', 4)), '1111111111', 'Digard', now(), now()),
 ('1', '1900-01-01', 'Marsha', crypt('bustyblonde', gen_salt('bf', 4)), '2222222222', 'Jordan', now(), now()),

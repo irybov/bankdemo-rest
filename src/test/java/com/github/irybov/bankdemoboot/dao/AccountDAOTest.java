@@ -1,10 +1,13 @@
 package com.github.irybov.bankdemoboot.dao;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.junit.jupiter.api.AfterAll;
@@ -32,16 +35,18 @@ class AccountDAOTest {
 	@InjectMocks
 	private AccountDAO accountDAO;
 
-	private static String search;
+	private static String rightPN;
+	private static String wrongPN;
 	private Account account;
 	
 	@BeforeAll
 	static void prepare() {
-		search = new String("0000000000");
+		rightPN = new String("0000000000");
+		wrongPN = new String("0000000000");
 	}
 	
 	@BeforeEach
-	void set_up() {		
+	void setup() {		
 		accountDAO = new AccountDAO();
 		ReflectionTestUtils.setField(accountDAO, "entityManager", entityManager);
 		account = new Account
@@ -52,34 +57,40 @@ class AccountDAOTest {
 	@Test
 //	@Order(1)
 	void check_if_phone_presents() {
-        assertThat(accountDAO.getAccount(search).getPhone().equals(account.getPhone())).isTrue();
+        assertThat(accountDAO.getPhone(rightPN).equals(account.getPhone())).isTrue();
+	}
+	
+    @Test
+//	@Order(2)
+	void check_if_phone_not_presents() {
+		assertThatExceptionOfType(NoResultException.class)
+		.isThrownBy(() -> {accountDAO.getPhone(wrongPN);});
+//		assertThat(accountDAO.getPhone(newPhone)).isNull();
 	}
 	
 	@Test
-//	@Order(2)
+//	@Order(3)
 	void save_and_search_by_phone() {
-		Account fromDB = accountDAO.getAccount(search);
+		Account fromDB = accountDAO.getAccount(rightPN);
 		assertThat(fromDB).isEqualTo(account);
 	}
 
 	@Test
-//	@Order(3)
+//	@Order(4)
 	void update_and_compare() {
-
-		String newPhone = "9999999999";
-		Account fromDB = accountDAO.getAccount(search);
-		fromDB.setPhone(newPhone);
+		Account fromDB = accountDAO.getAccount(rightPN);
+		fromDB.setPhone(wrongPN);
 		accountDAO.updateAccount(fromDB);
-		Account updated = accountDAO.getAccount(newPhone);		
+		Account updated = accountDAO.getAccount(wrongPN);		
 		assertThat(fromDB).isEqualTo(updated);		
 	}
-	
+    
     @Test
-//	@Order(4)
-	void check_if_phone_not_presents() {
-		String newPhone = "9999999999";
-		assertThat(accountDAO.getAccount(newPhone).getPhone()).isNull();
-	}
+//	@Order(5)
+    void check_if_no_clients_present() {
+    	List<Account> clients = accountDAO.getAll();
+    	assertThat(clients.isEmpty()).isTrue();
+    }
 	
     @AfterEach
     void tear_down() {
@@ -89,7 +100,8 @@ class AccountDAOTest {
     
     @AfterAll
     static void clear() {
-    	search = null;
+    	rightPN = null;
+    	wrongPN = null;
     }
     
 }

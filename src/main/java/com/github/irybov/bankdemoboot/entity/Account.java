@@ -37,6 +37,7 @@ import com.github.irybov.bankdemoboot.Role;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashCode.CacheStrategy;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -45,7 +46,7 @@ import lombok.ToString;
 uniqueConstraints={@UniqueConstraint(columnNames={"phone"})})
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(of = "phone")
+@EqualsAndHashCode(of = "phone", cacheStrategy=CacheStrategy.LAZY)
 public class Account{
 
 //	@EqualsAndHashCode.Exclude

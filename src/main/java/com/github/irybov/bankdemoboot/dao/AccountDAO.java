@@ -35,10 +35,11 @@ public class AccountDAO {
 	}
 	
 	public String getPhone(String check) {
-		return (String) entityManager.createNativeQuery
-				("SELECT phone FROM {h-schema}accounts WHERE phone=:check")
+		return entityManager.createQuery("SELECT phone FROM Account WHERE phone=:check",
+				String.class)
 				.setParameter("check", check)
 				.getSingleResult();
+//				.getResultStream().findFirst().orElse(null);		
 	}
 	
 	public List<Account> getAll(){
@@ -48,4 +49,5 @@ public class AccountDAO {
 				.setParameter("role", Role.CLIENT)
 				.getResultList();
 	}
+	
 }

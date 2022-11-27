@@ -3,6 +3,7 @@ package com.github.irybov.bankdemoboot.service;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 
@@ -34,10 +35,13 @@ class AccountServiceJPATest {
 	private AccountServiceJPA accountService;
 	
 	private static String search;
+	private static Account account;
 	
 	@BeforeAll
 	static void prepare() {
 		search = new String("0000000000");
+		account = new Account
+				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 	}
 	
     @BeforeEach
@@ -49,6 +53,7 @@ class AccountServiceJPATest {
 	
     @Test
     void can_get_account() {
+    	when(accountRepository.findByPhone(search)).thenReturn(account);
     	try {
 			accountService.getAccount(search);
 		}
@@ -77,9 +82,7 @@ class AccountServiceJPATest {
 		ArgumentCaptor<Account> argumentCaptor = ArgumentCaptor.forClass(Account.class);
         verify(accountRepository).save(argumentCaptor.capture());
 
-		Account account = new Account
-			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
-		given(accountRepository.findByPhone(search).getPhone()).willReturn("0000000000");
+		given(accountService.getAccount(search).getPhone()).willReturn("0000000000");
 		try {
 			assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
 		}
@@ -97,6 +100,7 @@ class AccountServiceJPATest {
     @AfterAll
     static void clear() {    	
     	search = null;
+    	account = null;
     }
     
 }

@@ -206,7 +206,7 @@ public class AdminController {
 		try {
 			status = billService.changeStatus(id);
 			log.info("Admin {} changes active status of bill {} to {}",
-			authentication().getName(), id, status.toString());
+			authentication().getName(), id, status);
 		}
 		catch (Exception exc) {
 			log.error(exc.getMessage(), exc);

@@ -89,7 +89,7 @@ public class BankController {
 			}
 		}
 		catch (Exception exc) {
-			exc.printStackTrace();
+			log.error(exc.getMessage(), exc);
 		}
 		
 		AccountResponseDTO account = null;
@@ -97,7 +97,7 @@ public class BankController {
 			account = accountService.getAccountDTO(current);
 		}
 		catch (Exception exc) {
-			exc.printStackTrace();
+			log.error(exc.getMessage(), exc);
 		}
 		List<BillResponseDTO> bills = accountService.getBills(account.getId());
 		modelMap.addAttribute("account", account);
@@ -122,7 +122,8 @@ public class BankController {
 	@PostMapping("/bills/add")
 	@ResponseBody
 	public BillResponseDTO createBill(@RequestParam Map<String, String> params) {
-		
+
+		log.info("Client {} creates new {} bill", params.get("phone"), params.get("currency"));
 //		if(params.get("currency").isEmpty()) return "Please choose currency type";
 //		if(params.get("phone").isEmpty()) phone = authentication().getName();		
 		BillResponseDTO bill = null;
@@ -142,8 +143,9 @@ public class BankController {
 	}
 	
 	@DeleteMapping("/bills/delete/{id}")
-	@ResponseBody
+//	@ResponseBody
 	public void deleteBill(@PathVariable int id) {
+		log.info("Client {} deletes bill with id {}", authentication().getName(), id);
 		billService.deleteBill(id);
 	}
 	

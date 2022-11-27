@@ -151,9 +151,9 @@ public class AccountServiceJPA implements AccountService {
 
 	@Transactional(readOnly = true)
 	public List<AccountResponseDTO> getAll() {		
-		return accountRepository.findAll()
+		return accountRepository.getAll()
 				.stream()
-				.filter(a -> a.getRoles().contains(Role.CLIENT))
+//				.filter(a -> a.getRoles().contains(Role.CLIENT))
 				.sorted((a1, a2) -> a1.getId() - a2.getId())
 				.map(AccountResponseDTO::new)
 				.collect(Collectors.toList());

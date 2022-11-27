@@ -3,6 +3,7 @@ package com.github.irybov.bankdemoboot.repository;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -23,16 +24,18 @@ class AccountRepositoryTest {
 	@Autowired
 	private AccountRepository accountRepository;
 	
-	private static String search;
+	private static String rightPN;
+	private static String wrongPN;
 	private Account account;
 	
 	@BeforeAll
 	static void prepare() {
-		search = new String("0000000000");
+		rightPN = new String("0000000000");
+		wrongPN = new String("0000000000");
 	}
 	
 	@BeforeEach
-	void set_up() {
+	void setup() {
 		account = new Account
 				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 		accountRepository.save(account);
@@ -40,37 +43,43 @@ class AccountRepositoryTest {
 	
 	@Test
 //	@Order(1)
-	void check_if_phone_presents() {		
-        assertThat(accountRepository.findByPhone(search).getPhone()
-        		.equals(account.getPhone())).isTrue();
+	void check_if_phone_presents() {
+        assertThat(accountRepository.getPhone(rightPN).equals(account.getPhone())).isTrue();
+	}
+	
+    
+    @Test
+//	@Order(2)
+	void check_if_phone_not_presents() {
+		assertThat(accountRepository.getPhone(wrongPN)).isNull();
 	}
 	
 	@Test
-//	@Order(2)
+//	@Order(3)
 	void save_and_search_by_phone() {
-		Account fromDB = accountRepository.findByPhone(search);
+		Account fromDB = accountRepository.findByPhone(rightPN);
+		assertThat(fromDB).isEqualTo(account);
+		fromDB = accountRepository.getByPhone(rightPN);
 		assertThat(fromDB).isEqualTo(account);
 	}
 	
     @Test
-//	@Order(3)
-    void update_and_compare() {
-    	
-		String newPhone = "9999999999";
-		Account fromDB = accountRepository.findByPhone(search);
-		fromDB.setPhone(newPhone);
+//	@Order(4)
+    void update_and_compare() {    	
+		Account fromDB = accountRepository.findByPhone(rightPN);
+		fromDB.setPhone(wrongPN);
 		accountRepository.save(fromDB);
-		Account updated = accountRepository.findByPhone(newPhone);
+		Account updated = accountRepository.getByPhone(wrongPN);
 		assertThat(fromDB).isEqualTo(updated);
     }
     
     @Test
-//	@Order(4)
-	void check_if_phone_not_presents() {
-		String newPhone = "9999999999";
-		assertThat(accountRepository.findByPhone(newPhone).getPhone()).isNull();
-	}
-		
+//	@Order(5)
+    void check_if_no_clients_present() {
+    	List<Account> clients = accountRepository.getAll();
+    	assertThat(clients.isEmpty()).isTrue();
+    }
+    
     @AfterEach
     void tear_down() {
     	accountRepository.deleteAll();
@@ -79,7 +88,8 @@ class AccountRepositoryTest {
 	
     @AfterAll
     static void clear() {
-    	search = null;
+    	rightPN = null;
+    	wrongPN = null;
     }
     
 }
