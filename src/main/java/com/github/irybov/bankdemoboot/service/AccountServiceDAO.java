@@ -70,7 +70,8 @@ public class AccountServiceDAO implements AccountService {
 			throw new EntityNotFoundException
 			("Database exception: " + "account with phone " + phone + " not found");
 		}
-		return accountDAO.getAccount(phone);
+		return account;
+//		return accountDAO.getAccount(phone);
 	}
 	@Transactional(readOnly = true)
 	public AccountResponseDTO getById(int id) {

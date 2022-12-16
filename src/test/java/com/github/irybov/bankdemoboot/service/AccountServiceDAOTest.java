@@ -3,6 +3,7 @@ package com.github.irybov.bankdemoboot.service;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 
@@ -11,7 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+//import org.junit.jupiter.api.TestInstance;
 //import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -24,7 +25,7 @@ import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.dao.AccountDAO;
 import com.github.irybov.bankdemoboot.entity.Account;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 //@ExtendWith(MockitoExtension.class)
 class AccountServiceDAOTest {
 
@@ -33,15 +34,18 @@ class AccountServiceDAOTest {
 	@InjectMocks
 	private AccountServiceDAO accountService;
 	
-	private static String search;
+	private static String phone;
+	private static Account account;
 	
 	@BeforeAll
 	static void prepare() {
-		search = new String("0000000000");
+		phone = new String("0000000000");
+		account = new Account
+				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 	}
 	
     @BeforeEach
-    void setUp() {
+    void set_up() {
     	MockitoAnnotations.openMocks(this);
     	accountService = new AccountServiceDAO();
 		ReflectionTestUtils.setField(accountService, "accountDAO", accountDAO);		
@@ -49,13 +53,14 @@ class AccountServiceDAOTest {
 	
     @Test
     void can_get_account() {
+    	when(accountDAO.getAccount(phone)).thenReturn(account);
     	try {
-			accountService.getAccount(search);
+			accountService.getAccount(phone);
 		}
     	catch (Exception exc) {
 			exc.printStackTrace();
 		}
-        verify(accountDAO).getAccount(search);
+        verify(accountDAO).getAccount(phone);
     }
     
 	@Test
@@ -69,23 +74,21 @@ class AccountServiceDAOTest {
 		accountRequestDTO.setSurname("Adminov");
 		try {
 			accountService.saveAccount(accountRequestDTO);
-		} catch (Exception exc) {
-			exc.printStackTrace();
 		}
-		
+		catch (Exception exc) {
+			exc.printStackTrace();
+		}		
 		ArgumentCaptor<Account> argumentCaptor = ArgumentCaptor.forClass(Account.class);
         verify(accountDAO).saveAccount(argumentCaptor.capture());
 
-		Account account = new Account
-			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
-		given(accountDAO.getAccount(search).getPhone()).willReturn("0000000000");
+		given(accountDAO.getAccount(phone)).willReturn(account);
 		try {
-			assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
+			assertThat(accountService.verifyAccount(phone, account.getPhone())).isTrue();
 		}
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
-        verify(accountDAO).getAccount(search).getPhone();
+        verify(accountDAO).getAccount(phone);
 	}
     
     @AfterEach
@@ -95,7 +98,8 @@ class AccountServiceDAOTest {
     
     @AfterAll
     static void clear() {    	
-    	search = null;
+    	phone = null;
+    	account = null;
     }
     
 }

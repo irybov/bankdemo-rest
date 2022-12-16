@@ -1,7 +1,9 @@
 package com.github.irybov.bankdemoboot.service;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
+//import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -12,7 +14,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+//import org.junit.jupiter.api.TestInstance;
 //import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -25,7 +27,7 @@ import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.repository.AccountRepository;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 //@ExtendWith(MockitoExtension.class)
 class AccountServiceJPATest {
 
@@ -34,12 +36,12 @@ class AccountServiceJPATest {
 	@InjectMocks
 	private AccountServiceJPA accountService;
 	
-	private static String search;
+	private static String phone;
 	private static Account account;
 	
 	@BeforeAll
 	static void prepare() {
-		search = new String("0000000000");
+		phone = new String("0000000000");
 		account = new Account
 				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 	}
@@ -53,14 +55,14 @@ class AccountServiceJPATest {
 	
     @Test
     void can_get_account() {
-    	when(accountRepository.findByPhone(search)).thenReturn(account);
+    	when(accountRepository.findByPhone(phone)).thenReturn(account);
     	try {
-			accountService.getAccount(search);
+			accountService.getAccount(phone);
 		}
     	catch (Exception exc) {
 			exc.printStackTrace();
 		}
-        verify(accountRepository).findByPhone(search);
+        verify(accountRepository).findByPhone(phone);
     }
     
 	@Test
@@ -77,19 +79,21 @@ class AccountServiceJPATest {
 		}
 		catch (Exception exc) {
 			exc.printStackTrace();
-		}
-		
+		}		
 		ArgumentCaptor<Account> argumentCaptor = ArgumentCaptor.forClass(Account.class);
         verify(accountRepository).save(argumentCaptor.capture());
-
-		given(accountService.getAccount(search).getPhone()).willReturn("0000000000");
+        
+//    	when(accountRepository.findByPhone(phone)).thenReturn(account);
+		given(accountRepository.findByPhone(phone)).willReturn(account);
 		try {
-			assertThat(accountService.verifyAccount(search, account.getPhone())).isTrue();
+//			assertThat(accountService.verifyAccount(phone, account.getPhone())).isTrue();
+			then(accountService.verifyAccount(phone, account.getPhone())).isTrue();
 		}
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
-        verify(accountRepository).findByPhone(search).getPhone();
+//      verify(accountRepository).findByPhone(phone);
+        org.mockito.BDDMockito.then(accountRepository).should().findByPhone(phone);
 	}
     
     @AfterEach
@@ -99,7 +103,7 @@ class AccountServiceJPATest {
     
     @AfterAll
     static void clear() {    	
-    	search = null;
+    	phone = null;
     	account = null;
     }
     

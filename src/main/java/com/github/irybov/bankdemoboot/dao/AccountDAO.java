@@ -39,7 +39,7 @@ public class AccountDAO {
 				String.class)
 				.setParameter("check", check)
 				.getSingleResult();
-//				.getResultStream().findFirst().orElse(null);		
+//				.getResultStream().findFirst().orElse(null);
 	}
 	
 	public List<Account> getAll(){

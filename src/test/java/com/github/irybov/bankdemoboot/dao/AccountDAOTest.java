@@ -23,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.github.irybov.bankdemoboot.Role;
 import com.github.irybov.bankdemoboot.entity.Account;
 
 //@TestMethodOrder(OrderAnnotation.class)
@@ -35,73 +36,74 @@ class AccountDAOTest {
 	@InjectMocks
 	private AccountDAO accountDAO;
 
-	private static String rightPN;
-	private static String wrongPN;
+	private String oldPN;
+	private String newPN;
 	private Account account;
 	
 	@BeforeAll
-	static void prepare() {
-		rightPN = new String("0000000000");
-		wrongPN = new String("0000000000");
+	void prepare() {
+		ReflectionTestUtils.setField(accountDAO, "entityManager", entityManager);
+		oldPN = new String("0000000000");
+		newPN = new String("9999999999");
 	}
 	
 	@BeforeEach
-	void setup() {		
-		accountDAO = new AccountDAO();
-		ReflectionTestUtils.setField(accountDAO, "entityManager", entityManager);
+	void set_up() {		
 		account = new Account
 				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
+		account.addRole(Role.ADMIN);
 		accountDAO.saveAccount(account);
 	}
 	
 	@Test
 //	@Order(1)
-	void check_if_phone_presents() {
-        assertThat(accountDAO.getPhone(rightPN).equals(account.getPhone())).isTrue();
+	void check_that_phone_present() {
+        assertThat(accountDAO.getPhone(oldPN).equals(account.getPhone())).isTrue();
 	}
 	
     @Test
 //	@Order(2)
-	void check_if_phone_not_presents() {
+	void check_that_phone_not_present() {
 		assertThatExceptionOfType(NoResultException.class)
-		.isThrownBy(() -> {accountDAO.getPhone(wrongPN);});
+		.isThrownBy(() -> {accountDAO.getPhone(newPN);});
 //		assertThat(accountDAO.getPhone(newPhone)).isNull();
 	}
 	
 	@Test
 //	@Order(3)
-	void save_and_search_by_phone() {
-		Account fromDB = accountDAO.getAccount(rightPN);
+	void search_by_phone() {
+		Account fromDB = accountDAO.getAccount(oldPN);
 		assertThat(fromDB).isEqualTo(account);
 	}
 
-	@Test
+/*	@Test
 //	@Order(4)
 	void update_and_compare() {
-		Account fromDB = accountDAO.getAccount(rightPN);
-		fromDB.setPhone(wrongPN);
+		Account fromDB = accountDAO.getAccount(oldPN);
+		fromDB.setPhone(newPN);
 		accountDAO.updateAccount(fromDB);
-		Account updated = accountDAO.getAccount(wrongPN);		
+		Account updated = accountDAO.getAccount(newPN);		
 		assertThat(fromDB).isEqualTo(updated);		
-	}
+	}*/
     
     @Test
 //	@Order(5)
-    void check_if_no_clients_present() {
+    void check_that_no_clients_present() {
     	List<Account> clients = accountDAO.getAll();
+    	assertThat(clients).isNotNull();
     	assertThat(clients.isEmpty()).isTrue();
     }
 	
     @AfterEach
     void tear_down() {
-    	accountDAO = null;
+    	entityManager.remove(account);
     	account = null;
     }
     
     @AfterAll
-    static void clear() {
-    	rightPN = null;
-    	wrongPN = null;
+    void clear() {
+    	oldPN = null;
+    	newPN = null;
     }
     
 }
