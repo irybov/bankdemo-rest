@@ -20,4 +20,5 @@ public interface OperationRepository extends JpaRepository<Operation, Long>,
 			+ "(o.sender=:id OR o.recipient=:id)")
 	Page<Operation> findByActionLikeAndSenderOrRecipient
 	(String action, int id, Pageable pageable);*/
+	
 }

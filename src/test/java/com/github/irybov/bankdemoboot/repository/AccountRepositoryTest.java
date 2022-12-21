@@ -6,9 +6,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
+//import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+//import org.junit.jupiter.api.BeforeEach;
 //import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 //import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -36,10 +36,6 @@ class AccountRepositoryTest {
 	void prepare() {
 		oldPN = new String("0000000000");
 		newPN = new String("9999999999");
-	}
-	
-	@BeforeEach
-	void set_up() {
 		account = new Account
 				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 		account.addRole(Role.ADMIN);
@@ -67,7 +63,7 @@ class AccountRepositoryTest {
 		assertThat(fromDB).isEqualTo(account);
 	}
 	
-/*    @Test
+    @Test
 //	@Order(4)
     void update_and_compare() {    	
 		Account fromDB = accountRepository.findByPhone(oldPN);
@@ -75,7 +71,7 @@ class AccountRepositoryTest {
 		accountRepository.save(fromDB);
 		Account updated = accountRepository.getByPhone(newPN);
 		assertThat(fromDB).isEqualTo(updated);
-    }*/
+    }
     
     @Test
 //	@Order(5)
@@ -84,17 +80,13 @@ class AccountRepositoryTest {
     	assertThat(clients).isNotNull();
     	assertThat(clients.isEmpty()).isTrue();
     }
-    
-    @AfterEach
-    void tear_down() {
-    	accountRepository.deleteAll();
-    	account = null;
-    }
 	
     @AfterAll
     void clear() {
     	oldPN = null;
     	newPN = null;
+    	accountRepository.deleteAll();
+    	account = null;
     }
     
 }

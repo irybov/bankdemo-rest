@@ -287,6 +287,7 @@ public class AdminController {
 		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};
 		data.add(owner);
 		data.add(new String[0]);
+		
 		String[] info = {bill.getCurrency(), String.valueOf(bill.getBalance()), bill.getCreatedAt()
 				.toString()};
 		data.add(info);
@@ -294,6 +295,8 @@ public class AdminController {
 		
 		String[] header = {"Action", "Amount", "When", "Recipient", "Sender"};
 		data.add(header);
+		data.add(new String[0]);		
+		
 		for(OperationResponseDTO operation : operations) {
 			String[] row = {operation.getAction(),
 							String.valueOf(operation.getAmount()),

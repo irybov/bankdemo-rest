@@ -1,11 +1,11 @@
 package com.github.irybov.bankdemoboot.service;
 
-import static org.assertj.core.api.BDDAssertions.then;
 //import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+//import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 
@@ -14,6 +14,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+//import org.junit.jupiter.api.parallel.Execution;
+//import org.junit.jupiter.api.parallel.ExecutionMode;
 //import org.junit.jupiter.api.TestInstance;
 //import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,6 +31,7 @@ import com.github.irybov.bankdemoboot.repository.AccountRepository;
 
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 //@ExtendWith(MockitoExtension.class)
+//@Execution(ExecutionMode.CONCURRENT)
 class AccountServiceJPATest {
 
 	@Mock
@@ -55,7 +58,8 @@ class AccountServiceJPATest {
 	
     @Test
     void can_get_account() {
-    	when(accountRepository.findByPhone(phone)).thenReturn(account);
+//    	when(accountRepository.findByPhone(phone)).thenReturn(account);
+		given(accountRepository.findByPhone(phone)).willReturn(account);
     	try {
 			accountService.getAccount(phone);
 		}

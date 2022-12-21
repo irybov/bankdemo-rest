@@ -76,7 +76,7 @@ class AccountDAOTest {
 		assertThat(fromDB).isEqualTo(account);
 	}
 
-/*	@Test
+	@Test
 //	@Order(4)
 	void update_and_compare() {
 		Account fromDB = accountDAO.getAccount(oldPN);
@@ -84,7 +84,7 @@ class AccountDAOTest {
 		accountDAO.updateAccount(fromDB);
 		Account updated = accountDAO.getAccount(newPN);		
 		assertThat(fromDB).isEqualTo(updated);		
-	}*/
+	}
     
     @Test
 //	@Order(5)
