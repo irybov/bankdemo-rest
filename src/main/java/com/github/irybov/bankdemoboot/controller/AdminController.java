@@ -251,8 +251,8 @@ public class AdminController {
 		LocalDate from = LocalDate.parse(FROM.isEmpty() ? "1900-01-01" : FROM);
 		LocalDate to = LocalDate.parse(TO.isEmpty() ? LocalDate.now().toString() : TO);
 		
-		OffsetDateTime dateFrom = OffsetDateTime.of(from, LocalTime.MIDNIGHT, ZoneOffset.UTC);
-		OffsetDateTime dateTo = OffsetDateTime.of(to, LocalTime.MIDNIGHT, ZoneOffset.UTC);
+		OffsetDateTime dateFrom = OffsetDateTime.of(from, LocalTime.MIN, ZoneOffset.UTC);
+		OffsetDateTime dateTo = OffsetDateTime.of(to, LocalTime.MAX, ZoneOffset.UTC);
 		
 		OperationPage page = new OperationPage();
 		page.setPageNumber(pageable.getPageNumber());

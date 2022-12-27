@@ -85,7 +85,7 @@ class AccountRepositoryTest {
     void clear() {
     	oldPN = null;
     	newPN = null;
-    	accountRepository.deleteAll();
+    	accountRepository.delete(account);
     	account = null;
     }
     

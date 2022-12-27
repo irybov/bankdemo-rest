@@ -23,6 +23,10 @@ public class AccountDAO {
 	public void updateAccount(Account account) {
 		entityManager.merge(account);
 	}
+	
+	public void deleteAccount(Account account) {
+		entityManager.remove(account);
+	}
 
 	public Account getAccount(String phone) {
 		return entityManager.createQuery("SELECT a FROM Account a WHERE a.phone=:phone",

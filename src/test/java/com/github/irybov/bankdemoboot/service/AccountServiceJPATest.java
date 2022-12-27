@@ -39,6 +39,8 @@ class AccountServiceJPATest {
 	@InjectMocks
 	private AccountServiceJPA accountService;
 	
+	private AutoCloseable autoClosable;
+	
 	private static String phone;
 	private static Account account;
 	
@@ -51,7 +53,7 @@ class AccountServiceJPATest {
 	
     @BeforeEach
     void setUp() {
-    	MockitoAnnotations.openMocks(this);
+    	autoClosable = MockitoAnnotations.openMocks(this);
     	accountService = new AccountServiceJPA();
 		ReflectionTestUtils.setField(accountService, "accountRepository", accountRepository);		
     }
@@ -101,7 +103,8 @@ class AccountServiceJPATest {
 	}
     
     @AfterEach
-    void tear_down() {
+    void tear_down() throws Exception {
+    	autoClosable.close();
     	accountService = null;
     }
     

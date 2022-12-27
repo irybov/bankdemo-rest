@@ -39,6 +39,8 @@ class AccountServiceDAOTest {
 	@InjectMocks
 	private AccountServiceDAO accountService;
 	
+	private AutoCloseable autoClosable;
+	
 	private static String phone;
 	private static Account account;
 	
@@ -51,7 +53,7 @@ class AccountServiceDAOTest {
 	
     @BeforeEach
     void set_up() {
-    	MockitoAnnotations.openMocks(this);
+    	autoClosable = MockitoAnnotations.openMocks(this);
     	accountService = new AccountServiceDAO();
 		ReflectionTestUtils.setField(accountService, "accountDAO", accountDAO);		
     }
@@ -101,7 +103,8 @@ class AccountServiceDAOTest {
 	}
     
     @AfterEach
-    void tear_down() {
+    void tear_down() throws Exception {
+    	autoClosable.close();
     	accountService = null;
     }
     

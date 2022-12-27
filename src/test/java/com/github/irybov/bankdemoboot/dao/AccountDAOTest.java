@@ -96,7 +96,7 @@ class AccountDAOTest {
 	
     @AfterEach
     void tear_down() {
-    	entityManager.remove(account);
+    	accountDAO.deleteAccount(account);
     	account = null;
     }
     
