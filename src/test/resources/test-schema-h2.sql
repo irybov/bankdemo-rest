@@ -31,6 +31,6 @@ CREATE TABLE IF NOT EXISTS bankdemo.operations(
 );
 CREATE TABLE IF NOT EXISTS bankdemo.roles(
   roles VARCHAR(10) NOT NULL,
-  account_id INTEGER,
+  account_id INTEGER NOT NULL,
   FOREIGN KEY(account_id) REFERENCES bankdemo.accounts(id)
 );
