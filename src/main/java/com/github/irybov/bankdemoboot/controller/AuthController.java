@@ -1,5 +1,7 @@
 package com.github.irybov.bankdemoboot.controller;
 
+import javax.persistence.EntityNotFoundException;
+
 //import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +67,7 @@ public class AuthController {
 			model.addAttribute("account", account);
 			log.info("User {} has enter the system", account.getPhone());
 		}
-		catch (Exception exc) {
+		catch (EntityNotFoundException exc) {
 			log.error(exc.getMessage(), exc);
 		}
 		return "/auth/success";

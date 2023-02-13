@@ -56,11 +56,17 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
-			<!-- <exclusions> <exclusion> <groupId>org.springframework.boot</groupId> 
-				<artifactId>spring-boot-starter-logging</artifactId> </exclusion> </exclusions> -->
+<!-- 			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId> 
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions> -->
 		</dependency>
-		<!-- <dependency> <groupId>org.springframework.boot</groupId> <artifactId>spring-boot-starter-log4j2</artifactId> 
-			</dependency> -->
+<!-- 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId> 
+		</dependency> -->
 		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
 			<artifactId>thymeleaf-extras-springsecurity5</artifactId>
@@ -85,6 +91,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+				    <groupId>org.junit.vintage</groupId>
+    				<artifactId>junit-vintage-engine</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -125,15 +137,15 @@
 			<artifactId>opencsv</artifactId>
 			<version>5.6</version>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 		    <groupId>org.modelmapper</groupId>
 		    <artifactId>modelmapper</artifactId>
 		    <version>3.1.0</version>
-		</dependency>
-		<dependency>
+		</dependency> -->
+<!-- 		<dependency>
 	        <groupId>org.springframework.boot</groupId>
 	        <artifactId>spring-boot-starter-jdbc</artifactId>
-    	</dependency>		
+    	</dependency>	 -->	
 	</dependencies>
 
 	<build>

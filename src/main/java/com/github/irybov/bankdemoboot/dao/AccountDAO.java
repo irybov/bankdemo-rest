@@ -42,8 +42,8 @@ public class AccountDAO {
 		return entityManager.createQuery("SELECT phone FROM Account WHERE phone=:check",
 				String.class)
 				.setParameter("check", check)
-				.getSingleResult();
-//				.getResultStream().findFirst().orElse(null);
+//				.getSingleResult();
+				.getResultStream().findFirst().orElse(null);
 	}
 	
 	public List<Account> getAll(){

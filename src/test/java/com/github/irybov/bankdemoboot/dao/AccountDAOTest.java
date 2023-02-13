@@ -1,13 +1,13 @@
 package com.github.irybov.bankdemoboot.dao;
 
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+//import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
+//import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.junit.jupiter.api.AfterAll;
@@ -64,9 +64,9 @@ class AccountDAOTest {
     @Test
 //	@Order(2)
 	void check_that_phone_not_present() {
-		assertThatExceptionOfType(NoResultException.class)
-		.isThrownBy(() -> {accountDAO.getPhone(newPN);});
-//		assertThat(accountDAO.getPhone(newPhone)).isNull();
+//		assertThatExceptionOfType(NoResultException.class)
+//		.isThrownBy(() -> {accountDAO.getPhone(newPN);});
+		assertThat(accountDAO.getPhone(newPN)).isNull();
 	}
 	
 	@Test

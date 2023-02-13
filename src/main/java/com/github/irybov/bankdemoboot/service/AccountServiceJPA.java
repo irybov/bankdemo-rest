@@ -61,7 +61,7 @@ public class AccountServiceJPA implements AccountService {
 	}
 	
 	@Transactional(readOnly = true)
-	public AccountResponseDTO getAccountDTO(String phone) throws Exception {
+	public AccountResponseDTO getAccountDTO(String phone) throws EntityNotFoundException {
 		return new AccountResponseDTO(accountService.getAccount(phone));
 	}
 	@Transactional(readOnly = true)
@@ -74,15 +74,15 @@ public class AccountServiceJPA implements AccountService {
 		return account;
 //		return accountRepository.getByPhone(phone);
 	}
-	@Transactional(readOnly = true)
+/*	@Transactional(readOnly = true)
 	public AccountResponseDTO getById(int id) {
 //		Optional<Account> account = accountRepository.findById(id);
 //		return new AccountResponseDTO(account.get());
 		Account account = accountRepository.getById(id);
 		return new AccountResponseDTO(account);
-	}
+	}*/
 	
-	public void updateAccount(Account account) {
+	void updateAccount(Account account) {
 		accountRepository.save(account);
 	}
 	
@@ -112,7 +112,7 @@ public class AccountServiceJPA implements AccountService {
 		return new BillResponseDTO(bill);
 	}
 	
-	public void changeStatus(String phone) throws Exception {
+/*	public void changeStatus(String phone) throws Exception {
 		
 		Account account = accountService.getAccount(phone);
 		if(account.isActive()) {
@@ -122,7 +122,7 @@ public class AccountServiceJPA implements AccountService {
 			account.setActive(true);
 		}
 		accountService.updateAccount(account);
-	}
+	}*/
 	
 	public void changePassword(String phone, String password) throws Exception {
 		Account account = accountService.getAccount(phone);

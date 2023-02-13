@@ -36,13 +36,13 @@ public class BillDAO {
 				+ "(SELECT account_id FROM {h-schema}bills WHERE id=:billId)")
 				.setParameter("billId", billId)				
 				.getSingleResult();
-	}*/
+	}
 	
 	public String getPhone(int billId) {
 		return getBill(billId).getOwner().getPhone();
 	}
 	
-/*	public List<Integer> getAll(String billCurrency){
+	public List<Integer> getAll(String billCurrency){
 		return entityManager.createQuery("SELECT id FROM Bill WHERE currency=:billCurrency",
 				Integer.class)
 				.setParameter("billCurrency", billCurrency)

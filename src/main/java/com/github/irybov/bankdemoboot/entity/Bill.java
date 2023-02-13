@@ -61,8 +61,7 @@ public class Bill {
 	@JoinColumn(name="account_id", updatable = false)
 	private Account owner;
 	
-	public Bill(String currency, boolean isActive, Account owner) {
-		
+	public Bill(String currency, boolean isActive, Account owner) {		
 		this.currency = currency;
 		this.isActive = isActive;
 		this.owner = owner;

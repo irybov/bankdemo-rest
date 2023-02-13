@@ -18,6 +18,8 @@ import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Optional;
 
+import javax.persistence.EntityNotFoundException;
+
 //import javax.persistence.EntityNotFoundException;
 //import javax.servlet.http.HttpServletResponse;
 
@@ -86,7 +88,7 @@ public class AdminController {
 			model.addAttribute("admin", admin);
 			log.info("Admin {} has enter admin's zone", admin.getPhone());
 		}
-		catch (Exception exc) {
+		catch (EntityNotFoundException exc) {
 			log.error(exc.getMessage(), exc);
 		}
 /*		AccountResponseDTO target = null;
@@ -126,7 +128,7 @@ public class AdminController {
 			log.info("Admin {} requests data about client {}", authentication().getName(), phone);
 			return new ResponseEntity<AccountResponseDTO>(target, HttpStatus.OK);
 		}
-		catch (Exception exc) {
+		catch (EntityNotFoundException exc) {
 			log.error("Database exception: account with phone {} not found", phone, exc);
 			String message = "Account with phone " + phone + " not found";
 			return new ResponseEntity<String>(message, HttpStatus.NOT_FOUND);

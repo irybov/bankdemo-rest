@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,7 +97,7 @@ public class BankController {
 		try {
 			account = accountService.getAccountDTO(current);
 		}
-		catch (Exception exc) {
+		catch (EntityNotFoundException exc) {
 			log.error(exc.getMessage(), exc);
 		}
 		List<BillResponseDTO> bills = accountService.getBills(account.getId());

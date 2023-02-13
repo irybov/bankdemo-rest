@@ -60,7 +60,7 @@ public class AccountServiceDAO implements AccountService {
 	}
 	
 	@Transactional(readOnly = true)
-	public AccountResponseDTO getAccountDTO(String phone) throws Exception {
+	public AccountResponseDTO getAccountDTO(String phone) throws EntityNotFoundException {
 		return new AccountResponseDTO(accountService.getAccount(phone));
 	}
 	@Transactional(readOnly = true)
@@ -73,12 +73,12 @@ public class AccountServiceDAO implements AccountService {
 		return account;
 //		return accountDAO.getAccount(phone);
 	}
-	@Transactional(readOnly = true)
+/*	@Transactional(readOnly = true)
 	public AccountResponseDTO getById(int id) {
 		return new AccountResponseDTO(accountDAO.getById(id));
-	}
+	}*/
 	
-	public void updateAccount(Account account) {
+	void updateAccount(Account account) {
 		accountDAO.updateAccount(account);
 	}
 	
@@ -108,7 +108,7 @@ public class AccountServiceDAO implements AccountService {
 		return new BillResponseDTO(bill);
 	}
 	
-	public void changeStatus(String phone) throws Exception {
+/*	public void changeStatus(String phone) throws Exception {
 		
 		Account account = accountService.getAccount(phone);
 		if(account.isActive()) {
@@ -118,7 +118,7 @@ public class AccountServiceDAO implements AccountService {
 			account.setActive(true);
 		}
 		accountService.updateAccount(account);
-	}
+	}*/
 	
 	public void changePassword(String phone, String password) throws Exception {
 		Account account = accountService.getAccount(phone);
