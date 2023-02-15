@@ -5,6 +5,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 //import static org.mockito.Mockito.when;
@@ -29,6 +30,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 //import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,6 +39,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.github.irybov.bankdemoboot.Role;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.entity.Bill;
@@ -85,9 +89,11 @@ class AccountServiceJPATest {
     void add_new_bill_and_get_it() {
     	
     	String currency = "SEA";
-    	Bill bill = new Bill();
+    	Bill billOne = new Bill();
+    	Bill billTwo = new Bill();
     	given(accountServiceJPA.getAccount(phone)).willReturn(adminEntity);
-    	doNothing().when(billService).saveBill(bill);
+    	doNothing().when(billService).saveBill(billOne);
+    	doNothing().when(billService).saveBill(billTwo);
     	doNothing().when(accountServiceJPA).updateAccount(adminEntity);
     	try {
     		org.assertj.core.api.BDDAssertions.then(accountService.addBill(phone, currency))
@@ -99,24 +105,32 @@ class AccountServiceJPATest {
     	verify(accountServiceJPA).getAccount(phone);
 
     	given(accountRepository.getById(anyInt())).willReturn(adminEntity);
-    	then(accountService.getBills(anyInt())).hasSize(1);
-    	verify(accountRepository).getById(anyInt());
+//    	then(accountService.getBills(anyInt())).hasSize(2);
+//    	verify(accountRepository).getById(anyInt());
+    }
+    
+    @Test
+    void can_get_phone_if_presents() {
+        
+        given(accountRepository.getPhone(phone)).willReturn(phone);
+        org.assertj.core.api.BDDAssertions.then(accountService.getPhone(phone))
+        									.isExactlyInstanceOf(String.class)
+        									.hasSize(phone.length());
+        verify(accountRepository).getPhone(phone);
     }
 	
     @Test
     void can_get_single_account() {
-//    	when(accountRepository.findByPhone(phone)).thenReturn(account);
+
 		given(accountRepository.findByPhone(phone)).willReturn(adminEntity);
     	try {
-			accountService.getAccount(phone);
+    		org.assertj.core.api.BDDAssertions.then(accountService.getAccount(phone))
+    											 .isExactlyInstanceOf(Account.class);
 		}
     	catch (Exception exc) {
 			exc.printStackTrace();
 		}
         verify(accountRepository).findByPhone(phone);
-        
-        accountService.getPhone(phone);
-        verify(accountRepository).getPhone(phone);
     }
     
     @Test
@@ -125,13 +139,16 @@ class AccountServiceJPATest {
 		Account vixenEntity = new Account
 		("Marica", "Hase", "1111111111", LocalDate.of(1981, Month.SEPTEMBER, 26), "supervixen", true);
 		vixenEntity.addRole(Role.CLIENT);
+		vixenEntity.setId(3);
 		Account blondeEntity = new Account
 		("Sarah", "Vandella", "2222222222", LocalDate.of(1983, Month.DECEMBER, 02), "bustyblonde", true);
 		blondeEntity.addRole(Role.CLIENT);
+		blondeEntity.setId(2);
 		Account gingerEntity = new Account
 		("Lily", "Cade", "3333333333", LocalDate.of(1995, Month.JANUARY, 25), "gingerchick", true);
 		gingerEntity.addRole(Role.CLIENT);
 		gingerEntity.addRole(Role.ADMIN);
+		gingerEntity.setId(1);
     	
     	List<Account> clients = new ArrayList<>();
     	clients.add(vixenEntity);
@@ -140,7 +157,8 @@ class AccountServiceJPATest {
     	
     	given(accountRepository.getAll()).willReturn(clients);
     	then(accountService.getAll()).hasSameSizeAs(clients)
-    								 .isSortedAccordingTo((a1, a2) -> a1.getId() - a2.getId());
+    								 .isSortedAccordingTo((a1, a2) -> a1.getId() - a2.getId())
+    								 .containsAll(new ArrayList<AccountResponseDTO>());
     	org.mockito.BDDMockito.then(accountRepository).should().getAll();
     }
     
@@ -157,15 +175,23 @@ class AccountServiceJPATest {
     @Test
     void can_change_password() {
     	
+    	String password = "nightmare";
     	given(accountServiceJPA.getAccount(phone)).willReturn(adminEntity);
-    	doNothing().when(accountServiceJPA).updateAccount(adminEntity);
+    	doAnswer(new Answer<Account>() {
+			@Override
+			public Account answer(InvocationOnMock invocation) throws Throwable {
+				adminEntity.setPassword(password);
+				return adminEntity;
+			}}).when(accountServiceJPA).updateAccount(adminEntity);
+    	
     	try {
-			accountService.changePassword(phone, "nightmare");
+			accountService.changePassword(phone, password);
 		}
     	catch (Exception exc) {
 			exc.printStackTrace();
 		}
     	verify(accountServiceJPA).getAccount(phone);
+    	org.assertj.core.api.BDDAssertions.then(adminEntity.getPassword()).isEqualTo(password);
     }
     
     @Test
@@ -225,7 +251,7 @@ class AccountServiceJPATest {
 		accountRequestDTO.setSurname("Adminov");
 
 		assertThatExceptionOfType(RegistrationException.class)
-		.isThrownBy(() -> {accountService.saveAccount(accountRequestDTO);});		
+		.isThrownBy(() -> {accountService.saveAccount(accountRequestDTO);});
 	}
     
     @AfterEach

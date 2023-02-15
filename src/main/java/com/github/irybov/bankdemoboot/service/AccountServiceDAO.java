@@ -148,6 +148,7 @@ public class AccountServiceDAO implements AccountService {
 	public List<AccountResponseDTO> getAll() {
 		return accountDAO.getAll()
 				.stream()
+//				.sorted((a1, a2) -> a1.getId() - a2.getId())
 				.map(AccountResponseDTO::new)
 				.collect(Collectors.toList());
 	}
