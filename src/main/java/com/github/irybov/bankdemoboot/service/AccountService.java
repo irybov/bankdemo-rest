@@ -14,11 +14,11 @@ public interface AccountService {
 	public void saveAccount(AccountRequestDTO accountRequestDTO) throws Exception;
 	public AccountResponseDTO getAccountDTO(String phone) throws EntityNotFoundException;
 //	public void updateAccount(Account account);
-	public boolean verifyAccount(String phone, String current) throws Exception;
+	public boolean verifyAccount(String phone, String current) throws EntityNotFoundException;
 	public BillResponseDTO addBill(String phone, String currency) throws Exception;
 //	public void changeStatus(String phone) throws Exception;
-	public void changePassword(String phone, String password) throws Exception;
-	public boolean comparePassword(String oldPassword, String phone) throws Exception;
+	public void changePassword(String phone, String password) throws EntityNotFoundException;
+	public boolean comparePassword(String oldPassword, String phone) throws EntityNotFoundException;
 //	public AccountResponseDTO getById(int id);
 	public Boolean changeStatus(int id);
 	public String getPhone(String phone);

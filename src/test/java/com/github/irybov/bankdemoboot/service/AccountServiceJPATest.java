@@ -6,15 +6,16 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
-//import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import javax.persistence.PersistenceException;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -86,15 +87,21 @@ class AccountServiceJPATest {
     }
     
     @Test
-    void add_new_bill_and_get_it() {
+    void add_new_bills_and_get_them() {
     	
     	String currency = "SEA";
-    	Bill billOne = new Bill();
-    	Bill billTwo = new Bill();
+    	Bill billOne = new Bill(currency, true, adminEntity);
+    	Bill billTwo = new Bill(currency, true, adminEntity);
+    	
     	given(accountServiceJPA.getAccount(phone)).willReturn(adminEntity);
-    	doNothing().when(billService).saveBill(billOne);
-    	doNothing().when(billService).saveBill(billTwo);
-    	doNothing().when(accountServiceJPA).updateAccount(adminEntity);
+    	doAnswer(new Answer<Account>() {
+			@Override
+			public Account answer(InvocationOnMock invocation) throws Throwable {
+				adminEntity.addBill(billOne);
+				adminEntity.addBill(billTwo);
+				return adminEntity;
+			}}).when(accountServiceJPA).updateAccount(adminEntity);
+    	
     	try {
     		org.assertj.core.api.BDDAssertions.then(accountService.addBill(phone, currency))
     											.isExactlyInstanceOf(BillResponseDTO.class);
@@ -105,8 +112,8 @@ class AccountServiceJPATest {
     	verify(accountServiceJPA).getAccount(phone);
 
     	given(accountRepository.getById(anyInt())).willReturn(adminEntity);
-//    	then(accountService.getBills(anyInt())).hasSize(2);
-//    	verify(accountRepository).getById(anyInt());
+    	then(accountService.getBills(anyInt())).hasSize(3);
+    	verify(accountRepository).getById(anyInt());
     }
     
     @Test
@@ -166,8 +173,6 @@ class AccountServiceJPATest {
     void can_change_status() {
     	
     	given(accountRepository.findById(anyInt())).willReturn(Optional.of(adminEntity));
-    	given(accountRepository.save(adminEntity)).willReturn(adminEntity);
-    	doNothing().when(accountServiceJPA).updateAccount(adminEntity);
     	then(accountService.changeStatus(anyInt())).isFalse();
     	verify(accountRepository).findById(anyInt());
     }
@@ -206,7 +211,7 @@ class AccountServiceJPATest {
 			exc.printStackTrace();
 		}
     	verify(accountServiceJPA).getAccount(phone);
-//    	verify(bCryptPasswordEncoder).matches("superadmin", adminEntity.getPassword());
+    	verify(bCryptPasswordEncoder).matches("superadmin", adminEntity.getPassword());
     }
     
 	@Test
@@ -225,23 +230,20 @@ class AccountServiceJPATest {
 			exc.printStackTrace();
 		}		
 		ArgumentCaptor<Account> argumentCaptor = ArgumentCaptor.forClass(Account.class);
-        verify(accountRepository).save(argumentCaptor.capture());
+		org.mockito.BDDMockito.then(accountRepository).should().save(argumentCaptor.capture());
         
-//    	when(accountRepository.findByPhone(phone)).thenReturn(adminEntity);
 		given(accountRepository.findByPhone(phone)).willReturn(adminEntity);
 		try {
-//			assertThat(accountService.verifyAccount(phone, adminEntity.getPhone())).isTrue();
 			then(accountService.verifyAccount(phone, adminEntity.getPhone())).isTrue();
 		}
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
-//      verify(accountRepository).findByPhone(phone);
         org.mockito.BDDMockito.then(accountRepository).should().findByPhone(phone);
 	}
 	
 	@Test
-	void save_and_catch_exception() {
+	void save_and_catch_exceptions() {
 		
 		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
 		accountRequestDTO.setBirthday(LocalDate.now().minusYears(10L).toString());
@@ -252,6 +254,13 @@ class AccountServiceJPATest {
 
 		assertThatExceptionOfType(RegistrationException.class)
 		.isThrownBy(() -> {accountService.saveAccount(accountRequestDTO);});
+		
+		accountRequestDTO.setBirthday(LocalDate.now().minusYears(20L).toString());		
+		doThrow(new PersistenceException()).when(accountRepository).save(adminEntity);
+		
+		assertThatExceptionOfType(PersistenceException.class)
+		.isThrownBy(() -> {accountService.saveAccount(accountRequestDTO);});
+		org.mockito.BDDMockito.then(accountRepository).should().save(adminEntity);
 	}
     
     @AfterEach

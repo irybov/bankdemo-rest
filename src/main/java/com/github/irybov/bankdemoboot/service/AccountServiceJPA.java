@@ -49,8 +49,8 @@ public class AccountServiceJPA implements AccountService {
 		}
 		
 		Account account = new Account(accountRequestDTO.getName(), accountRequestDTO.getSurname(),
-				accountRequestDTO.getPhone(), birthday, BCrypt.hashpw
-				(accountRequestDTO.getPassword(), BCrypt.gensalt(4)), true);
+				accountRequestDTO.getPhone(), birthday,
+				bCryptPasswordEncoder.encode(accountRequestDTO.getPassword()), true);
 		account.addRole(Role.CLIENT);
 		try {
 			accountRepository.save(account);
@@ -87,7 +87,7 @@ public class AccountServiceJPA implements AccountService {
 	}
 	
 	@Transactional(readOnly = true)
-	public boolean verifyAccount(String phone, String current) throws Exception{
+	public boolean verifyAccount(String phone, String current) throws EntityNotFoundException{
 		if(getAccount(phone).getPhone() == null || !phone.equals(current)) {
 			return false;
 		}
@@ -124,13 +124,13 @@ public class AccountServiceJPA implements AccountService {
 		accountService.updateAccount(account);
 	}*/
 	
-	public void changePassword(String phone, String password) throws Exception {
+	public void changePassword(String phone, String password) throws EntityNotFoundException {
 		Account account = accountService.getAccount(phone);
 		account.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(4)));
 		accountService.updateAccount(account);
 	}
 	@Transactional(readOnly = true)
-	public boolean comparePassword(String oldPassword, String phone) throws Exception {
+	public boolean comparePassword(String oldPassword, String phone) throws EntityNotFoundException {
 		Account account = accountService.getAccount(phone);
 		return bCryptPasswordEncoder.matches(oldPassword, account.getPassword());
 	}
