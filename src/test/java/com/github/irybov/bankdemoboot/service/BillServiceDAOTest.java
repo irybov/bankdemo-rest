@@ -18,6 +18,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -138,18 +140,19 @@ class BillServiceDAOTest {
 		    .hasMessage("Amount of money should be higher than zero");
 	}
 	
-	@Test
-	void can_deposit_money() {
+	@ParameterizedTest
+	@CsvSource({"0.01", "0.02", "0.03"})
+	void can_deposit_money(double amount) {
 		
 		when(billServiceDAO.getBill(anyInt())).thenReturn(bill);
 		try {
-			billService.deposit(anyInt(), 0.01);
+			billService.deposit(anyInt(), amount);
 		}
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
-		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), 0.01, 0.00);
-		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(0.01);
+		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), amount, 0.00);
+		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(amount);
 	}
 	
 	@Test
@@ -172,6 +175,8 @@ class BillServiceDAOTest {
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
+		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), 0.5, 0.00);
+		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(0.5);		
 	}
 	
 	@Test
@@ -182,7 +187,7 @@ class BillServiceDAOTest {
 	}
 	
 	@Test
-	void transfer_wrong_currency() {
+	void transfer_wrong_currency_type() {
 		
 		bill.setBalance(new BigDecimal(1.00));
 		Bill target = new Bill("XXX", false, owner);		

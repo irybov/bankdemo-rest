@@ -49,7 +49,7 @@ public class Bill {
 	@NotNull
 	@Column(columnDefinition = "Decimal(19,2) default '0.00'", precision = 2)
 	@JsonFormat(shape = JsonFormat.Shape.NUMBER_FLOAT)
-	private BigDecimal balance = new BigDecimal(0.00);
+	private BigDecimal balance = BigDecimal.valueOf(0.00);
 
 	@NotNull
 	@Size(min=3, max=3)

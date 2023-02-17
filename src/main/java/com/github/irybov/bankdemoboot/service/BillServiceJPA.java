@@ -40,7 +40,7 @@ public class BillServiceJPA implements BillService {
 				(()-> new EntityNotFoundException("Target bill with id: " + id + " not found"));
 	}
 	@Transactional(readOnly = true)
-	public BillResponseDTO getBillDTO(int id) throws Exception {
+	public BillResponseDTO getBillDTO(int id) throws EntityNotFoundException {
 		return new BillResponseDTO(billService.getBill(id));
 	}
 	
@@ -51,7 +51,7 @@ public class BillServiceJPA implements BillService {
 		}		
 		
 		Bill bill = billService.getBill(id);
-		bill.setBalance(bill.getBalance().add(new BigDecimal(amount)));
+		bill.setBalance(bill.getBalance().add(BigDecimal.valueOf(amount)));
 		billService.updateBill(bill);
 		return bill.getCurrency();
 	}
@@ -66,7 +66,7 @@ public class BillServiceJPA implements BillService {
 		if(bill.getBalance().compareTo(BigDecimal.valueOf(amount)) == -1) {
 			throw new PaymentException("Not enough money to complete operation");
 		}
-		bill.setBalance(bill.getBalance().subtract(new BigDecimal(amount)));
+		bill.setBalance(bill.getBalance().subtract(BigDecimal.valueOf(amount)));
 		billService.updateBill(bill);
 		return bill.getCurrency();
 	}
@@ -98,7 +98,7 @@ public class BillServiceJPA implements BillService {
 		return bill.getCurrency();
 	}
 	
-	public boolean changeStatus(int id) throws Exception {
+	public boolean changeStatus(int id) throws EntityNotFoundException {
 		
 		Bill bill = billService.getBill(id);
 		if(bill.isActive()) {
