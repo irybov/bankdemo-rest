@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -91,6 +92,7 @@ class BillServiceJPATest {
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
+		verify(billServiceJPA).getBill(anyInt());
 	}
 	
 	@Test
@@ -104,6 +106,7 @@ class BillServiceJPATest {
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
+		verify(billServiceJPA).getBill(anyInt());
 	}
 	
 	@Test
@@ -155,6 +158,7 @@ class BillServiceJPATest {
 		}
 		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), amount, 0.00);
 		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(amount);
+		verify(billServiceJPA).getBill(anyInt());
 	}
 	
 	@Test
@@ -164,6 +168,7 @@ class BillServiceJPATest {
 		assertThatThrownBy(() -> billService.withdraw(anyInt(), 0.05))
 			.isInstanceOf(PaymentException.class)
 			.hasMessage("Not enough money to complete operation");
+		verify(billServiceJPA).getBill(anyInt());
 	}
 	
 	@Test
@@ -179,6 +184,7 @@ class BillServiceJPATest {
 		}
 		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), 0.5, 0.00);
 		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(0.5);
+		verify(billServiceJPA).getBill(anyInt());
 	}
 	
 	@Test
@@ -199,6 +205,7 @@ class BillServiceJPATest {
 		assertThatThrownBy(() -> billService.transfer(0, 0.01, 1))
 	    .isInstanceOf(PaymentException.class)
 	    .hasMessage("Wrong currency type of the target bill");
+		verify(billServiceJPA, times(2)).getBill(anyInt());
 	}
 	
 	@Test
@@ -215,6 +222,7 @@ class BillServiceJPATest {
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
+		verify(billServiceJPA, times(2)).getBill(anyInt());
 	}
 	
 	@AfterEach

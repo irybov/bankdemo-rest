@@ -89,8 +89,6 @@ public class OperationServiceJPA implements OperationService {
 		
 		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
 											page.getSortDirection(), page.getSortBy());
-//		return operationRepository.findByActionLikeAndSenderOrRecipient(action, id, pageable)
-//				.map(OperationResponseDTO::new);
 		
 		return operationRepository.findAll(Specification.where(OperationSpecs.hasAction(action)
 				.and(OperationSpecs.hasOwner(id)).and(OperationSpecs.amountBetween(minval, maxval))

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -89,6 +90,7 @@ class BillServiceDAOTest {
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
+		verify(billServiceDAO).getBill(anyInt());
 	}
 	
 	@Test
@@ -102,6 +104,7 @@ class BillServiceDAOTest {
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
+		verify(billServiceDAO).getBill(anyInt());
 	}
 	
 	@Test
@@ -153,6 +156,7 @@ class BillServiceDAOTest {
 		}
 		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), amount, 0.00);
 		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(amount);
+		verify(billServiceDAO).getBill(anyInt());
 	}
 	
 	@Test
@@ -162,6 +166,7 @@ class BillServiceDAOTest {
 		assertThatThrownBy(() -> billService.withdraw(anyInt(), 0.05))
 			.isInstanceOf(PaymentException.class)
 			.hasMessage("Not enough money to complete operation");
+		verify(billServiceDAO).getBill(anyInt());
 	}
 	
 	@Test
@@ -176,7 +181,8 @@ class BillServiceDAOTest {
 			exc.printStackTrace();
 		}
 		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), 0.5, 0.00);
-		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(0.5);		
+		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(0.5);
+		verify(billServiceDAO).getBill(anyInt());
 	}
 	
 	@Test
@@ -197,6 +203,7 @@ class BillServiceDAOTest {
 		assertThatThrownBy(() -> billService.transfer(0, 0.01, 1))
 	    .isInstanceOf(PaymentException.class)
 	    .hasMessage("Wrong currency type of the target bill");
+		verify(billServiceDAO, times(2)).getBill(anyInt());
 	}
 	
 	@Test
@@ -213,6 +220,7 @@ class BillServiceDAOTest {
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
+		verify(billServiceDAO, times(2)).getBill(anyInt());
 	}
 
 	@AfterEach

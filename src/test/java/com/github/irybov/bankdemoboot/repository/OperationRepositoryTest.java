@@ -1,8 +1,9 @@
 package com.github.irybov.bankdemoboot.repository;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.OffsetDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -36,9 +37,12 @@ class OperationRepositoryTest {
 	@ParameterizedTest
 	@CsvSource({"1, 1, 3", "2, 2, 2", "3, 3, 3"})
 	void test_findBySenderOrRecipientOrderByIdDesc(int sender, int recipient, int quantity) {
+		
+	    Comparator<Operation> compareById = Comparator.comparing(Operation::getId).reversed();	
 		List<Operation> operations =
 				operationRepository.findBySenderOrRecipientOrderByIdDesc(sender, recipient);
 		assertThat(operations.size()).isEqualTo(quantity);
+		assertThat(operations).isSortedAccordingTo((compareById));
 	}
 	
 	//@Execution(ExecutionMode.CONCURRENT)

@@ -196,7 +196,7 @@ public class BankController {
 		}
 		
 		log.info("User {} performs {} operation with bill {}",
-		authentication().getName(), params.get("action"), id);
+				authentication().getName(), params.get("action"), id);
 		
 		String currency;		
 		switch(params.get("action")) {

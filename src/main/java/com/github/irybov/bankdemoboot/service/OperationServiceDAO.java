@@ -1,7 +1,7 @@
 package com.github.irybov.bankdemoboot.service;
 
 import java.time.OffsetDateTime;
-import java.util.Comparator;
+//import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,10 +68,10 @@ public class OperationServiceDAO implements OperationService {
 	@Transactional(readOnly = true)
 	public List<OperationResponseDTO> getAll(int id) {
 		
-	    Comparator<Operation> compareById = Comparator.comparing(Operation::getId);	    
+//	    Comparator<Operation> compareById = Comparator.comparing(Operation::getId);	    
 		return operationDAO.getAll(id)
 				.stream()
-				.sorted(compareById)
+//				.sorted(compareById)
 				.map(OperationResponseDTO::new)
 				.collect(Collectors.toList());
 	}
