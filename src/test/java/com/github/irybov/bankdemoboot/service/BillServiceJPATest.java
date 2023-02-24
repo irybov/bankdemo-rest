@@ -25,7 +25,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
@@ -52,7 +51,7 @@ class BillServiceJPATest {
 	@BeforeAll
 	static void prepare() {
 		owner = new Account("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
-								   BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
+				"superadmin", true);
 		bill = new Bill("SEA", true, owner);
 	}
 	
@@ -157,7 +156,6 @@ class BillServiceJPATest {
 			exc.printStackTrace();
 		}
 		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), amount, 0.00);
-		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(amount);
 		verify(billServiceJPA).getBill(anyInt());
 	}
 	
@@ -203,8 +201,8 @@ class BillServiceJPATest {
 		when(billServiceJPA.getBill(0)).thenReturn(bill);
 		
 		assertThatThrownBy(() -> billService.transfer(0, 0.01, 1))
-	    .isInstanceOf(PaymentException.class)
-	    .hasMessage("Wrong currency type of the target bill");
+	    	.isInstanceOf(PaymentException.class)
+	    	.hasMessage("Wrong currency type of the target bill");
 		verify(billServiceJPA, times(2)).getBill(anyInt());
 	}
 	

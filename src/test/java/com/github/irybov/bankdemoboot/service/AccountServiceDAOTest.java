@@ -37,7 +37,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 //import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.github.irybov.bankdemoboot.Role;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
@@ -45,6 +44,7 @@ import com.github.irybov.bankdemoboot.dao.AccountDAO;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.exception.RegistrationException;
+import com.github.irybov.bankdemoboot.security.Role;
 
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 //@ExtendWith(MockitoExtension.class)

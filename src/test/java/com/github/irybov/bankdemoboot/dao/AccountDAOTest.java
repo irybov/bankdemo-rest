@@ -23,8 +23,8 @@ import org.mockito.InjectMocks;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.github.irybov.bankdemoboot.Role;
 import com.github.irybov.bankdemoboot.entity.Account;
+import com.github.irybov.bankdemoboot.security.Role;
 
 //@TestMethodOrder(OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -58,7 +58,7 @@ class AccountDAOTest {
 	@Test
 //	@Order(1)
 	void check_that_phone_present() {
-        assertThat(accountDAO.getPhone(oldPN).equals(account.getPhone())).isTrue();
+        assertThat(accountDAO.getPhone(oldPN)).isEqualTo(account.getPhone());
 	}
 	
     @Test

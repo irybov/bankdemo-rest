@@ -15,13 +15,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.github.irybov.bankdemoboot.Role;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.dao.AccountDAO;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.exception.RegistrationException;
+import com.github.irybov.bankdemoboot.security.Role;
 import com.github.irybov.bankdemoboot.entity.Account;
 
 @Service

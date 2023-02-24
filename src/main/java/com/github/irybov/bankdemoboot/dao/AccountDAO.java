@@ -7,8 +7,8 @@ import javax.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import com.github.irybov.bankdemoboot.Role;
 import com.github.irybov.bankdemoboot.entity.Account;
+import com.github.irybov.bankdemoboot.security.Role;
 
 @Repository
 public class AccountDAO {

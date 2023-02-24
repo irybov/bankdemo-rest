@@ -92,12 +92,12 @@ class OperationServiceDAOTest {
 				.collect(Collectors.toList());
 		
 		when(operationDAO.getAll(anyInt())).thenReturn(operations);
+		
+		List<OperationResponseDTO> dtos = operationService.getAll(anyInt());
 		assertAll(
-				() -> assertThat(operationService.getAll(anyInt()))
-								.hasSameClassAs(new ArrayList<OperationResponseDTO>()),
-				() -> assertThat(operationService.getAll(anyInt()).size())
-								.isEqualTo(operations.size()));
-		verify(operationDAO, times(2)).getAll(anyInt());
+				() -> assertThat(dtos).hasSameClassAs(new ArrayList<OperationResponseDTO>()),
+				() -> assertThat(dtos.size()).isEqualTo(operations.size()));
+		verify(operationDAO).getAll(anyInt());
 	}
 	
 	@Test
@@ -117,8 +117,11 @@ class OperationServiceDAOTest {
 		OperationPage page = new OperationPage();
 		OffsetDateTime date = OffsetDateTime.now();
 		
-		assertThat(operationService.getPage(id, "^[a-z]{7,8}", value, value, date, date, page))
+		Page<OperationResponseDTO> dtos = operationService.getPage(id, "^[a-z]{7,8}",
+				value, value, date, date, page);
+		assertThat(dtos)
 			.hasSameClassAs(new PageImpl<OperationResponseDTO>(new ArrayList<OperationResponseDTO>()));
+		assertThat(dtos.getContent().size()).isEqualTo(size);
 		verify(operationDAO).getPage(anyInt(), anyString(), anyDouble(),  anyDouble(),
 				any(OffsetDateTime.class), any(OffsetDateTime.class), any(Pageable.class));
 	}

@@ -33,7 +33,7 @@ import javax.validation.constraints.Size;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.github.irybov.bankdemoboot.Role;
+import com.github.irybov.bankdemoboot.security.Role;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

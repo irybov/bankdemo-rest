@@ -65,9 +65,7 @@ public class BankController {
 	}
 	
 	private final Set<Currency> currencies = new HashSet<>();
-//	private final Set<Currency> currencies;
 	{
-//		currencies = EnumSet.allOf(Currency.class);
 		Currency usd = Currency.getInstance("USD");
 		currencies.add(usd);
 		Currency eur = Currency.getInstance("EUR");

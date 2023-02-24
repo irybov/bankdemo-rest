@@ -93,12 +93,12 @@ class OperationServiceJPATest {
 		
 		when(operationRepository.findBySenderOrRecipientOrderByIdDesc(id, id))
 			.thenReturn(operations);
+		
+		List<OperationResponseDTO> dtos = operationService.getAll(id);
 		assertAll(
-				() -> assertThat(operationService.getAll(id))
-								.hasSameClassAs(new ArrayList<OperationResponseDTO>()),
-				() -> assertThat(operationService.getAll(id).size())
-								.isEqualTo(operations.size()));
-		verify(operationRepository, times(2)).findBySenderOrRecipientOrderByIdDesc(id, id);
+				() -> assertThat(dtos).hasSameClassAs(new ArrayList<OperationResponseDTO>()),
+				() -> assertThat(dtos.size()).isEqualTo(operations.size()));
+		verify(operationRepository).findBySenderOrRecipientOrderByIdDesc(id, id);
 	}
 	
 	@Test
@@ -116,9 +116,11 @@ class OperationServiceJPATest {
 		final double value = new Random().nextDouble();
 		OperationPage page = new OperationPage();
 		
-		assertThat(operationService.getPage(id, "^[a-z]{7,8}", value, value,
-					any(OffsetDateTime.class), any(OffsetDateTime.class), page))
+		Page<OperationResponseDTO> dtos = operationService.getPage(id, "^[a-z]{7,8}", value, value,
+				any(OffsetDateTime.class), any(OffsetDateTime.class), page);
+		assertThat(dtos)
 			.hasSameClassAs(new PageImpl<OperationResponseDTO>(new ArrayList<OperationResponseDTO>()));
+		assertThat(dtos.getContent().size()).isEqualTo(size);
 		verify(operationRepository).findAll(any(Specification.class), any(Pageable.class));
 	}
 	
