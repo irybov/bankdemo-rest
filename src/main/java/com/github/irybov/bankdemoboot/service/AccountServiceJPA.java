@@ -57,7 +57,7 @@ public class AccountServiceJPA implements AccountService {
 			accountRepository.save(account);
 		}
 		catch (RuntimeException exc) {
-			throw new DataIntegrityViolationException("Database exception: this number is already in use.");
+			throw new DataIntegrityViolationException("This number is already in use.");
 		}
 	}
 	
@@ -70,7 +70,7 @@ public class AccountServiceJPA implements AccountService {
 		Account account = accountRepository.findByPhone(phone);
 		if(account == null) {
 			throw new EntityNotFoundException
-			("Database exception: " + "account with phone " + phone + " not found");
+			("Account with phone " + phone + " not found");
 		}
 		return account;
 //		return accountRepository.getByPhone(phone);

@@ -65,7 +65,7 @@ class AccountValidatorTest {
 		accountRequestDTO.setBirthday("2001-01-01");
 		accountRequestDTO.setName("Admin");
 		accountRequestDTO.setPassword("superadmin");
-		accountRequestDTO.setPhone("0000000000");
+		accountRequestDTO.setPhone(phone);
 		accountRequestDTO.setSurname("Adminov");
 	
 		Errors errors = new BeanPropertyBindingResult(accountRequestDTO, "accountRequestDTO");

@@ -2,6 +2,8 @@ package com.github.irybov.bankdemoboot.controller;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -35,6 +37,7 @@ import org.springframework.validation.Validator;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.entity.Account;
+import com.github.irybov.bankdemoboot.exception.RegistrationException;
 import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 import com.github.irybov.bankdemoboot.service.AccountService;
 
@@ -139,7 +142,7 @@ class AuthControllerTest {
 									 .param("phone", accountRequestDTO.getPhone())
 									 .param("surname", accountRequestDTO.getSurname())
 					)
-//			.andExpect(status().isCreated())
+			.andExpect(status().isCreated())
 			.andExpect(view().name("/auth/login"));
 	}
 	
@@ -160,8 +163,62 @@ class AuthControllerTest {
 									 .param("phone", accountRequestDTO.getPhone())
 									 .param("surname", accountRequestDTO.getSurname())
 					)
-//			.andExpect(status().isCreated())
+			.andExpect(status().isBadRequest())
 			.andExpect(view().name("/auth/register"));
+	}
+	
+	@Test
+	void interrupted_registration() throws Exception {
+		
+		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
+		accountRequestDTO.setBirthday(LocalDate.now().minusYears(10L).toString());
+		accountRequestDTO.setName("Admin");
+		accountRequestDTO.setPassword("superadmin");
+		accountRequestDTO.setPhone("0000000000");
+		accountRequestDTO.setSurname("Adminov");
+		
+		doThrow(new RegistrationException("You must be 18+ to register"))
+		.when(accountService).saveAccount(refEq(accountRequestDTO));
+		
+		mock.perform(post("/confirm").with(csrf())
+									 .param("birthday", accountRequestDTO.getBirthday())
+									 .param("name", accountRequestDTO.getName())
+									 .param("password", accountRequestDTO.getPassword())
+									 .param("phone", accountRequestDTO.getPhone())
+									 .param("surname", accountRequestDTO.getSurname())
+					)
+			.andExpect(status().isBadRequest())
+        	.andExpect(model().attribute("message", "You must be 18+ to register"))
+			.andExpect(view().name("/auth/register"));
+		
+	    verify(accountService).saveAccount(refEq(accountRequestDTO));
+	}
+	
+	@Test
+	void violated_registration() throws Exception {
+		
+		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
+		accountRequestDTO.setBirthday("2001-01-01");
+		accountRequestDTO.setName("Admin");
+		accountRequestDTO.setPassword("superadmin");
+		accountRequestDTO.setPhone("0000000000");
+		accountRequestDTO.setSurname("Adminov");
+		
+		doThrow(new Exception("This number is already in use."))
+		.when(accountService).saveAccount(refEq(accountRequestDTO));
+		
+		mock.perform(post("/confirm").with(csrf())
+									 .param("birthday", accountRequestDTO.getBirthday())
+									 .param("name", accountRequestDTO.getName())
+									 .param("password", accountRequestDTO.getPassword())
+									 .param("phone", accountRequestDTO.getPhone())
+									 .param("surname", accountRequestDTO.getSurname())
+					)
+			.andExpect(status().isConflict())
+        	.andExpect(model().attribute("message", "This number is already in use."))
+			.andExpect(view().name("/auth/register"));
+		
+	    verify(accountService).saveAccount(refEq(accountRequestDTO));
 	}
 	
 }

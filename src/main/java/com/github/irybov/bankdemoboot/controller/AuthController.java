@@ -1,6 +1,7 @@
 package com.github.irybov.bankdemoboot.controller;
 
 import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletResponse;
 
 //import javax.validation.Valid;
 
@@ -76,11 +77,12 @@ public class AuthController {
 	
 	@PostMapping("/confirm")
 	public String signIn(@ModelAttribute("account") AccountRequestDTO accountRequestDTO,
-			BindingResult result, Model model) {
+			BindingResult result, Model model, HttpServletResponse response) {
 		
 		accountValidator.validate(accountRequestDTO, result);
 		if(result.hasErrors()) {
 			log.warn("{}", result.getFieldErrors().toString());
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			return "/auth/register";
 		}
 		try {
@@ -89,8 +91,10 @@ public class AuthController {
 		catch (Exception exc) {
 			model.addAttribute("message", exc.getMessage());
 			log.error(exc.getMessage(), exc);
+			response.setStatus(HttpServletResponse.SC_CONFLICT);
 			return "/auth/register";			
 		}
+		response.setStatus(HttpServletResponse.SC_CREATED);
 		return "/auth/login";
 	}
 	

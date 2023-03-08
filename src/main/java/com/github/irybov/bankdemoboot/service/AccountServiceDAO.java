@@ -56,7 +56,7 @@ public class AccountServiceDAO implements AccountService {
 			accountDAO.saveAccount(account);
 		}
 		catch (RuntimeException exc) {
-			throw new PersistenceException("Database exception: this number is already in use.");
+			throw new PersistenceException("This number is already in use.");
 		}
 	}
 	
@@ -69,7 +69,7 @@ public class AccountServiceDAO implements AccountService {
 		Account account = accountDAO.getAccount(phone);
 		if(account == null) {
 			throw new EntityNotFoundException
-			("Database exception: " + "account with phone " + phone + " not found");
+			("Account with phone " + phone + " not found");
 		}
 		return account;
 //		return accountDAO.getAccount(phone);
