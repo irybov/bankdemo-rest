@@ -44,9 +44,7 @@ public class AccountValidator implements org.springframework.validation.Validato
 	    }
 		
 		AccountRequestDTO account = (AccountRequestDTO) target;
-		if(accountService.getPhone(account.getPhone()) == null){
-			return;
-		}
+		if(accountService.getPhone(account.getPhone()) == null) return;
 		errors.rejectValue("phone", "", "Validator in action! This number is already in use.");
 	}
 

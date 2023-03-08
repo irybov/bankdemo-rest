@@ -69,6 +69,7 @@ public class AuthController {
 		}
 		catch (EntityNotFoundException exc) {
 			log.error(exc.getMessage(), exc);
+			return "redirect:/home";
 		}
 		return "/auth/success";
 	}
@@ -79,7 +80,7 @@ public class AuthController {
 		
 		accountValidator.validate(accountRequestDTO, result);
 		if(result.hasErrors()) {
-			log.warn(result.getFieldErrors().toString());
+			log.warn("{}", result.getFieldErrors().toString());
 			return "/auth/register";
 		}
 		try {

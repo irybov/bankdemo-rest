@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.persistence.PersistenceException;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -33,6 +31,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 //import org.mockito.junit.jupiter.MockitoExtension;
@@ -125,6 +124,14 @@ class AccountServiceJPATest {
         									.hasSize(phone.length());
         verify(accountRepository).getPhone(phone);
     }
+    
+    @Test
+    void can_not_get_phone() {
+        
+        given(accountRepository.getPhone(phone)).willReturn(null);
+        org.assertj.core.api.BDDAssertions.then(accountService.getPhone(phone)).isNull();
+        verify(accountRepository).getPhone(phone);
+    }
 	
     @Test
     void can_get_single_account() {
@@ -202,7 +209,7 @@ class AccountServiceJPATest {
     @Test
     void password_comparison() {
     	
-    	given(accountServiceJPA.getAccount(phone)).willReturn(adminEntity);
+    	given(accountRepository.findByPhone(phone)).willReturn(adminEntity);
 //    	given(bCryptPasswordEncoder.matches("superadmin", adminEntity.getPassword())).willReturn(true);
     	try {
 			then(accountService.comparePassword("superadmin", phone)).isTrue();
@@ -210,7 +217,7 @@ class AccountServiceJPATest {
     	catch (Exception exc) {
 			exc.printStackTrace();
 		}
-    	verify(accountServiceJPA).getAccount(phone);
+    	verify(accountRepository).findByPhone(phone);
     	verify(bCryptPasswordEncoder).matches("superadmin", adminEntity.getPassword());
     }
     
@@ -256,9 +263,9 @@ class AccountServiceJPATest {
 		.isThrownBy(() -> {accountService.saveAccount(accountRequestDTO);});
 		
 		accountRequestDTO.setBirthday(LocalDate.now().minusYears(20L).toString());		
-		doThrow(new PersistenceException()).when(accountRepository).save(adminEntity);
+		doThrow(new DataIntegrityViolationException(null)).when(accountRepository).save(adminEntity);
 		
-		assertThatExceptionOfType(PersistenceException.class)
+		assertThatExceptionOfType(DataIntegrityViolationException.class)
 		.isThrownBy(() -> {accountService.saveAccount(accountRequestDTO);});
 		org.mockito.BDDMockito.then(accountRepository).should().save(adminEntity);
 	}

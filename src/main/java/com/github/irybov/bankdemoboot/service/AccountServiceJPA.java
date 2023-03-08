@@ -7,13 +7,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
-import javax.persistence.PersistenceException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
@@ -56,15 +57,15 @@ public class AccountServiceJPA implements AccountService {
 			accountRepository.save(account);
 		}
 		catch (RuntimeException exc) {
-			throw new PersistenceException("Database exception: this number is already in use.");
+			throw new DataIntegrityViolationException("Database exception: this number is already in use.");
 		}
 	}
 	
 	@Transactional(readOnly = true)
 	public AccountResponseDTO getAccountDTO(String phone) throws EntityNotFoundException {
-		return new AccountResponseDTO(accountService.getAccount(phone));
+		return new AccountResponseDTO(getAccount(phone));
 	}
-	@Transactional(readOnly = true)
+	@Transactional(propagation = Propagation.MANDATORY)
 	Account getAccount(String phone) throws EntityNotFoundException {
 		Account account = accountRepository.findByPhone(phone);
 		if(account == null) {
@@ -81,7 +82,7 @@ public class AccountServiceJPA implements AccountService {
 		Account account = accountRepository.getById(id);
 		return new AccountResponseDTO(account);
 	}*/
-	
+	@Transactional(propagation = Propagation.MANDATORY)
 	void updateAccount(Account account) {
 		accountRepository.save(account);
 	}
@@ -131,7 +132,7 @@ public class AccountServiceJPA implements AccountService {
 	}
 	@Transactional(readOnly = true)
 	public boolean comparePassword(String oldPassword, String phone) throws EntityNotFoundException {
-		Account account = accountService.getAccount(phone);
+		Account account = getAccount(phone);
 		return bCryptPasswordEncoder.matches(oldPassword, account.getPassword());
 	}
 

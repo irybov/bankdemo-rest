@@ -6,6 +6,7 @@ import javax.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
@@ -22,6 +23,7 @@ public class BillServiceDAO implements BillService {
 	@Autowired
 	private BillDAO billDAO;
 	
+	@Transactional(propagation = Propagation.MANDATORY)
 	public void saveBill(Bill bill) {
 		billDAO.saveBill(bill);
 	}
@@ -34,7 +36,7 @@ public class BillServiceDAO implements BillService {
 		billDAO.deleteBill(id);
 	}
 	
-	@Transactional(readOnly = true)
+	@Transactional(propagation = Propagation.MANDATORY)
 	Bill getBill(int id) throws EntityNotFoundException {
 		Bill bill = billDAO.getBill(id);
 		if(bill == null)
@@ -44,7 +46,7 @@ public class BillServiceDAO implements BillService {
 	}
 	@Transactional(readOnly = true)
 	public BillResponseDTO getBillDTO(int id) throws EntityNotFoundException {
-		return new BillResponseDTO(billService.getBill(id));
+		return new BillResponseDTO(getBill(id));
 	}
 	
 	public String deposit(int id, double amount) throws Exception {

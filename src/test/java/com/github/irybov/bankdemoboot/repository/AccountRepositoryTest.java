@@ -1,8 +1,11 @@
 package com.github.irybov.bankdemoboot.repository;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.time.LocalDate;
+import java.time.Month;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterAll;
@@ -16,6 +19,7 @@ import org.junit.jupiter.api.TestInstance;
 //import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.security.Role;
@@ -75,10 +79,41 @@ class AccountRepositoryTest {
     
     @Test
 //	@Order(5)
-    void check_that_no_clients_present() {
+    void check_for_clients_presence() {
     	List<Account> clients = accountRepository.getAll();
     	assertThat(clients).isNotNull();
     	assertThat(clients.isEmpty()).isTrue();
+    	
+		Account vixenEntity = new Account
+		("Marica", "Hase", "1111111111", LocalDate.of(1981, Month.SEPTEMBER, 26), "supervixen", true);
+		vixenEntity.addRole(Role.CLIENT);
+		Account blondeEntity = new Account
+		("Sarah", "Vandella", "2222222222", LocalDate.of(1983, Month.DECEMBER, 02), "bustyblonde", true);
+		blondeEntity.addRole(Role.CLIENT);
+		Account gingerEntity = new Account
+		("Lily", "Cade", "3333333333", LocalDate.of(1995, Month.JANUARY, 25), "gingerchick", true);
+		gingerEntity.addRole(Role.CLIENT);
+		gingerEntity.addRole(Role.ADMIN);
+		
+    	List<Account> whores = new ArrayList<>();
+    	whores.add(vixenEntity);
+    	whores.add(blondeEntity);
+    	whores.add(gingerEntity);
+    	accountRepository.saveAll(whores);
+    	
+    	clients = accountRepository.getAll();
+    	assertThat(clients.isEmpty()).isFalse();
+    	assertThat(clients.size()).isEqualTo(whores.size());
+    }
+    
+    @Test
+//	@Order(6)
+    void produce_persistence_exception() {
+		Account fakeAdmin = new Account
+				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
+		fakeAdmin.addRole(Role.CLIENT);
+		assertThatExceptionOfType(DataIntegrityViolationException.class)
+		.isThrownBy(() -> {accountRepository.save(fakeAdmin);});
     }
 	
     @AfterAll

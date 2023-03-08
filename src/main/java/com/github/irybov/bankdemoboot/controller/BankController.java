@@ -138,7 +138,7 @@ public class BankController {
 	@DeleteMapping("/accounts/show/{phone}")
 	public String deleteBill(@PathVariable String phone, @RequestParam int id) {
 		billService.deleteBill(id);
-		return "redirect:/accounts/show/{phone}";
+		return "forward:/accounts/show/{phone}";
 	}
 	
 	@DeleteMapping("/bills/delete/{id}")

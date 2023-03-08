@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -183,7 +185,7 @@ public class AdminController {
 		Boolean status = null;
 		status = accountService.changeStatus(id);
 		log.info("Admin {} changes active status of client {} to {}",
-		authentication().getName(), id, status);
+				authentication().getName(), id, status);
 		return status.toString();
 	}
 	
@@ -275,18 +277,20 @@ public class AdminController {
 //	public void export2csv(@PathVariable int id, HttpServletResponse response) throws IOException {
 	public Resource export2csv(@PathVariable int id) throws IOException {
 
-		BillResponseDTO bill = null;
-		try {
-			bill = billService.getBillDTO(id);
-		}
-		catch (Exception exc) {
-			log.error(exc.getMessage(), exc);
-		}
+		CompletableFuture<BillResponseDTO> futureBill = CompletableFuture.supplyAsync
+				(() -> {try {return billService.getBillDTO(id);}
+					   	catch(EntityNotFoundException exc) {log.error(exc.getMessage(), exc);
+					   	throw new CompletionException(exc);}
+//						return null;
+				});
+		CompletableFuture<List<OperationResponseDTO>> futureOperations =
+				CompletableFuture.supplyAsync(() -> operationService.getAll(id));
+				
+		BillResponseDTO bill = futureBill.join();
 		AccountResponseDTO account = bill.getOwner();
-		List<OperationResponseDTO> operations = operationService.getAll(id);
+		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};
 		
 		List<String[]> data = new ArrayList<>();
-		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};
 		data.add(owner);
 		data.add(new String[0]);
 		
@@ -299,6 +303,7 @@ public class AdminController {
 		data.add(header);
 		data.add(new String[0]);		
 		
+		List<OperationResponseDTO> operations = futureOperations.join();
 		for(OperationResponseDTO operation : operations) {
 			String[] row = {operation.getAction(),
 							String.valueOf(operation.getAmount()),

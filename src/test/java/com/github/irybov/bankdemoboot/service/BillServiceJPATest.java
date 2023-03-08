@@ -97,7 +97,7 @@ class BillServiceJPATest {
 	@Test
 	void can_get_billDTO() {
 		
-		when(billServiceJPA.getBill(anyInt())).thenReturn(bill);
+		when(billRepository.findById(anyInt())).thenReturn(Optional.of(bill));
 		try {
 			assertThat(billService.getBillDTO(anyInt()))
 			.isExactlyInstanceOf(BillResponseDTO.class);
@@ -105,7 +105,7 @@ class BillServiceJPATest {
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
-		verify(billServiceJPA).getBill(anyInt());
+		verify(billRepository).findById(anyInt());
 	}
 	
 	@Test

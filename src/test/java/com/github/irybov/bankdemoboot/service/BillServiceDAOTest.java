@@ -95,7 +95,7 @@ class BillServiceDAOTest {
 	@Test
 	void can_get_billDTO() {
 		
-		when(billServiceDAO.getBill(anyInt())).thenReturn(bill);
+		when(billDAO.getBill(anyInt())).thenReturn(bill);
 		try {
 			assertThat(billService.getBillDTO(anyInt()))
 			.isExactlyInstanceOf(BillResponseDTO.class);
@@ -103,7 +103,7 @@ class BillServiceDAOTest {
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
-		verify(billServiceDAO).getBill(anyInt());
+		verify(billDAO).getBill(anyInt());
 	}
 	
 	@Test

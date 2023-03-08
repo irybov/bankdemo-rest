@@ -31,7 +31,7 @@ public class AccountRequestDTO {
 	@JsonProperty("phone")
 	@NotBlank(message = "Phone number must not be empty")
 	@Size(min=10, max=10, message = "Phone number should be 10 digits length")
-	@Pattern(regexp = "^\\d{10}$", message = "Please input phone like XXXXXXXXXX")
+	@Pattern(regexp = "^\\d{10}$", message = "Please input phone number like a row of 10 digits")
 	private String phone;
 
 	@JsonProperty("birthday")

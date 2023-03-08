@@ -4,14 +4,19 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+
+import javax.persistence.EntityNotFoundException;
 
 //import java.io.File;
 //import java.nio.file.Files;
@@ -25,16 +30,20 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.test.context.support.WithMockUser;
 //import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.validation.Validator;
 
+import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.security.AccountDetailsService;
-import com.github.irybov.bankdemoboot.security.Role;
 import com.github.irybov.bankdemoboot.service.AccountService;
 
 @WebMvcTest(controllers = AuthController.class)
 class AuthControllerTest {
 
+	@MockBean
+	@Qualifier("beforeCreateAccountValidator")
+	private Validator accountValidator;
 	@MockBean
 	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
@@ -87,7 +96,6 @@ class AuthControllerTest {
 											 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
 		entity.setId(0);
 		entity.setCreatedAt(OffsetDateTime.now());
-		entity.addRole(Role.ADMIN);
 		AccountResponseDTO account = new AccountResponseDTO(entity);
 		
 		when(accountService.getAccountDTO(anyString())).thenReturn(account);
@@ -95,10 +103,65 @@ class AuthControllerTest {
 		mock.perform(get("/success"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("Welcome!")))
-	        .andExpect(model().attributeExists("account"))
+	        .andExpect(model().attribute("account", account))
 	        .andExpect(view().name("/auth/success"));
 	    
 	    verify(accountService).getAccountDTO(anyString());
+	}
+	
+	@WithMockUser
+	@Test
+	void entity_not_found() throws Exception {
+		
+		when(accountService.getAccountDTO(anyString())).thenThrow(EntityNotFoundException.class);
+		
+		mock.perform(get("/success"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/home"));
+	    
+	    verify(accountService).getAccountDTO(anyString());
+	}
+	
+	@Test
+	void accepted_registration() throws Exception {
+		
+		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
+		accountRequestDTO.setBirthday("2001-01-01");
+		accountRequestDTO.setName("Admin");
+		accountRequestDTO.setPassword("superadmin");
+		accountRequestDTO.setPhone("0000000000");
+		accountRequestDTO.setSurname("Adminov");
+		
+		mock.perform(post("/confirm").with(csrf())
+									 .param("birthday", accountRequestDTO.getBirthday())
+									 .param("name", accountRequestDTO.getName())
+									 .param("password", accountRequestDTO.getPassword())
+									 .param("phone", accountRequestDTO.getPhone())
+									 .param("surname", accountRequestDTO.getSurname())
+					)
+//			.andExpect(status().isCreated())
+			.andExpect(view().name("/auth/login"));
+	}
+	
+	@Test
+	void rejected_registration() throws Exception {
+		
+		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
+		accountRequestDTO.setBirthday(null);
+		accountRequestDTO.setName("i");
+		accountRequestDTO.setPassword("superb");
+		accountRequestDTO.setPhone("xxx");
+		accountRequestDTO.setSurname("a");
+		
+		mock.perform(post("/confirm").with(csrf())
+									 .param("birthday", accountRequestDTO.getBirthday())
+									 .param("name", accountRequestDTO.getName())
+									 .param("password", accountRequestDTO.getPassword())
+									 .param("phone", accountRequestDTO.getPhone())
+									 .param("surname", accountRequestDTO.getSurname())
+					)
+//			.andExpect(status().isCreated())
+			.andExpect(view().name("/auth/register"));
 	}
 	
 }

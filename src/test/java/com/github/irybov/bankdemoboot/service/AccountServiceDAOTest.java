@@ -124,6 +124,14 @@ class AccountServiceDAOTest {
         									.hasSize(phone.length());
         verify(accountDAO).getPhone(phone);
     }
+    
+    @Test
+    void can_not_get_phone() {
+        
+        given(accountDAO.getPhone(phone)).willReturn(null);
+        org.assertj.core.api.BDDAssertions.then(accountService.getPhone(phone)).isNull();
+        verify(accountDAO).getPhone(phone);
+    }
 	
     @Test
     void can_get_single_account() {
@@ -202,7 +210,7 @@ class AccountServiceDAOTest {
     @Test
     void password_comparison() {
     	
-    	given(accountServiceDAO.getAccount(phone)).willReturn(adminEntity);
+    	given(accountDAO.getAccount(phone)).willReturn(adminEntity);
 //    	given(bCryptPasswordEncoder.matches("superadmin", adminEntity.getPassword())).willReturn(true);
     	try {
 			then(accountService.comparePassword("superadmin", phone)).isTrue();
@@ -210,7 +218,7 @@ class AccountServiceDAOTest {
     	catch (Exception exc) {
 			exc.printStackTrace();
 		}
-    	verify(accountServiceDAO).getAccount(phone);
+    	verify(accountDAO).getAccount(phone);
     	verify(bCryptPasswordEncoder).matches("superadmin", adminEntity.getPassword());
     }
     

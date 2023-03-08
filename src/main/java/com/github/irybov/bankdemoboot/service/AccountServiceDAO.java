@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
@@ -61,9 +62,9 @@ public class AccountServiceDAO implements AccountService {
 	
 	@Transactional(readOnly = true)
 	public AccountResponseDTO getAccountDTO(String phone) throws EntityNotFoundException {
-		return new AccountResponseDTO(accountService.getAccount(phone));
+		return new AccountResponseDTO(getAccount(phone));
 	}
-	@Transactional(readOnly = true)
+	@Transactional(propagation = Propagation.MANDATORY)
 	Account getAccount(String phone) throws EntityNotFoundException {
 		Account account = accountDAO.getAccount(phone);
 		if(account == null) {
@@ -77,7 +78,7 @@ public class AccountServiceDAO implements AccountService {
 	public AccountResponseDTO getById(int id) {
 		return new AccountResponseDTO(accountDAO.getById(id));
 	}*/
-	
+	@Transactional(propagation = Propagation.MANDATORY)
 	void updateAccount(Account account) {
 		accountDAO.updateAccount(account);
 	}
@@ -127,7 +128,7 @@ public class AccountServiceDAO implements AccountService {
 	}
 	@Transactional(readOnly = true)
 	public boolean comparePassword(String oldPassword, String phone) throws EntityNotFoundException {
-		Account account = accountService.getAccount(phone);
+		Account account = getAccount(phone);
 		return bCryptPasswordEncoder.matches(oldPassword, account.getPassword());
 	}
 
