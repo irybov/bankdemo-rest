@@ -18,7 +18,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+//import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,11 +36,11 @@ public class Bill {
 	private int id;
 
 //	@NotNull
-	@JsonFormat(shape = JsonFormat.Shape.STRING)
+//	@JsonFormat(shape = JsonFormat.Shape.STRING)
 	private OffsetDateTime createdAt;
 	
 //	@NotNull
-	@JsonFormat(shape = JsonFormat.Shape.STRING)
+//	@JsonFormat(shape = JsonFormat.Shape.STRING)
 	private OffsetDateTime updatedAt;
 	
 	@NotNull
@@ -48,7 +48,7 @@ public class Bill {
 	
 	@NotNull
 	@Column(columnDefinition = "Decimal(19,2) default '0.00'", precision = 2)
-	@JsonFormat(shape = JsonFormat.Shape.NUMBER_FLOAT)
+//	@JsonFormat(shape = JsonFormat.Shape.NUMBER_FLOAT)
 	private BigDecimal balance = BigDecimal.valueOf(0.00);
 
 	@NotNull

@@ -67,12 +67,12 @@ public class AuthController {
 			account = accountService.getAccountDTO(authentication().getName());
 			model.addAttribute("account", account);
 			log.info("User {} has enter the system", account.getPhone());
+			return "/auth/success";
 		}
 		catch (EntityNotFoundException exc) {
 			log.error(exc.getMessage(), exc);
 			return "redirect:/home";
 		}
-		return "/auth/success";
 	}
 	
 	@PostMapping("/confirm")
@@ -87,6 +87,8 @@ public class AuthController {
 		}
 		try {
 			accountService.saveAccount(accountRequestDTO);
+			response.setStatus(HttpServletResponse.SC_CREATED);
+			return "/auth/login";
 		}
 		catch (Exception exc) {
 			model.addAttribute("message", exc.getMessage());
@@ -94,8 +96,6 @@ public class AuthController {
 			response.setStatus(HttpServletResponse.SC_CONFLICT);
 			return "/auth/register";			
 		}
-		response.setStatus(HttpServletResponse.SC_CREATED);
-		return "/auth/login";
 	}
 	
 }

@@ -28,7 +28,8 @@ public class BillServiceDAO implements BillService {
 		billDAO.saveBill(bill);
 	}
 	
-	public void updateBill(Bill bill) {
+	@Transactional(propagation = Propagation.MANDATORY)
+	void updateBill(Bill bill) {
 		billDAO.updateBill(bill);
 	}
 	
@@ -103,7 +104,7 @@ public class BillServiceDAO implements BillService {
 		return bill.getCurrency();
 	}
 	
-	public boolean changeStatus(int id) throws EntityNotFoundException {
+	public boolean changeStatus(int id) {
 		
 		Bill bill = billService.getBill(id);
 		if(bill.isActive()) {

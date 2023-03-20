@@ -22,7 +22,7 @@ public class BillResponseDTO {
 		
 		this.id = bill.getId();
 		this.createdAt = bill.getCreatedAt();
-		this.updatedAt = OffsetDateTime.now();		
+		this.updatedAt = bill.getUpdatedAt();		
 		this.active = bill.isActive();
 		this.balance = bill.getBalance();
 		this.currency = bill.getCurrency();

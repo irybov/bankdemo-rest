@@ -16,7 +16,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -28,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.test.context.support.WithMockUser;
 //import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -56,7 +54,7 @@ class AuthControllerTest {
 	private MockMvc mock;
 	
 	@Test
-	void can_get_start_page() throws Exception {
+	void can_get_start_html() throws Exception {
 		
 //		File home = new ClassPathResource("templates/auth/home.html").getFile();
 //		String html = new String(Files.readAllBytes(home.toPath()));
@@ -74,12 +72,13 @@ class AuthControllerTest {
         mock.perform(get("/register"))
 	        .andExpect(status().isOk())
 	        .andExpect(content().string(containsString("Registration")))
+	        .andExpect(model().size(1))
 	        .andExpect(model().attributeExists("account"))
 	        .andExpect(view().name("/auth/register"));
 	}
 
 	@Test
-	void can_get_login_page() throws Exception {
+	void can_get_login_html() throws Exception {
 		
 //		File login = new ClassPathResource("templates/auth/login.html").getFile();
 //		String html = new String(Files.readAllBytes(login.toPath()));
@@ -93,19 +92,16 @@ class AuthControllerTest {
 	
 	@WithMockUser
 	@Test
-	void can_get_menu_page() throws Exception {
-			
-		Account entity = new Account("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
-											 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
-		entity.setId(0);
-		entity.setCreatedAt(OffsetDateTime.now());
-		AccountResponseDTO account = new AccountResponseDTO(entity);
+	void can_get_menu_html() throws Exception {
+
+		AccountResponseDTO account = new AccountResponseDTO(new Account());
 		
 		when(accountService.getAccountDTO(anyString())).thenReturn(account);
 		
 		mock.perform(get("/success"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("Welcome!")))
+	        .andExpect(model().size(1))
 	        .andExpect(model().attribute("account", account))
 	        .andExpect(view().name("/auth/success"));
 	    
@@ -123,6 +119,17 @@ class AuthControllerTest {
 			.andExpect(redirectedUrl("/home"));
 	    
 	    verify(accountService).getAccountDTO(anyString());
+	}
+	
+	@Test
+	void unauthorized_success() throws Exception {
+		mock.perform(get("/success"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("http://localhost/login"));
+	}
+	@Test
+	void unauthorized_confirm() throws Exception {
+		mock.perform(post("/confirm")).andExpect(status().isForbidden());
 	}
 	
 	@Test
@@ -164,6 +171,8 @@ class AuthControllerTest {
 									 .param("surname", accountRequestDTO.getSurname())
 					)
 			.andExpect(status().isBadRequest())
+	        .andExpect(model().size(1))
+	        .andExpect(model().attributeExists("account"))
 			.andExpect(view().name("/auth/register"));
 	}
 	
@@ -187,7 +196,9 @@ class AuthControllerTest {
 									 .param("phone", accountRequestDTO.getPhone())
 									 .param("surname", accountRequestDTO.getSurname())
 					)
-			.andExpect(status().isBadRequest())
+			.andExpect(status().isConflict())
+	        .andExpect(model().size(2))
+	        .andExpect(model().attributeExists("account"))
         	.andExpect(model().attribute("message", "You must be 18+ to register"))
 			.andExpect(view().name("/auth/register"));
 		
@@ -215,6 +226,8 @@ class AuthControllerTest {
 									 .param("surname", accountRequestDTO.getSurname())
 					)
 			.andExpect(status().isConflict())
+	        .andExpect(model().size(2))
+	        .andExpect(model().attributeExists("account"))
         	.andExpect(model().attribute("message", "This number is already in use."))
 			.andExpect(view().name("/auth/register"));
 		

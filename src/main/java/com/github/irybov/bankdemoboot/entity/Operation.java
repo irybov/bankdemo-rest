@@ -11,7 +11,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+//import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,7 +38,7 @@ public class Operation {
 //	@NotNull
 //	@Builder.Default
 	@Setter
-	@JsonFormat(shape = JsonFormat.Shape.STRING)
+//	@JsonFormat(shape = JsonFormat.Shape.STRING)
 	private OffsetDateTime createdAt;
 	
 	@NotNull

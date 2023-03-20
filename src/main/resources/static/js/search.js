@@ -125,7 +125,8 @@ $(document).ready(function(){
 	 	                    var isIE = false || !!document.documentMode;
 	 	                    if (isIE) {
 	 	                        window.navigator.msSaveBlob(blob, fileName);
-	 	                    } else {
+	 	                    }
+	 	                    else {
 	 	                        var url = window.URL || window.webkitURL;
 	 	                        link = url.createObjectURL(blob);
 	 	                        var a = $("<a />");
@@ -277,7 +278,7 @@ $(document).ready(function(){
  		    });*/
 	    })
 	    .done(function() { $('#message').empty(); })
-	    .fail(function() { $('#message').html('Phone number not found'); });
+	    .fail(function() { $('#message').html("Phone number not found"); });
 		$('#client_table tbody').hide().fadeIn('fast');
 		$('#bill_table tbody').hide().fadeIn('slow');
     });

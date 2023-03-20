@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 //import org.springframework.data.domain.Page;
 //import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -76,11 +77,17 @@ public class BankController {
 		currencies.add(rub);
 	}
 	
+	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping("/accounts/show/{phone}")
 	public String getAccount(@PathVariable String phone, ModelMap modelMap) {
 
 		String current = authentication().getName();
-		try {
+		if(!current.equals(phone)) {
+			modelMap.addAttribute("message", "Security restricted information");
+			log.warn("User {} tries to get protected information", current);
+			return "forward:/accounts/show/" + current;
+		}
+/*		try {
 			if(!accountService.verifyAccount(phone, current)) {
 				modelMap.addAttribute("message", "Security restricted information");
 				log.warn("User {} tries to get protected information", current);
@@ -89,7 +96,7 @@ public class BankController {
 		}
 		catch (Exception exc) {
 			log.error(exc.getMessage(), exc);
-		}
+		}*/
 		
 		AccountResponseDTO account = null;
 		try {
@@ -117,7 +124,7 @@ public class BankController {
 		accountService.addBill(phone, currency);
 		return "redirect:/accounts/show/{phone}";
 	}*/
-	
+	@PreAuthorize("hasRole('CLIENT')")
 	@PostMapping("/bills/add")
 	@ResponseBody
 	public BillResponseDTO createBill(@RequestParam Map<String, String> params) {
@@ -135,12 +142,14 @@ public class BankController {
 		return bill;
 	}
 	
+	@PreAuthorize("hasRole('CLIENT')")
 	@DeleteMapping("/accounts/show/{phone}")
 	public String deleteBill(@PathVariable String phone, @RequestParam int id) {
 		billService.deleteBill(id);
 		return "forward:/accounts/show/{phone}";
 	}
 	
+	@PreAuthorize("hasRole('CLIENT')")
 	@DeleteMapping("/bills/delete/{id}")
 //	@ResponseBody
 	public void deleteBill(@PathVariable int id) {
@@ -148,6 +157,7 @@ public class BankController {
 		billService.deleteBill(id);
 	}
 	
+	@PreAuthorize("hasRole('CLIENT')")
 	@PostMapping("/bills/operate")
 	public String operateBill(@RequestParam Map<String, String> params, ModelMap modelMap) {
 		
@@ -160,6 +170,7 @@ public class BankController {
 		return "/bill/payment";
 	}
 	
+	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping(value = "/bills/validate/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
 	@ResponseBody
 	public String checkOwner(@PathVariable int id) {
@@ -175,6 +186,7 @@ public class BankController {
 		return bill.getOwner().getName() + " " + bill.getOwner().getSurname();
 	}
 	
+	@PreAuthorize("hasRole('CLIENT')")
 	@PatchMapping("/bills/launch/{id}")
 	public String driveMoney(@PathVariable int id, @RequestParam(required=false) String recipient,
 			@RequestParam Map<String, String> params, ModelMap modelMap) {
@@ -191,8 +203,7 @@ public class BankController {
 				return "/bill/transfer";
 			}
 			else target = Integer.parseInt(recipient);
-		}
-		
+		}		
 		log.info("User {} performs {} operation with bill {}",
 				authentication().getName(), params.get("action"), id);
 		
@@ -251,12 +262,14 @@ public class BankController {
 		return "redirect:/accounts/show/" + phone;
 	}
 	
+	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping("/accounts/password/{phone}")
 	public String changePassword(@PathVariable String phone, Model model) {
 		model.addAttribute("password", new PasswordRequestDTO());
 		return "/account/password";
 	}
 	
+	@PreAuthorize("hasRole('CLIENT')")
 	@PatchMapping("/accounts/password/{phone}")
 	public String changePassword(@PathVariable String phone,
 			@ModelAttribute("password") @Valid PasswordRequestDTO passwordRequestDTO,

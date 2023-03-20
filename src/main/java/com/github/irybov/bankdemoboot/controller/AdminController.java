@@ -3,12 +3,19 @@ package com.github.irybov.bankdemoboot.controller;
 import java.io.BufferedInputStream;
 //import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+//import java.io.File;
+//import java.io.FileInputStream;
 //import java.io.FileNotFoundException;
 //import java.io.FileOutputStream;
-import java.io.FileWriter;
+//import java.io.FileWriter;
 import java.io.IOException;
+//import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
+//import java.io.PrintStream;
+import java.io.PrintWriter;
+//import java.nio.file.FileSystems;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
@@ -16,9 +23,15 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
+//import java.util.concurrent.ExecutorService;
+//import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -48,6 +61,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
@@ -70,10 +85,13 @@ public class AdminController {
 	@Autowired
 	@Qualifier("billServiceAlias")
 	private BillService billService;
+	@Autowired
+	@Qualifier("operationServiceAlias")
+	private OperationService operationService;
 	
-	private final OperationService operationService;
-	public AdminController(@Qualifier("operationServiceAlias")OperationService operationService) {
-		this.operationService = operationService;
+	private final Executor executorService;
+	public AdminController(@Qualifier("asyncExecutor")Executor executorService) {
+		this.executorService = executorService;
 	}
 
 	private Authentication authentication() {
@@ -117,7 +135,7 @@ public class AdminController {
 		if(phone != null) {
 			if(!phone.matches("^\\d{10}$")) {
 				log.warn("Admin {} types phone {} in a wrong format",
-				authentication().getName(), phone);
+								  authentication().getName(), phone);
 				throw new InputMismatchException("Phone number should be of 10 digits");
 			}
 		}
@@ -133,7 +151,19 @@ public class AdminController {
 		catch (EntityNotFoundException exc) {
 			log.error("Database exception: account with phone {} not found", phone, exc);
 			String message = "Account with phone " + phone + " not found";
-			return new ResponseEntity<String>(message, HttpStatus.NOT_FOUND);
+			
+			ObjectMapper objectMapper = new ObjectMapper();
+			Map<String, String> map = Stream.of(new String[][] {{"report", message},})
+							.collect(Collectors.toMap(data -> data[0], data -> data[1]));
+			String json = null;
+			try {
+				json = objectMapper.writeValueAsString(map);
+			}
+			catch (JsonProcessingException jpe) {
+				jpe.printStackTrace();
+			}
+			return new ResponseEntity<String>(json, HttpStatus.NOT_FOUND);
+//			return new ResponseEntity<String>(message, HttpStatus.NOT_FOUND);
 		}
 /*		if(target == null) {
 			log.error("Database exception: " + phone + " not found");
@@ -185,7 +215,7 @@ public class AdminController {
 		Boolean status = null;
 		status = accountService.changeStatus(id);
 		log.info("Admin {} changes active status of client {} to {}",
-				authentication().getName(), id, status);
+							 authentication().getName(), id, status);
 		return status.toString();
 	}
 	
@@ -207,14 +237,9 @@ public class AdminController {
 	public String changeBillStatus(@PathVariable int id) {
 		
 		Boolean status = null;
-		try {
-			status = billService.changeStatus(id);
-			log.info("Admin {} changes active status of bill {} to {}",
-			authentication().getName(), id, status);
-		}
-		catch (Exception exc) {
-			log.error(exc.getMessage(), exc);
-		}
+		status = billService.changeStatus(id);
+		log.info("Admin {} changes active status of bill {} to {}",
+						   authentication().getName(), id, status);
 		return status.toString();
 	}
 	
@@ -271,25 +296,25 @@ public class AdminController {
 	
 	@PreAuthorize("hasRole('ADMIN')")
 //	@GetMapping("/operations/print/{id}")
-	@GetMapping(value = "/operations/print/{id}",
-	produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@GetMapping(value = "/operations/print/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	@ResponseBody
 //	public void export2csv(@PathVariable int id, HttpServletResponse response) throws IOException {
-	public Resource export2csv(@PathVariable int id) throws IOException {
+	public Resource export2csv(@PathVariable int id) {
 
+//		ExecutorService executorService = Executors.newFixedThreadPool
+//						(Runtime.getRuntime().availableProcessors());
+		CompletableFuture<List<OperationResponseDTO>> futureOperations =
+				CompletableFuture.supplyAsync(() -> operationService.getAll(id), executorService);
 		CompletableFuture<BillResponseDTO> futureBill = CompletableFuture.supplyAsync
 				(() -> {try {return billService.getBillDTO(id);}
 					   	catch(EntityNotFoundException exc) {log.error(exc.getMessage(), exc);
 					   	throw new CompletionException(exc);}
-//						return null;
-				});
-		CompletableFuture<List<OperationResponseDTO>> futureOperations =
-				CompletableFuture.supplyAsync(() -> operationService.getAll(id));
+				}, executorService);
 				
 		BillResponseDTO bill = futureBill.join();
 		AccountResponseDTO account = bill.getOwner();
-		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};
 		
+		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};		
 		List<String[]> data = new ArrayList<>();
 		data.add(owner);
 		data.add(new String[0]);
@@ -313,23 +338,38 @@ public class AdminController {
 			data.add(row);
 		}
 		
-		final String SLASH = System.getProperty("file.separator");
+/*		final String SLASH = FileSystems.getDefault().getSeparator();
 		final String PATH = System.getProperty("user.dir") + SLASH + "files";
 		new File(PATH).mkdir();
-		final String FILENAME = "Bill-" + id +".csv";
+		final String FILENAME = "Bill-" + id +".csv";*/
 		
-        try (CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter
+		byte[] byteArray = null;
+		try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				OutputStreamWriter osw = new OutputStreamWriter(baos);
+				PrintWriter pw = new PrintWriter(osw);
+				BufferedWriter bw = new BufferedWriter(pw);
+				CSVWriter writer = new CSVWriter(bw);) {
+			writer.writeAll(data);
+			writer.flush();
+			byteArray = baos.toByteArray();
+		}
+        catch (IOException exc) {
+        	log.error(exc.getMessage(), exc);
+		}
+		
+/*        try (CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter
         		(new File(PATH, FILENAME))))) {
             writer.writeAll(data);
         }
         catch (IOException exc) {
         	log.error(exc.getMessage(), exc);
-		}
+		}*/
+        		
+		log.info("Admin {} exports data about bill {} to csv", authentication().getName(), id);		
+        return new InputStreamResource(new BufferedInputStream(new ByteArrayInputStream(byteArray)));
         
-		log.info("Admin {} exports data about bill {} to csv", authentication().getName(), id);
-//        File file = new File(PATH + SLASH + FILENAME);
-        return new InputStreamResource(new BufferedInputStream(new FileInputStream
-        		(PATH + SLASH + FILENAME)));
+//		File file = new File(PATH + SLASH + FILENAME);
+//		return new InputStreamResource(new BufferedInputStream(new FileInputStream(file)));
 /*        response.setContentType("text/csv");
         response.setContentLength((int)file.length());
         response.setHeader("Content-Disposition", "attachment; filename="+FILENAME+"");

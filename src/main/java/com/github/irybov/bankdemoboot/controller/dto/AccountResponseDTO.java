@@ -32,7 +32,7 @@ public class AccountResponseDTO {
 		
 		this.id = account.getId();
 		this.createdAt = account.getCreatedAt();
-		this.updatedAt = OffsetDateTime.now();
+		this.updatedAt = account.getUpdatedAt();
 		this.active = account.isActive();
 		this.name = account.getName();
 		this.surname = account.getSurname();

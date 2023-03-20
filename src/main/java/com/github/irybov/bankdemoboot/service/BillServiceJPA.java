@@ -28,7 +28,8 @@ public class BillServiceJPA implements BillService {
 		billRepository.save(bill);
 	}
 	
-	public void updateBill(Bill bill) {
+	@Transactional(propagation = Propagation.MANDATORY)
+	void updateBill(Bill bill) {
 		billRepository.save(bill);
 	}
 	
@@ -100,7 +101,7 @@ public class BillServiceJPA implements BillService {
 		return bill.getCurrency();
 	}
 	
-	public boolean changeStatus(int id) throws EntityNotFoundException {
+	public boolean changeStatus(int id) {
 		
 		Bill bill = billService.getBill(id);
 		if(bill.isActive()) {

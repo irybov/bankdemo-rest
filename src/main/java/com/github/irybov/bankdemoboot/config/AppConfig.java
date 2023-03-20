@@ -1,5 +1,7 @@
 package com.github.irybov.bankdemoboot.config;
 
+import java.util.concurrent.Executor;
+
 import javax.sql.DataSource;
 
 //import org.modelmapper.ModelMapper;
@@ -12,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
@@ -52,6 +55,18 @@ public class AppConfig {
     @Primary
     public AccountValidator beforeCreateAccountValidator() {
         return new AccountValidator();
+    }
+    
+    @Bean
+    @Primary
+    public Executor asyncExecutor() {
+    	final int cores = Runtime.getRuntime().availableProcessors();
+    	final ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    	executor.setCorePoolSize(cores);
+        executor.setMaxPoolSize(cores * 2);
+        executor.setQueueCapacity(cores * 10);
+    	executor.initialize();
+    	return executor;
     }
     
 /*    @Bean

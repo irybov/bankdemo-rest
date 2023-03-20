@@ -34,8 +34,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
     }	
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-        	.userDetailsService(accountDetailsService)
+        auth.userDetailsService(accountDetailsService)
             .passwordEncoder(passwordEncoder());
     }
 	
@@ -75,7 +74,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 //			.successHandler((request, response, authentication) ->
 //			response.sendRedirect("/accounts/show/" + authentication.getName()))
 			.defaultSuccessUrl("/success", true)
-            .failureUrl("/login?error")
+            .failureUrl("/login?error=true")
             .permitAll()
 				.and()
 			.logout()

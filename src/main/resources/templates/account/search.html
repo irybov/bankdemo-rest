@@ -178,7 +178,7 @@
 <br>
 
 <!-- <div sec:authorize="hasRole('ADMIN')" th:if="${target}"> -->
-<div sec:authorize="hasRole('ADMIN')">
+<!-- <div sec:authorize="hasRole('ADMIN')">
 <table class="table table-hover table-sm" id="info_table">
 	<thead>
 		<tr>
@@ -194,7 +194,7 @@
 		</tr>
 	</thead>
 	<tbody>
-<!-- 	<tr th:each="operation : ${operations}">
+	<tr th:each="operation : ${operations}">
 		<td align="center" th:text="${operation.id}"></td>		
 	    <td align="center" th:text="${operation.action}"></td>
 	    <td></td>	    
@@ -204,13 +204,13 @@
 	    <td align="center" th:text="${operation.recipient}"></td>
 	    <td></td>
 	    <td align="center" th:text="${operation.timestamp}"></td>
-		</tr> -->
+		</tr>
 	</tbody>
 	<tfoot>
 	</tfoot>	
 </table>
 	<ul class="pagination justify-content-center" style="cursor: pointer;"></ul>
-</div>
+</div> -->
 <br>
 
 <form th:action="@{/logout}" method="post">
