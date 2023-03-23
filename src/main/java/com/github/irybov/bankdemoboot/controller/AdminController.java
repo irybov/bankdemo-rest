@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletResponse;
 
 //import javax.persistence.EntityNotFoundException;
 //import javax.servlet.http.HttpServletResponse;
@@ -299,7 +300,7 @@ public class AdminController {
 	@GetMapping(value = "/operations/print/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	@ResponseBody
 //	public void export2csv(@PathVariable int id, HttpServletResponse response) throws IOException {
-	public Resource export2csv(@PathVariable int id) {
+	public Resource export2csv(@PathVariable int id, HttpServletResponse response) {
 
 //		ExecutorService executorService = Executors.newFixedThreadPool
 //						(Runtime.getRuntime().availableProcessors());
@@ -364,7 +365,7 @@ public class AdminController {
         catch (IOException exc) {
         	log.error(exc.getMessage(), exc);
 		}*/
-        		
+		response.setStatus(HttpServletResponse.SC_CREATED);        		
 		log.info("Admin {} exports data about bill {} to csv", authentication().getName(), id);		
         return new InputStreamResource(new BufferedInputStream(new ByteArrayInputStream(byteArray)));
         

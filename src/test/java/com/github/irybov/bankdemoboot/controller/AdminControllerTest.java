@@ -10,13 +10,17 @@ import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -28,6 +32,8 @@ import java.util.concurrent.Executor;
 
 import javax.persistence.EntityNotFoundException;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -40,7 +46,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -55,6 +64,7 @@ import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
+import com.opencsv.CSVWriter;
 
 @WithMockUser(username = "0000000000", roles = "ADMIN")
 @WebMvcTest(controllers = AdminController.class)
@@ -75,7 +85,17 @@ class AdminControllerTest {
 	@MockBean
 	private AccountDetailsService accountDetailsService;
 	@Autowired
-	private MockMvc mock;
+	private MockMvc mockMVC;
+	
+	private Authentication authentication() {
+		return SecurityContextHolder.getContext().getAuthentication();
+	}
+	private String phone;
+	
+	@BeforeEach
+	void set_up() {
+		phone = authentication().getName();		
+	}
 
     @TestConfiguration
     static class TestConfig {
@@ -99,7 +119,7 @@ class AdminControllerTest {
 		AccountResponseDTO admin = new AccountResponseDTO(new Account());		
 		when(accountService.getAccountDTO(anyString())).thenReturn(admin);
 		
-		mock.perform(get("/accounts/search"))
+		mockMVC.perform(get("/accounts/search"))
 			.andExpect(status().isOk())
 			.andExpect(model().size(1))
 	        .andExpect(model().attribute("admin", admin))
@@ -112,7 +132,7 @@ class AdminControllerTest {
 	@Test
 	void can_get_history_html() throws Exception {
 		
-		mock.perform(get("/operations/list"))
+		mockMVC.perform(get("/operations/list"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("Operations history")))
 			.andExpect(view().name("/account/history"));
@@ -124,7 +144,7 @@ class AdminControllerTest {
 		List<AccountResponseDTO> clients = new ArrayList<>();
 		when(accountService.getAll()).thenReturn(clients);
 		
-		mock.perform(get("/accounts/list"))
+		mockMVC.perform(get("/accounts/list"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("Clients list")))
 			.andExpect(model().size(1))
@@ -139,7 +159,7 @@ class AdminControllerTest {
 		
 		when(accountService.changeStatus(anyInt())).thenReturn(false);		
 		
-		mock.perform(get("/accounts/status/{id}", "0"))
+		mockMVC.perform(get("/accounts/status/{id}", "0"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("false")));
 		
@@ -151,7 +171,7 @@ class AdminControllerTest {
 		
 		when(billService.changeStatus(anyInt())).thenReturn(false);
 		
-		mock.perform(get("/bills/status/{id}", "0"))
+		mockMVC.perform(get("/bills/status/{id}", "0"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("false")));
 		
@@ -161,7 +181,7 @@ class AdminControllerTest {
 	@Test
 	void input_mismatch_exception() throws Exception {
 		
-		assertThatThrownBy(() -> mock.perform(get("/accounts/search/{phone}", "00000"))
+		assertThatThrownBy(() -> mockMVC.perform(get("/accounts/search/{phone}", "XXX"))
 				.andExpect(status().isInternalServerError()))
 				.hasCause(new InputMismatchException("Phone number should be of 10 digits"));
 	}
@@ -169,34 +189,34 @@ class AdminControllerTest {
 	@Test
 	void entity_not_found_exception() throws Exception {
 		
-		String phone = "9999999999";
-		when(accountService.getAccountDTO(anyString()))
-			.thenThrow(new EntityNotFoundException("Account with phone " + phone + " not found"));
+		String wrong = "9999999999";
+		when(accountService.getAccountDTO(wrong))
+			.thenThrow(new EntityNotFoundException("Account with phone " + wrong + " not found"));
 		
-		mock.perform(get("/accounts/search/{phone}", phone))
+		mockMVC.perform(get("/accounts/search/{phone}", wrong))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.report").value("Account with phone " + phone + " not found"));
+			.andExpect(jsonPath("$.report").value("Account with phone " + wrong + " not found"));
 		
-	    verify(accountService).getAccountDTO(anyString());
+	    verify(accountService).getAccountDTO(wrong);
 	}
 	
 	@Test
 	void can_get_account_info() throws Exception {
 		
 		Account entity = new Account
-				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
+				("Admin", "Adminov", phone, LocalDate.of(2001, 01, 01), "superadmin", true);
 		entity.setCreatedAt(OffsetDateTime.now());
 		entity.setUpdatedAt(OffsetDateTime.now());
 		
 		AccountResponseDTO account = new AccountResponseDTO(entity);
-		when(accountService.getAccountDTO(anyString())).thenReturn(account);
+		when(accountService.getAccountDTO(phone)).thenReturn(account);
 		List<BillResponseDTO> bills = new ArrayList<>();
 		Bill bill = new Bill();
 		bill.setOwner(entity);
 		bills.add(new BillResponseDTO(bill));
 		when(accountService.getBills(anyInt())).thenReturn(bills);
 		
-		mock.perform(get("/accounts/search/{phone}", "0000000000"))
+		mockMVC.perform(get("/accounts/search/{phone}", phone))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.createdAt").exists())
@@ -210,7 +230,7 @@ class AdminControllerTest {
 			.andExpect(jsonPath("$.bills").isArray())
 			.andExpect(jsonPath("$.bills").isNotEmpty());
 		
-	    verify(accountService).getAccountDTO(anyString());
+	    verify(accountService).getAccountDTO(phone);
 	    verify(accountService).getBills(anyInt());
 	}
 	
@@ -229,7 +249,7 @@ class AdminControllerTest {
 				any(OffsetDateTime.class), any(OffsetDateTime.class),refEq(page)))
 				.thenReturn(operationPage);
 		
-		mock.perform(get("/operations/list/{id}", "0"))
+		mockMVC.perform(get("/operations/list/{id}", "0"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content").exists())
 			.andExpect(jsonPath("$.content").isArray())
@@ -267,12 +287,61 @@ class AdminControllerTest {
 		CompletableFuture<BillResponseDTO> futureBill = CompletableFuture.completedFuture(fake);
 		when(billService.getBillDTO(anyInt())).thenReturn(futureBill.join());
 		
-		mock.perform(get("/operations/print/{id}", "0"))
-			.andDo(print())
-			.andExpect(status().isOk());
+		byte[] output = data_2_csv_converter(entity, bill, operations);
+		
+		mockMVC.perform(get("/operations/print/{id}", "0"))
+			.andExpect(status().isCreated())
+			.andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+			.andExpect(content().bytes(output));
 		
 		verify(operationService).getAll(anyInt());
 		verify(billService).getBillDTO(anyInt());
+	}
+	
+	private byte[] data_2_csv_converter(Account account, Bill bill, List<OperationResponseDTO> operations) {
+
+		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};		
+		List<String[]> data = new ArrayList<>();
+		data.add(owner);
+		data.add(new String[0]);
+		
+		String[] info = {bill.getCurrency(), String.valueOf(bill.getBalance()), bill.getCreatedAt()
+				.toString()};
+		data.add(info);
+		data.add(new String[0]);
+		
+		String[] header = {"Action", "Amount", "When", "Recipient", "Sender"};
+		data.add(header);
+		data.add(new String[0]);		
+		
+		for(OperationResponseDTO operation : operations) {
+			String[] row = {operation.getAction(),
+							String.valueOf(operation.getAmount()),
+							operation.getCreatedAt().toString(),
+							String.valueOf(operation.getRecipient()),
+							String.valueOf(operation.getSender())};
+			data.add(row);
+		}
+		
+		byte[] byteArray = null;
+		try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				OutputStreamWriter osw = new OutputStreamWriter(baos);
+				PrintWriter pw = new PrintWriter(osw);
+				BufferedWriter bw = new BufferedWriter(pw);
+				CSVWriter writer = new CSVWriter(bw);) {
+			writer.writeAll(data);
+			writer.flush();
+			byteArray = baos.toByteArray();
+		}
+        catch (IOException exc) {
+//        	log.error(exc.getMessage(), exc);
+		}		
+		return byteArray;		
+	}
+	
+	@AfterEach
+	void tear_down() {
+		phone = null;
 	}
 	
 }

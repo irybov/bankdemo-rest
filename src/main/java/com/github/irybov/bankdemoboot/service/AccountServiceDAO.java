@@ -64,7 +64,7 @@ public class AccountServiceDAO implements AccountService {
 	public AccountResponseDTO getAccountDTO(String phone) throws EntityNotFoundException {
 		return new AccountResponseDTO(getAccount(phone));
 	}
-	@Transactional(propagation = Propagation.MANDATORY)
+	@Transactional(propagation = Propagation.MANDATORY, readOnly = true)
 	Account getAccount(String phone) throws EntityNotFoundException {
 		Account account = accountDAO.getAccount(phone);
 		if(account == null) {

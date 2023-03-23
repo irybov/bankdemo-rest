@@ -51,7 +51,7 @@ class AuthControllerTest {
 	@MockBean
 	private AccountDetailsService accountDetailsService;
 	@Autowired
-	private MockMvc mock;
+	private MockMvc mockMVC;
 	
 	@Test
 	void can_get_start_html() throws Exception {
@@ -59,7 +59,7 @@ class AuthControllerTest {
 //		File home = new ClassPathResource("templates/auth/home.html").getFile();
 //		String html = new String(Files.readAllBytes(home.toPath()));
 		
-        mock.perform(get("/home"))
+        mockMVC.perform(get("/home"))
 	        .andExpect(status().isOk())
 	//        .andExpect(content().string(html))
 	        .andExpect(content().string(containsString("Welcome!")))
@@ -69,7 +69,7 @@ class AuthControllerTest {
 	@Test
 	void can_get_registration_form() throws Exception {
 		
-        mock.perform(get("/register"))
+        mockMVC.perform(get("/register"))
 	        .andExpect(status().isOk())
 	        .andExpect(content().string(containsString("Registration")))
 	        .andExpect(model().size(1))
@@ -83,7 +83,7 @@ class AuthControllerTest {
 //		File login = new ClassPathResource("templates/auth/login.html").getFile();
 //		String html = new String(Files.readAllBytes(login.toPath()));
 		
-        mock.perform(get("/login"))
+        mockMVC.perform(get("/login"))
 	        .andExpect(status().isOk())
 	//        .andExpect(content().string(html))
 	        .andExpect(content().string(containsString("Log In")))
@@ -98,7 +98,7 @@ class AuthControllerTest {
 		
 		when(accountService.getAccountDTO(anyString())).thenReturn(account);
 		
-		mock.perform(get("/success"))
+		mockMVC.perform(get("/success"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("Welcome!")))
 	        .andExpect(model().size(1))
@@ -114,7 +114,7 @@ class AuthControllerTest {
 		
 		when(accountService.getAccountDTO(anyString())).thenThrow(EntityNotFoundException.class);
 		
-		mock.perform(get("/success"))
+		mockMVC.perform(get("/success"))
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/home"));
 	    
@@ -123,13 +123,13 @@ class AuthControllerTest {
 	
 	@Test
 	void unauthorized_success() throws Exception {
-		mock.perform(get("/success"))
+		mockMVC.perform(get("/success"))
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("http://localhost/login"));
 	}
 	@Test
 	void unauthorized_confirm() throws Exception {
-		mock.perform(post("/confirm")).andExpect(status().isForbidden());
+		mockMVC.perform(post("/confirm")).andExpect(status().isForbidden());
 	}
 	
 	@Test
@@ -142,7 +142,7 @@ class AuthControllerTest {
 		accountRequestDTO.setPhone("0000000000");
 		accountRequestDTO.setSurname("Adminov");
 		
-		mock.perform(post("/confirm").with(csrf())
+		mockMVC.perform(post("/confirm").with(csrf())
 									 .param("birthday", accountRequestDTO.getBirthday())
 									 .param("name", accountRequestDTO.getName())
 									 .param("password", accountRequestDTO.getPassword())
@@ -163,7 +163,7 @@ class AuthControllerTest {
 		accountRequestDTO.setPhone("xxx");
 		accountRequestDTO.setSurname("a");
 		
-		mock.perform(post("/confirm").with(csrf())
+		mockMVC.perform(post("/confirm").with(csrf())
 									 .param("birthday", accountRequestDTO.getBirthday())
 									 .param("name", accountRequestDTO.getName())
 									 .param("password", accountRequestDTO.getPassword())
@@ -189,7 +189,7 @@ class AuthControllerTest {
 		doThrow(new RegistrationException("You must be 18+ to register"))
 		.when(accountService).saveAccount(refEq(accountRequestDTO));
 		
-		mock.perform(post("/confirm").with(csrf())
+		mockMVC.perform(post("/confirm").with(csrf())
 									 .param("birthday", accountRequestDTO.getBirthday())
 									 .param("name", accountRequestDTO.getName())
 									 .param("password", accountRequestDTO.getPassword())
@@ -215,10 +215,10 @@ class AuthControllerTest {
 		accountRequestDTO.setPhone("0000000000");
 		accountRequestDTO.setSurname("Adminov");
 		
-		doThrow(new Exception("This number is already in use."))
+		doThrow(new RuntimeException("This number is already in use."))
 		.when(accountService).saveAccount(refEq(accountRequestDTO));
 		
-		mock.perform(post("/confirm").with(csrf())
+		mockMVC.perform(post("/confirm").with(csrf())
 									 .param("birthday", accountRequestDTO.getBirthday())
 									 .param("name", accountRequestDTO.getName())
 									 .param("password", accountRequestDTO.getPassword())

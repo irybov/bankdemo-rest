@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,11 +56,9 @@ public class BankController {
 	@Autowired
 	@Qualifier("billServiceAlias")
 	private BillService billService;
-
-	private final OperationService operationService;
-	public BankController(@Qualifier("operationServiceAlias")OperationService operationService) {
-		this.operationService = operationService;
-	}
+	@Autowired
+	@Qualifier("operationServiceAlias")
+	private OperationService operationService;
 		
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
@@ -79,12 +78,13 @@ public class BankController {
 	
 	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping("/accounts/show/{phone}")
-	public String getAccount(@PathVariable String phone, ModelMap modelMap) {
+	public String getAccount(@PathVariable String phone, ModelMap modelMap, HttpServletResponse response) {
 
 		String current = authentication().getName();
 		if(!current.equals(phone)) {
 			modelMap.addAttribute("message", "Security restricted information");
-			log.warn("User {} tries to get protected information", current);
+			log.warn("User {} tries to get protected information about {}", current, phone);
+			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			return "forward:/accounts/show/" + current;
 		}
 /*		try {
@@ -127,7 +127,7 @@ public class BankController {
 	@PreAuthorize("hasRole('CLIENT')")
 	@PostMapping("/bills/add")
 	@ResponseBody
-	public BillResponseDTO createBill(@RequestParam Map<String, String> params) {
+	public BillResponseDTO createBill(@RequestParam Map<String, String> params, HttpServletResponse response) {
 
 		log.info("Client {} creates new {} bill", params.get("phone"), params.get("currency"));
 //		if(params.get("currency").isEmpty()) return "Please choose currency type";
@@ -139,19 +139,20 @@ public class BankController {
 		catch (Exception exc) {
 			log.error(exc.getMessage(), exc);
 		}
+		response.setStatus(HttpServletResponse.SC_CREATED);
 		return bill;
 	}
 	
-	@PreAuthorize("hasRole('CLIENT')")
+/*	@PreAuthorize("hasRole('CLIENT')")
 	@DeleteMapping("/accounts/show/{phone}")
 	public String deleteBill(@PathVariable String phone, @RequestParam int id) {
 		billService.deleteBill(id);
 		return "forward:/accounts/show/{phone}";
-	}
+	}*/
 	
 	@PreAuthorize("hasRole('CLIENT')")
 	@DeleteMapping("/bills/delete/{id}")
-//	@ResponseBody
+	@ResponseBody
 	public void deleteBill(@PathVariable int id) {
 		log.info("Client {} deletes bill with id {}", authentication().getName(), id);
 		billService.deleteBill(id);
@@ -173,7 +174,7 @@ public class BankController {
 	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping(value = "/bills/validate/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
 	@ResponseBody
-	public String checkOwner(@PathVariable int id) {
+	public String checkOwner(@PathVariable int id, HttpServletResponse response) {
 		
 		BillResponseDTO bill = null;
 		try {
@@ -181,6 +182,7 @@ public class BankController {
 		}
 		catch (Exception exc) {
 			log.error(exc.getMessage(), exc);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return exc.getMessage();
 		}		
 		return bill.getOwner().getName() + " " + bill.getOwner().getSurname();
@@ -262,19 +264,25 @@ public class BankController {
 		return "redirect:/accounts/show/" + phone;
 	}
 	
-	@PreAuthorize("hasRole('CLIENT')")
+	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
 	@GetMapping("/accounts/password/{phone}")
 	public String changePassword(@PathVariable String phone, Model model) {
 		model.addAttribute("password", new PasswordRequestDTO());
 		return "/account/password";
 	}
 	
-	@PreAuthorize("hasRole('CLIENT')")
+	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
 	@PatchMapping("/accounts/password/{phone}")
 	public String changePassword(@PathVariable String phone,
 			@ModelAttribute("password") @Valid PasswordRequestDTO passwordRequestDTO,
-			BindingResult result, Model model) {
+			BindingResult result, Model model, HttpServletResponse response) {
 
+		if(result.hasErrors()) {
+			log.warn(result.getFieldErrors().toString());
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return "/account/password";
+		}
+		
 		try {
 			if(!accountService.comparePassword(passwordRequestDTO.getOldPassword(), phone)) {
 				log.warn("User {} fails to confirm old password", authentication().getName());
@@ -284,10 +292,6 @@ public class BankController {
 		}
 		catch (Exception exc) {
 			log.error(exc.getMessage(), exc);
-		}
-		if(result.hasErrors()) {
-			log.warn(result.getFieldErrors().toString());
-			return "/account/password";
 		}
 		
 		try {
