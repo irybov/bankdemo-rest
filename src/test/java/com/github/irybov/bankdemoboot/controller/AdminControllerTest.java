@@ -32,7 +32,9 @@ import java.util.concurrent.Executor;
 
 import javax.persistence.EntityNotFoundException;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,6 +93,17 @@ class AdminControllerTest {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
 	private String phone;
+	
+	private static Account entity;
+	
+	@BeforeAll
+	static void prepare() {
+		
+		entity = new Account
+				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
+		entity.setCreatedAt(OffsetDateTime.now());
+		entity.setUpdatedAt(OffsetDateTime.now());
+	}
 	
 	@BeforeEach
 	void set_up() {
@@ -203,11 +216,6 @@ class AdminControllerTest {
 	@Test
 	void can_get_account_info() throws Exception {
 		
-		Account entity = new Account
-				("Admin", "Adminov", phone, LocalDate.of(2001, 01, 01), "superadmin", true);
-		entity.setCreatedAt(OffsetDateTime.now());
-		entity.setUpdatedAt(OffsetDateTime.now());
-		
 		AccountResponseDTO account = new AccountResponseDTO(entity);
 		when(accountService.getAccountDTO(phone)).thenReturn(account);
 		List<BillResponseDTO> bills = new ArrayList<>();
@@ -261,11 +269,6 @@ class AdminControllerTest {
 	
 	@Test
 	void can_export_data_2_csv_file() throws Exception {
-		
-		Account entity = new Account
-				("Nia", "Nacci", "4444444444", LocalDate.of(1998, 12, 10), "blackmamba", true);
-		entity.setCreatedAt(OffsetDateTime.now());
-		entity.setUpdatedAt(OffsetDateTime.now());
 		
 		List<OperationResponseDTO> operations = new ArrayList<>();
 		Operation operation = Operation.builder()
@@ -342,6 +345,11 @@ class AdminControllerTest {
 	@AfterEach
 	void tear_down() {
 		phone = null;
+	}
+	
+	@AfterAll
+	static void clear() {
+		entity = null;
 	}
 	
 }

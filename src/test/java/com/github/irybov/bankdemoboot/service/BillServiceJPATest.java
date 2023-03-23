@@ -170,6 +170,16 @@ class BillServiceJPATest {
 	}
 	
 	@Test
+	void transfer_not_enough_money() {
+		
+		when(billServiceJPA.getBill(anyInt())).thenReturn(bill);
+		assertThatThrownBy(() -> billService.transfer(0, 0.05, 1))
+			.isInstanceOf(PaymentException.class)
+			.hasMessage("Not enough money to complete operation");
+		verify(billServiceJPA, times(2)).getBill(anyInt());
+	}
+	
+	@Test
 	void can_withdraw_money() {
 		
 		bill.setBalance(new BigDecimal(1.00));

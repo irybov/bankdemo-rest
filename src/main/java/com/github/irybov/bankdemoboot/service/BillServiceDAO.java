@@ -96,7 +96,7 @@ public class BillServiceDAO implements BillService {
 			throw new PaymentException("Wrong currency type of the target bill");
 		}		
 		if(bill.getBalance().compareTo(BigDecimal.valueOf(amount)) == -1) {
-			throw new PaymentException("Not enough money to complete the operation");
+			throw new PaymentException("Not enough money to complete operation");
 		}
 		
 		billService.withdraw(from, amount);

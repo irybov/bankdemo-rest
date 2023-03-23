@@ -3,6 +3,7 @@ package com.github.irybov.bankdemoboot.controller;
 import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
@@ -16,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -51,6 +53,7 @@ import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.entity.Bill;
+import com.github.irybov.bankdemoboot.exception.PaymentException;
 import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
@@ -80,6 +83,8 @@ class BankControllerTest {
 	private String phone;
 	
 	private static Set<Currency> currencies;
+	private static Account entity;
+	private static PasswordRequestDTO pw;
 	
 	@BeforeAll
 	static void prepare() {
@@ -93,6 +98,13 @@ class BankControllerTest {
 		currencies.add(gbp);
 		Currency rub = Currency.getInstance("RUB");
 		currencies.add(rub);
+		
+		entity = new Account
+				("Nia", "Nacci", "4444444444", LocalDate.of(1998, 12, 10), "blackmamba", true);
+		entity.setCreatedAt(OffsetDateTime.now());
+		entity.setUpdatedAt(OffsetDateTime.now());
+		
+		pw = new PasswordRequestDTO();
 	}
 	
 	@BeforeEach
@@ -102,11 +114,7 @@ class BankControllerTest {
 	
 	@Test
 	void can_get_client_html() throws Exception {
-		
-		Account entity = new Account
-				("Nia", "Nacci", phone, LocalDate.of(1998, 12, 10), "blackmamba", true);
-		entity.setCreatedAt(OffsetDateTime.now());
-		entity.setUpdatedAt(OffsetDateTime.now());
+
 		AccountResponseDTO account = new AccountResponseDTO(entity);		
 		List<BillResponseDTO> bills = new ArrayList<>();
 		
@@ -188,15 +196,15 @@ class BankControllerTest {
 			.andExpect(view().name("/bill/payment"));
 		
 		mockMVC.perform(post("/bills/operate").with(csrf())
-										   .param("id", "4")
+										   .param("id", "0")
 										   .param("action", "withdraw")
-										   .param("balance", "4.44")
+										   .param("balance", "0.00")
 					)
 			.andExpect(status().isOk())
 			.andExpect(model().size(3))
-			.andExpect(model().attribute("id", "4"))
+			.andExpect(model().attribute("id", "0"))
 			.andExpect(model().attribute("action", "withdraw"))
-			.andExpect(model().attribute("balance", "4.44"))
+			.andExpect(model().attribute("balance", "0.00"))
 			.andExpect(view().name("/bill/payment"));
 	}
 
@@ -218,11 +226,6 @@ class BankControllerTest {
 	
 	@Test
 	void check_bill_owner() throws Exception {
-		
-		Account entity = new Account
-				("Nia", "Nacci", phone, LocalDate.of(1998, 12, 10), "blackmamba", true);
-		entity.setCreatedAt(OffsetDateTime.now());
-		entity.setUpdatedAt(OffsetDateTime.now());
 		
 		Bill bill = new Bill();
 		bill.setOwner(entity);
@@ -269,7 +272,6 @@ class BankControllerTest {
 	@Test
 	void success_password_change() throws Exception {
 		
-		PasswordRequestDTO pw = new PasswordRequestDTO();
 		pw.setOldPassword("blackmamba");
 		pw.setNewPassword("whitecorba");
 		
@@ -291,7 +293,6 @@ class BankControllerTest {
 	@Test
 	void failure_password_change() throws Exception {
 		
-		PasswordRequestDTO pw = new PasswordRequestDTO();
 		pw.setOldPassword("blackcorba");
 		pw.setNewPassword("whitemamba");
 		
@@ -313,7 +314,6 @@ class BankControllerTest {
 	@Test
 	void password_binding_errors() throws Exception {
 		
-		PasswordRequestDTO pw = new PasswordRequestDTO();
 		pw.setOldPassword("black");
 		pw.setNewPassword("white");
 		
@@ -328,6 +328,213 @@ class BankControllerTest {
 			.andExpect(view().name("/account/password"));
 	}
 	
+	@Test
+	void wrong_format_input() throws Exception {
+		
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+														.param("recipient", "XXX")
+													    .param("id", "0")
+													    .param("action", "transfer")
+													    .param("balance", "0.00")
+						)
+			.andExpect(status().isBadRequest())
+			.andExpect(model().size(4))
+			.andExpect(model().attribute("id", 0))
+			.andExpect(model().attribute("action", "transfer"))
+			.andExpect(model().attribute("balance", "0.00"))
+			.andExpect(model().attribute("message", "Please provide correct bill number"))
+			.andExpect(view().name("/bill/transfer"));
+	}
+	
+	@Test
+	void successful_payment() throws Exception {
+		
+		when(billService.deposit(anyInt(), anyDouble())).thenReturn("SEA");
+		when(billService.withdraw(anyInt(), anyDouble())).thenReturn("SEA");
+		when(billService.transfer(anyInt(), anyDouble(), anyInt())).thenReturn("SEA");
+		doNothing().when(operationService).deposit(anyDouble(), anyString(), anyString(), anyInt());
+		doNothing().when(operationService).withdraw(anyDouble(), anyString(), anyString(), anyInt());
+		doNothing().when(operationService).transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt());
+		
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+													    .param("id", "0")
+													    .param("action", "deposit")
+													    .param("balance", "0.00")
+													    .param("amount", "0.00")
+						)
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/accounts/show/" + phone));
+				
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+													    .param("id", "0")
+													    .param("action", "withdraw")
+													    .param("balance", "0.00")
+													    .param("amount", "0.00")
+						)
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/accounts/show/" + phone));
+				
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+														.param("id", "0")
+														.param("action", "transfer")
+														.param("balance", "0.00")
+														.param("amount", "0.00")
+						)
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/accounts/show/" + phone));
+		
+		verify(billService).deposit(anyInt(), anyDouble());
+		verify(billService).withdraw(anyInt(), anyDouble());
+		verify(billService).transfer(anyInt(), anyDouble(), anyInt());
+		verify(operationService).deposit(anyDouble(), anyString(), anyString(), anyInt());
+		verify(operationService).withdraw(anyDouble(), anyString(), anyString(), anyInt());
+		verify(operationService).transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt());
+	}
+	
+	@Test
+	void zero_amount_exception() throws Exception {
+		
+		when(billService.deposit(anyInt(), anyDouble()))
+			.thenThrow(new PaymentException("Amount of money should be higher than zero"));
+		when(billService.withdraw(anyInt(), anyDouble()))
+			.thenThrow(new PaymentException("Amount of money should be higher than zero"));
+		when(billService.transfer(anyInt(), anyDouble(), anyInt()))
+			.thenThrow(new PaymentException("Amount of money should be higher than zero"));
+		
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+													    .param("id", "0")
+													    .param("action", "deposit")
+													    .param("balance", "0.00")
+													    .param("amount", "0.00")
+						)
+				.andExpect(status().isInternalServerError())
+				.andExpect(model().size(4))
+				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("action", "deposit"))
+				.andExpect(model().attribute("balance", "0.00"))
+				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
+				.andExpect(view().name("/bill/payment"));
+				
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+													    .param("id", "0")
+													    .param("action", "withdraw")
+													    .param("balance", "0.00")
+													    .param("amount", "0.00")
+						)
+				.andExpect(status().isInternalServerError())
+				.andExpect(model().size(4))
+				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("action", "withdraw"))
+				.andExpect(model().attribute("balance", "0.00"))
+				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
+				.andExpect(view().name("/bill/payment"));
+				
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+														.param("id", "0")
+														.param("action", "transfer")
+														.param("balance", "0.00")
+														.param("amount", "0.00")
+						)
+				.andExpect(status().isInternalServerError())
+				.andExpect(model().size(4))
+				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("action", "transfer"))
+				.andExpect(model().attribute("balance", "0.00"))
+				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
+				.andExpect(view().name("/bill/transfer"));
+		
+		verify(billService).deposit(anyInt(), anyDouble());
+		verify(billService).withdraw(anyInt(), anyDouble());
+		verify(billService).transfer(anyInt(), anyDouble(), anyInt());
+	}
+	
+	@Test
+	void negative_balance_exception() throws Exception {
+		
+		when(billService.withdraw(anyInt(), anyDouble()))
+			.thenThrow(new PaymentException("Not enough money to complete operation"));
+		when(billService.transfer(anyInt(), anyDouble(), anyInt()))
+			.thenThrow(new PaymentException("Not enough money to complete operation"));
+				
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+													    .param("id", "0")
+													    .param("action", "withdraw")
+													    .param("balance", "0.00")
+													    .param("amount", "0.01")
+						)
+				.andExpect(status().isInternalServerError())
+				.andExpect(model().size(4))
+				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("action", "withdraw"))
+				.andExpect(model().attribute("balance", "0.00"))
+				.andExpect(model().attribute("message", "Not enough money to complete operation"))
+				.andExpect(view().name("/bill/payment"));
+		
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+														.param("id", "0")
+														.param("action", "transfer")
+														.param("balance", "0.00")
+														.param("amount", "0.01")
+						)
+				.andExpect(status().isInternalServerError())
+				.andExpect(model().size(4))
+				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("action", "transfer"))
+				.andExpect(model().attribute("balance", "0.00"))
+				.andExpect(model().attribute("message", "Not enough money to complete operation"))
+				.andExpect(view().name("/bill/transfer"));
+		
+		verify(billService).withdraw(anyInt(), anyDouble());
+		verify(billService).transfer(anyInt(), anyDouble(), anyInt());
+	}
+	
+	@Test
+	void bills_id_match_exception() throws Exception {
+		
+		when(billService.transfer(0, 0.00, 0))
+			.thenThrow(new PaymentException("Source and target bills should not be the same"));
+		
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+													    .param("id", "0")
+													    .param("action", "transfer")
+													    .param("balance", "0.00")
+													    .param("amount", "0.00")
+						)
+				.andExpect(status().isInternalServerError())
+				.andExpect(model().size(4))
+				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("action", "transfer"))
+				.andExpect(model().attribute("balance", "0.00"))
+				.andExpect(model().attribute("message", "Source and target bills should not be the same"))
+				.andExpect(view().name("/bill/transfer"));
+		
+		verify(billService).transfer(0, 0.00, 0);
+	}
+	
+	@Test
+	void currency_mismatch_exception() throws Exception {
+
+		when(billService.transfer(0, 0.01, 1))
+			.thenThrow(new PaymentException("Wrong currency type of the target bill"));
+				
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+														.param("recipient", "1")
+														.param("id", "0")
+														.param("action", "transfer")
+														.param("balance", "0.01")
+														.param("amount", "0.01")
+						)
+				.andExpect(status().isInternalServerError())
+				.andExpect(model().size(4))
+				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("action", "transfer"))
+				.andExpect(model().attribute("balance", "0.01"))
+				.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
+				.andExpect(view().name("/bill/transfer"));
+		
+		verify(billService).transfer(0, 0.01, 1);
+	}
+	
 	@AfterEach
 	void tear_down() {
 		phone = null;
@@ -336,6 +543,8 @@ class BankControllerTest {
 	@AfterAll
 	static void clear() {
 		currencies = null;
+		entity = null;
+		pw = null;
 	}
 	
 }

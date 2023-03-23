@@ -191,25 +191,26 @@ public class BankController {
 	@PreAuthorize("hasRole('CLIENT')")
 	@PatchMapping("/bills/launch/{id}")
 	public String driveMoney(@PathVariable int id, @RequestParam(required=false) String recipient,
-			@RequestParam Map<String, String> params, ModelMap modelMap) {
+			@RequestParam Map<String, String> params, ModelMap modelMap, HttpServletResponse response) {
 		
+		String phone = authentication().getName();
 		int target = 0;
 		if(recipient != null) {
 			if(!recipient.matches("^\\d{1,9}$")) {
 				log.warn("Sender {} types recipient's bill number {} in a wrong format",
-				authentication().getName(), recipient);
+																		phone, recipient);
 				modelMap.addAttribute("id", id);
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", "Please provide correct bill number");
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST); 
 				return "/bill/transfer";
 			}
 			else target = Integer.parseInt(recipient);
 		}		
-		log.info("User {} performs {} operation with bill {}",
-				authentication().getName(), params.get("action"), id);
+		log.info("User {} performs {} operation with bill {}", phone, params.get("action"), id);
 		
-		String currency;		
+		String currency;
 		switch(params.get("action")) {
 		case "deposit":
 			try {
@@ -224,6 +225,7 @@ public class BankController {
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", exc.getMessage());
+				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				return "/bill/payment";
 			}
 			break;
@@ -240,6 +242,7 @@ public class BankController {
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", exc.getMessage());
+				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				return "/bill/payment";
 			}
 			break;
@@ -256,11 +259,11 @@ public class BankController {
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", exc.getMessage());
+				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				return "/bill/transfer";
 			}
 			break;			
-		}	
-		String phone = authentication().getName();
+		}
 		return "redirect:/accounts/show/" + phone;
 	}
 	
