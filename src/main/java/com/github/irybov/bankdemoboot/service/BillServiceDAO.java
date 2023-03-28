@@ -45,7 +45,7 @@ public class BillServiceDAO implements BillService {
 		else
 		return bill;
 	}
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public BillResponseDTO getBillDTO(int id) throws EntityNotFoundException {
 		return new BillResponseDTO(getBill(id));
 	}

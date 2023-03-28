@@ -61,7 +61,7 @@ public class AccountServiceJPA implements AccountService {
 		}
 	}
 	
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public AccountResponseDTO getAccountDTO(String phone) throws EntityNotFoundException {
 		return new AccountResponseDTO(getAccount(phone));
 	}
@@ -87,18 +87,18 @@ public class AccountServiceJPA implements AccountService {
 		accountRepository.save(account);
 	}
 	
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public boolean verifyAccount(String phone, String current) throws EntityNotFoundException{
 		if(getAccount(phone).getPhone() == null || !phone.equals(current)) {
 			return false;
 		}
 		return true;
 	}
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public String getPhone(String phone){
 		return accountRepository.getPhone(phone);
 	}
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public List<BillResponseDTO> getBills(int id){
 		List<Bill> bills = accountRepository.getById(id).getBills();
 		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());
@@ -130,7 +130,7 @@ public class AccountServiceJPA implements AccountService {
 		account.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(4)));
 		accountService.updateAccount(account);
 	}
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public boolean comparePassword(String oldPassword, String phone) throws EntityNotFoundException {
 		Account account = getAccount(phone);
 		return bCryptPasswordEncoder.matches(oldPassword, account.getPassword());
@@ -150,7 +150,7 @@ public class AccountServiceJPA implements AccountService {
 		return account.isActive();
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public List<AccountResponseDTO> getAll() {		
 		return accountRepository.getAll()
 				.stream()

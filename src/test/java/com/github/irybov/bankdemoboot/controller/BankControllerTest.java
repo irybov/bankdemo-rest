@@ -161,9 +161,9 @@ class BankControllerTest {
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.createdAt").exists())
 			.andExpect(jsonPath("$.updatedAt").exists())
-			.andExpect(jsonPath("$.active").exists())
-			.andExpect(jsonPath("$.balance").exists())
-			.andExpect(jsonPath("$.currency").exists())
+			.andExpect(jsonPath("$.active").value(true))
+			.andExpect(jsonPath("$.balance").value("9.99"))
+			.andExpect(jsonPath("$.currency").value("SEA"))
 			.andExpect(jsonPath("$.owner").exists());
 		
 		verify(accountService).addBill(anyString(), anyString());

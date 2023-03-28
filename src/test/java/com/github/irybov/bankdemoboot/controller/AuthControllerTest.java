@@ -1,5 +1,7 @@
 package com.github.irybov.bankdemoboot.controller;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.refEq;
@@ -7,6 +9,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -27,6 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 //import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -52,6 +57,10 @@ class AuthControllerTest {
 	private AccountDetailsService accountDetailsService;
 	@Autowired
 	private MockMvc mockMVC;
+	
+	private Authentication authentication() {
+		return SecurityContextHolder.getContext().getAuthentication();
+	}
 	
 	@Test
 	void can_get_start_html() throws Exception {
@@ -90,17 +99,25 @@ class AuthControllerTest {
 	        .andExpect(view().name("/auth/login"));
 	}
 	
-	@WithMockUser
+	@WithMockUser(username = "0000000000", roles = {"ADMIN", "CLIENT"})
 	@Test
 	void can_get_menu_html() throws Exception {
 
-		AccountResponseDTO account = new AccountResponseDTO(new Account());
+		AccountResponseDTO account = new AccountResponseDTO(new Account
+				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true));
 		
 		when(accountService.getAccountDTO(anyString())).thenReturn(account);
 		
+		String roles = authentication().getAuthorities().toString();
+		assertThat(authentication().getName()).isEqualTo("0000000000");
+		assertThat(roles).isEqualTo("[ROLE_ADMIN, ROLE_CLIENT]");
+		
 		mockMVC.perform(get("/success"))
 			.andExpect(status().isOk())
+			.andExpect(authenticated())
 			.andExpect(content().string(containsString("Welcome!")))
+			.andExpect(content().string(containsString(account.getName()+" "+account.getSurname())))
+			.andExpect(content().string(containsString(roles)))
 	        .andExpect(model().size(1))
 	        .andExpect(model().attribute("account", account))
 	        .andExpect(view().name("/auth/success"));
@@ -108,13 +125,18 @@ class AuthControllerTest {
 	    verify(accountService).getAccountDTO(anyString());
 	}
 	
-	@WithMockUser
+	@WithMockUser(username = "9999999999")
 	@Test
 	void entity_not_found() throws Exception {
 		
-		when(accountService.getAccountDTO(anyString())).thenThrow(EntityNotFoundException.class);
+		String phone = authentication().getName();
+		when(accountService.getAccountDTO(anyString())).thenThrow(new EntityNotFoundException
+							("Account with phone " + phone + " not found"));
+		
+		assertThat(phone).isEqualTo("9999999999");
 		
 		mockMVC.perform(get("/success"))
+			.andExpect(authenticated())
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/home"));
 	    

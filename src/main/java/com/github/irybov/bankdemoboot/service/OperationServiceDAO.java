@@ -61,11 +61,11 @@ public class OperationServiceDAO implements OperationService {
 		operationDAO.save(operation);
 	}
 	
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public Operation getOne(long id) {
 		return operationDAO.getById(id);
 	}
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public List<OperationResponseDTO> getAll(int id) {
 		
 //	    Comparator<Operation> compareById = Comparator.comparing(Operation::getId);	    
@@ -80,7 +80,7 @@ public class OperationServiceDAO implements OperationService {
 		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize());
 		return operationDAO.getPage(id, pageable).map(OperationResponseDTO::new);
 	}*/
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public Page<OperationResponseDTO> getPage(int id, String action, double minval, double maxval,
 			OffsetDateTime mindate, OffsetDateTime maxdate, OperationPage page) {
 		

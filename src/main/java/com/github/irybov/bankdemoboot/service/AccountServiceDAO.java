@@ -60,7 +60,7 @@ public class AccountServiceDAO implements AccountService {
 		}
 	}
 	
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public AccountResponseDTO getAccountDTO(String phone) throws EntityNotFoundException {
 		return new AccountResponseDTO(getAccount(phone));
 	}
@@ -83,18 +83,18 @@ public class AccountServiceDAO implements AccountService {
 		accountDAO.updateAccount(account);
 	}
 	
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public boolean verifyAccount(String phone, String current) throws EntityNotFoundException{
 		if(getAccount(phone).getPhone() == null || !phone.equals(current)) {
 			return false;
 		}
 		return true;
 	}
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public String getPhone(String phone){
 		return accountDAO.getPhone(phone);
 	}
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public List<BillResponseDTO> getBills(int id) {
 		List<Bill> bills = accountDAO.getById(id).getBills();
 		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());
@@ -126,7 +126,7 @@ public class AccountServiceDAO implements AccountService {
 		account.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(4)));
 		accountService.updateAccount(account);
 	}
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public boolean comparePassword(String oldPassword, String phone) throws EntityNotFoundException {
 		Account account = getAccount(phone);
 		return bCryptPasswordEncoder.matches(oldPassword, account.getPassword());
@@ -145,7 +145,7 @@ public class AccountServiceDAO implements AccountService {
 		return account.isActive();
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public List<AccountResponseDTO> getAll() {
 		return accountDAO.getAll()
 				.stream()

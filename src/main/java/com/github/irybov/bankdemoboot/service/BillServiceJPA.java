@@ -42,7 +42,7 @@ public class BillServiceJPA implements BillService {
 		return billRepository.findById(id).orElseThrow
 				(()-> new EntityNotFoundException("Target bill with id: " + id + " not found"));
 	}
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public BillResponseDTO getBillDTO(int id) throws EntityNotFoundException {
 		return new BillResponseDTO(getBill(id));
 	}

@@ -1,5 +1,7 @@
 package com.github.irybov.bankdemoboot.dao;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +20,8 @@ public class BillDAO {
 	}
 	
 	public void updateBill(Bill bill) {		
-		entityManager.merge(bill);
+		if(entityManager.contains(bill)) entityManager.merge(bill);
+		else saveBill(bill);
 	}
 	
 	public void deleteBill(int id) {	
@@ -48,5 +51,9 @@ public class BillDAO {
 				.setParameter("billCurrency", billCurrency)
 				.getResultList();
 	}*/
+	
+	public List<Bill> getAll(){
+		return entityManager.createQuery("SELECT b FROM Bill b", Bill.class).getResultList();
+	}
 	
 }

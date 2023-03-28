@@ -63,11 +63,11 @@ public class OperationServiceJPA implements OperationService {
 		operationRepository.save(operation);
 	}
 	
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public Operation getOne(long id) {
 		return operationRepository.getById(id);
 	}
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public List<OperationResponseDTO> getAll(int id) {
 
 		return operationRepository.findBySenderOrRecipientOrderByIdDesc(id, id)
@@ -83,7 +83,7 @@ public class OperationServiceJPA implements OperationService {
 		return operationRepository.findBySenderOrRecipient(id, id, pageable)
 				.map(OperationResponseDTO::new);
 	}*/
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public Page<OperationResponseDTO> getPage(int id, String action, double minval, double maxval,
 			OffsetDateTime mindate, OffsetDateTime maxdate, OperationPage page){
 		

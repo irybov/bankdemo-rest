@@ -11,7 +11,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.TestInstance;
+//import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -21,14 +21,14 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-//import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.model.OperationPage;
 
-//@Sql("/test-data-h2.sql")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Sql("/test-operations-h2.sql")
+//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DataJpaTest
 class OperationDAOTest {
 	

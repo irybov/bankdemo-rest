@@ -96,6 +96,22 @@ class AdminControllerTest {
 	
 	private static Account entity;
 	
+	@TestConfiguration
+	static class TestConfig {
+		
+		@Bean
+	    @Primary
+	    public Executor asyncExecutor() {
+	    	final int cores = Runtime.getRuntime().availableProcessors();
+	    	final ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+	    	executor.setCorePoolSize(cores);
+	        executor.setMaxPoolSize(cores * 2);
+	        executor.setQueueCapacity(cores * 10);
+	    	executor.initialize();
+	    	return executor;
+	    }
+	}
+
 	@BeforeAll
 	static void prepare() {
 		
@@ -110,23 +126,7 @@ class AdminControllerTest {
 		phone = authentication().getName();		
 	}
 
-    @TestConfiguration
-    static class TestConfig {
-    	
-    	@Bean
-        @Primary
-        public Executor asyncExecutor() {
-        	final int cores = Runtime.getRuntime().availableProcessors();
-        	final ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        	executor.setCorePoolSize(cores);
-            executor.setMaxPoolSize(cores * 2);
-            executor.setQueueCapacity(cores * 10);
-        	executor.initialize();
-        	return executor;
-        }
-    }
-	
-	@Test
+    @Test
 	void can_get_admin_html() throws Exception {
 
 		AccountResponseDTO admin = new AccountResponseDTO(new Account());		
