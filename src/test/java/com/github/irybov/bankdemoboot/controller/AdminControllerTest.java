@@ -194,7 +194,7 @@ class AdminControllerTest {
 	@Test
 	void input_mismatch_exception() throws Exception {
 		
-		assertThatThrownBy(() -> mockMVC.perform(get("/accounts/search/{phone}", "XXX"))
+		assertThatThrownBy(() -> mockMVC.perform(get("/accounts/search/{phone}", "XXL"))
 				.andExpect(status().isInternalServerError()))
 				.hasCause(new InputMismatchException("Phone number should be of 10 digits"));
 	}

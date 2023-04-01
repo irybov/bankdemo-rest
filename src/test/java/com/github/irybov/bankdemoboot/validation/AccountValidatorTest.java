@@ -106,6 +106,7 @@ class AccountValidatorTest {
     void tear_down() throws Exception {
     	autoClosable.close();
     	accountService = null;
+    	validator = null;
     }
     
     @AfterAll

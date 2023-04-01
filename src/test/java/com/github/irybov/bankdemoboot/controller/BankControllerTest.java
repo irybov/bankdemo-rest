@@ -84,7 +84,7 @@ class BankControllerTest {
 	
 	private static Set<Currency> currencies;
 	private static Account entity;
-	private static PasswordRequestDTO pw;
+	private static PasswordRequestDTO pwDTO;
 	
 	@BeforeAll
 	static void prepare() {
@@ -104,7 +104,7 @@ class BankControllerTest {
 		entity.setCreatedAt(OffsetDateTime.now());
 		entity.setUpdatedAt(OffsetDateTime.now());
 		
-		pw = new PasswordRequestDTO();
+		pwDTO = new PasswordRequestDTO();
 	}
 	
 	@BeforeEach
@@ -272,14 +272,14 @@ class BankControllerTest {
 	@Test
 	void success_password_change() throws Exception {
 		
-		pw.setOldPassword("blackmamba");
-		pw.setNewPassword("whitecorba");
+		pwDTO.setOldPassword("blackmamba");
+		pwDTO.setNewPassword("whitecorba");
 		
-		when(accountService.comparePassword(pw.getOldPassword(), phone)).thenReturn(true);
+		when(accountService.comparePassword(pwDTO.getOldPassword(), phone)).thenReturn(true);
 		
 		mockMVC.perform(patch("/accounts/password/{phone}", phone).with(csrf())
-														.param("oldPassword", pw.getOldPassword())
-														.param("newPassword", pw.getNewPassword())
+														.param("oldPassword", pwDTO.getOldPassword())
+														.param("newPassword", pwDTO.getNewPassword())
 					)
 			.andExpect(status().isOk())
 			.andExpect(model().size(2))
@@ -287,20 +287,20 @@ class BankControllerTest {
 			.andExpect(model().attribute("success", "Password changed"))
 			.andExpect(view().name("/account/password"));
 		
-		verify(accountService).comparePassword(pw.getOldPassword(), phone);
+		verify(accountService).comparePassword(pwDTO.getOldPassword(), phone);
 	}
 	
 	@Test
 	void failure_password_change() throws Exception {
 		
-		pw.setOldPassword("blackcorba");
-		pw.setNewPassword("whitemamba");
+		pwDTO.setOldPassword("blackcorba");
+		pwDTO.setNewPassword("whitemamba");
 		
-		when(accountService.comparePassword(pw.getOldPassword(), phone)).thenReturn(false);
+		when(accountService.comparePassword(pwDTO.getOldPassword(), phone)).thenReturn(false);
 		
 		mockMVC.perform(patch("/accounts/password/{phone}", phone).with(csrf())
-														.param("oldPassword", pw.getOldPassword())
-														.param("newPassword", pw.getNewPassword())
+														.param("oldPassword", pwDTO.getOldPassword())
+														.param("newPassword", pwDTO.getNewPassword())
 					)
 			.andExpect(status().isOk())
 			.andExpect(model().size(2))
@@ -308,18 +308,18 @@ class BankControllerTest {
 			.andExpect(model().attribute("message", "Old password mismatch"))
 			.andExpect(view().name("/account/password"));
 		
-		verify(accountService).comparePassword(pw.getOldPassword(), phone);
+		verify(accountService).comparePassword(pwDTO.getOldPassword(), phone);
 	}
 	
 	@Test
 	void password_binding_errors() throws Exception {
 		
-		pw.setOldPassword("black");
-		pw.setNewPassword("white");
+		pwDTO.setOldPassword("black");
+		pwDTO.setNewPassword("white");
 		
 		mockMVC.perform(patch("/accounts/password/{phone}", phone).with(csrf())
-														.param("oldPassword", pw.getOldPassword())
-														.param("newPassword", pw.getNewPassword())
+														.param("oldPassword", pwDTO.getOldPassword())
+														.param("newPassword", pwDTO.getNewPassword())
 				)
 			.andExpect(status().isBadRequest())
 			.andExpect(model().size(1))
@@ -544,7 +544,7 @@ class BankControllerTest {
 	static void clear() {
 		currencies = null;
 		entity = null;
-		pw = null;
+		pwDTO = null;
 	}
 	
 }

@@ -94,7 +94,7 @@ public class AuthController {
 			model.addAttribute("message", exc.getMessage());
 			log.error(exc.getMessage(), exc);
 			response.setStatus(HttpServletResponse.SC_CONFLICT);
-			return "/auth/register";			
+			return "/auth/register";
 		}
 	}
 	

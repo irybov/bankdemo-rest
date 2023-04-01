@@ -87,7 +87,7 @@ class AuthControllerTest {
 	}
 
 	@Test
-	void can_get_login_html() throws Exception {
+	void can_get_login_form() throws Exception {
 		
 //		File login = new ClassPathResource("templates/auth/login.html").getFile();
 //		String html = new String(Files.readAllBytes(login.toPath()));
