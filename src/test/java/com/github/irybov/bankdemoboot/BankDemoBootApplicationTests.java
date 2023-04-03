@@ -2,12 +2,17 @@ package com.github.irybov.bankdemoboot;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -16,6 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 import java.util.InputMismatchException;
+import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
@@ -26,12 +33,17 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
-//import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
 //@Sql("/test-data-h2.sql")
@@ -71,7 +83,7 @@ public class BankDemoBootApplicationTests {
 		        .andExpect(status().isOk())
 		        .andExpect(content().string(containsString("Registration")))
 		        .andExpect(model().size(1))
-		        .andExpect(model().attributeExists("account"))
+		        .andExpect(model().attribute("account", any(AccountRequestDTO.class)))
 		        .andExpect(view().name("/auth/register"));
 		}
 	
@@ -99,7 +111,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(content().string(containsString("Admin Adminsky")))
 				.andExpect(content().string(containsString("[ROLE_ADMIN]")))
 		        .andExpect(model().size(1))
-		        .andExpect(model().attributeExists("account"))
+		        .andExpect(model().attribute("account", any(AccountResponseDTO.class)))
 		        .andExpect(view().name("/auth/success"));
 		}
 		
@@ -153,7 +165,7 @@ public class BankDemoBootApplicationTests {
 						)
 				.andExpect(status().isBadRequest())
 				.andExpect(model().size(1))
-				.andExpect(model().attributeExists("account"))
+				.andExpect(model().attribute("account", any(AccountRequestDTO.class)))
 				.andExpect(view().name("/auth/register"));
 		}
 		
@@ -169,7 +181,7 @@ public class BankDemoBootApplicationTests {
 						)
 				.andExpect(status().isConflict())
 				.andExpect(model().size(2))
-				.andExpect(model().attributeExists("account"))
+				.andExpect(model().attribute("account", any(AccountRequestDTO.class)))
 				.andExpect(model().attribute("message", "You must be 18+ to register"))
 				.andExpect(view().name("/auth/register"));
 		}
@@ -186,7 +198,7 @@ public class BankDemoBootApplicationTests {
 						)
 				.andExpect(status().isBadRequest())
 				.andExpect(model().size(1))
-				.andExpect(model().attributeExists("account"))
+				.andExpect(model().attribute("account", any(AccountRequestDTO.class)))
 				.andExpect(content().string(containsString("Validator in action!")))
 				.andExpect(view().name("/auth/register"));
 		}
@@ -195,6 +207,7 @@ public class BankDemoBootApplicationTests {
 	
 	@WithMockUser(username = "0000000000", roles = "ADMIN")
 	@Nested
+	@Sql("/test-operations-h2.sql")
 	class AdminControllerTest{
 		
 	    @Test
@@ -203,7 +216,7 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(get("/accounts/search"))
 				.andExpect(status().isOk())
 				.andExpect(model().size(1))
-		        .andExpect(model().attributeExists("admin"))
+		        .andExpect(model().attribute("admin", any(AccountResponseDTO.class)))
 				.andExpect(content().string(containsString("Admin's area")))
 		        .andExpect(view().name("/account/search"));
 	    }
@@ -224,7 +237,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString("Clients list")))
 				.andExpect(model().size(1))
-		        .andExpect(model().attributeExists("clients"))
+		        .andExpect(model().attribute("clients", any(List.class)))
 		        .andExpect(view().name("/account/clients"));
 		}
 	    
@@ -235,8 +248,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString("false")));
 		}
-		
-		@Disabled
+
 		@Test
 		void can_change_bill_status() throws Exception {
 			
@@ -268,18 +280,341 @@ public class BankDemoBootApplicationTests {
 			String phone = "0000000000";
 			mockMVC.perform(get("/accounts/search/{phone}", phone))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").exists())
-				.andExpect(jsonPath("$.createdAt").exists())
-				.andExpect(jsonPath("$.updatedAt").exists())
-				.andExpect(jsonPath("$.active").exists())
-				.andExpect(jsonPath("$.name").exists())
-				.andExpect(jsonPath("$.surname").exists())
-				.andExpect(jsonPath("$.phone").exists())
-				.andExpect(jsonPath("$.birthday").exists())
-				.andExpect(jsonPath("$.bills").exists())
+				.andExpect(jsonPath("$.id").isNumber())
+				.andExpect(jsonPath("$.createdAt").isNotEmpty())
+				.andExpect(jsonPath("$.updatedAt").isNotEmpty())
+				.andExpect(jsonPath("$.active").isBoolean())
+				.andExpect(jsonPath("$.name").value("Admin"))
+				.andExpect(jsonPath("$.surname").value("Adminsky"))
+				.andExpect(jsonPath("$.phone").value(phone))
+				.andExpect(jsonPath("$.birthday").isNotEmpty())
 				.andExpect(jsonPath("$.bills").isArray())
-				.andExpect(jsonPath("$.bills").isEmpty());
-//				.andExpect(jsonPath("$.bills").isNotEmpty());
+				.andExpect(jsonPath("$.bills.length()", is(1)));
+		}
+
+		@Test
+		void can_get_operations_page() throws Exception {
+			
+			mockMVC.perform(get("/operations/list/{id}", "0")
+							.param("action", "")
+							.param("minval", "")
+							.param("maxval", "")
+							.param("mindate", "")
+							.param("maxdate", "")
+					)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content").isArray())
+				.andExpect(jsonPath("$.content.length()", is(4)));
+		}
+		
+//		@Disabled
+		@Test
+		void can_export_data_2_csv_file() throws Exception {
+			
+			mockMVC.perform(get("/operations/print/{id}", "0"))
+				.andExpect(status().isCreated())
+				.andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE));
+//				.andExpect(content().bytes(output));
+		}
+		
+	}
+	
+	@Sql(statements = "INSERT INTO bankdemo.bills(id, is_active, balance, currency, account_id)"
+				 +" "+"VALUES('0', '1', '10.00', 'RUB', '0'),('1', '1', '10.00', 'SEA', '1');")
+	@WithMockUser(username = "1111111111", roles = "CLIENT")
+	@Nested
+	class BankControllerTest{
+		
+		private static final String PHONE = "1111111111";
+		
+		@Test
+		void can_get_client_html() throws Exception {
+			
+			mockMVC.perform(get("/accounts/show/{phone}", PHONE))
+			.andExpect(status().isOk())
+			.andExpect(content().string(containsString("Private area")))
+			.andExpect(model().size(3))
+			.andExpect(model().attribute("account", any(AccountResponseDTO.class)))
+			.andExpect(model().attribute("bills", any(List.class)))
+			.andExpect(model().attribute("currencies", any(Set.class)))
+			.andExpect(view().name("/account/private"));
+		}
+		
+		@Test
+		void check_security_restriction() throws Exception {
+			
+			mockMVC.perform(get("/accounts/show/{phone}", "5555555555"))
+			.andExpect(status().isForbidden())
+			.andExpect(model().size(1))
+			.andExpect(model().attribute("message", "Security restricted information"))
+			.andExpect(forwardedUrl("/accounts/show/" + PHONE));
+		}
+		
+		@Test
+		void can_create_new_bill() throws Exception {
+			
+			mockMVC.perform(post("/bills/add").with(csrf())
+										   .param("phone", PHONE)
+										   .param("currency", "SEA")
+							)
+					.andExpect(status().isCreated())
+					.andExpect(jsonPath("$.id").isNumber())
+					.andExpect(jsonPath("$.createdAt").exists())
+					.andExpect(jsonPath("$.updatedAt").isEmpty())
+					.andExpect(jsonPath("$.active").value(true))
+					.andExpect(jsonPath("$.balance").value("0.0"))
+					.andExpect(jsonPath("$.currency").value("SEA"))
+					.andExpect(jsonPath("$.owner").exists());
+		}
+		
+		@Test
+		void can_delete_own_bill() throws Exception {
+			
+			mockMVC.perform(delete("/bills/delete/{id}", "0").with(csrf()))
+					.andExpect(status().isOk());
+		}
+		
+		@Test
+		void can_get_payment_html() throws Exception {
+			
+			mockMVC.perform(post("/bills/operate").with(csrf())
+											   .param("id", "0")
+											   .param("action", "deposit")
+											   .param("balance", "0.00")
+						)
+				.andExpect(status().isOk())
+				.andExpect(model().size(3))
+				.andExpect(model().attribute("id", "0"))
+				.andExpect(model().attribute("action", "deposit"))
+				.andExpect(model().attribute("balance", "0.00"))
+				.andExpect(view().name("/bill/payment"));
+			
+			mockMVC.perform(post("/bills/operate").with(csrf())
+											   .param("id", "0")
+											   .param("action", "withdraw")
+											   .param("balance", "0.00")
+						)
+				.andExpect(status().isOk())
+				.andExpect(model().size(3))
+				.andExpect(model().attribute("id", "0"))
+				.andExpect(model().attribute("action", "withdraw"))
+				.andExpect(model().attribute("balance", "0.00"))
+				.andExpect(view().name("/bill/payment"));
+		}
+
+		@Test
+		void can_get_transfer_html() throws Exception {
+			
+			mockMVC.perform(post("/bills/operate").with(csrf())
+											   .param("id", "0")
+											   .param("action", "transfer")
+											   .param("balance", "0.00")
+						)
+				.andExpect(status().isOk())
+				.andExpect(model().size(3))
+				.andExpect(model().attribute("id", "0"))
+				.andExpect(model().attribute("action", "transfer"))
+				.andExpect(model().attribute("balance", "0.00"))
+				.andExpect(view().name("/bill/transfer"));
+		}
+		
+		@Test
+		void check_bill_owner() throws Exception {
+			
+			mockMVC.perform(get("/bills/validate/{id}", "0"))
+				.andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.valueOf("text/plain;charset=UTF-8")))
+				.andExpect(content().string(containsString("Admin Adminsky")));
+		}
+		
+		@Test
+		void recipient_not_found() throws Exception {
+			
+			mockMVC.perform(get("/bills/validate/{id}", "4"))
+				.andExpect(status().isNotFound())
+				.andExpect(content().contentType(MediaType.valueOf("text/plain;charset=UTF-8")))
+				.andExpect(content().string(containsString("Target bill with id: 4 not found")));
+		}
+		
+		@Test
+		void can_get_password_html() throws Exception {
+			
+			mockMVC.perform(get("/accounts/password/{phone}", PHONE))
+			.andExpect(status().isOk())
+			.andExpect(model().size(1))
+			.andExpect(model().attribute("password", any(PasswordRequestDTO.class)))
+			.andExpect(view().name("/account/password"));
+		}
+		
+		@Disabled
+		@Test
+		void success_password_change() throws Exception {
+			
+			mockMVC.perform(patch("/accounts/password/{phone}", PHONE).with(csrf())
+										.param("oldPassword", "supervixen")
+										.param("newPassword", "japanrocks")
+					)
+					.andExpect(status().isOk())
+					.andExpect(model().size(2))
+					.andExpect(model().attributeExists("password"))
+					.andExpect(model().attribute("success", "Password changed"))
+					.andExpect(view().name("/account/password"));
+		}
+		
+		@Test
+		void failure_password_change() throws Exception {
+			
+			mockMVC.perform(patch("/accounts/password/{phone}", PHONE).with(csrf())
+										.param("oldPassword", "superjapan")
+										.param("newPassword", "japanrocks")
+					)
+					.andExpect(status().isBadRequest())
+					.andExpect(model().size(2))
+					.andExpect(model().attributeExists("password"))
+					.andExpect(model().attribute("message", "Old password mismatch"))
+					.andExpect(view().name("/account/password"));			
+		}
+		
+		@Test
+		void password_binding_errors() throws Exception {
+			
+			mockMVC.perform(patch("/accounts/password/{phone}", PHONE).with(csrf())
+										.param("oldPassword", "vixen")
+										.param("newPassword", "japan")
+					)
+					.andExpect(status().isBadRequest())
+					.andExpect(model().size(1))
+					.andExpect(model().errorCount(2))
+					.andExpect(model().attributeExists("password"))
+					.andExpect(view().name("/account/password"));			
+		}
+		
+		@Test
+		void wrong_format_input() throws Exception {
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+										.param("recipient", "XXX")
+									    .param("id", "0")
+									    .param("action", "transfer")
+									    .param("balance", "10.00")
+					)
+					.andExpect(status().isBadRequest())
+					.andExpect(model().size(4))
+					.andExpect(model().attribute("id", 0))
+					.andExpect(model().attribute("action", "transfer"))
+					.andExpect(model().attribute("balance", "10.00"))
+					.andExpect(model().attribute("message", "Please provide correct bill number"))
+					.andExpect(view().name("/bill/transfer"));
+		}
+		
+		@Test
+		void successful_payment() throws Exception {
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+									    .param("id", "0")
+									    .param("action", "deposit")
+									    .param("balance", "10.00")
+									    .param("amount", "10.00")
+					)
+					.andExpect(status().is3xxRedirection())
+					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+									    .param("id", "0")
+									    .param("action", "withdraw")
+									    .param("balance", "20.00")
+									    .param("amount", "20.00")
+					)
+					.andExpect(status().is3xxRedirection())
+					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
+		}
+		
+		@Test
+		void zero_amount_exception() throws Exception {
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+								    .param("id", "0")
+								    .param("action", "deposit")
+								    .param("balance", "10.00")
+								    .param("amount", "0.00")
+				)
+				.andExpect(status().isInternalServerError())
+				.andExpect(model().size(4))
+				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("action", "deposit"))
+				.andExpect(model().attribute("balance", "10.00"))
+				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
+				.andExpect(view().name("/bill/payment"));
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+								    .param("id", "0")
+								    .param("action", "withdraw")
+								    .param("balance", "10.00")
+								    .param("amount", "0.00")
+				)
+				.andExpect(status().isInternalServerError())
+				.andExpect(model().size(4))
+				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("action", "withdraw"))
+				.andExpect(model().attribute("balance", "10.00"))
+				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
+				.andExpect(view().name("/bill/payment"));
+		}
+		
+		@Test
+		void negative_balance_exception() throws Exception {
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+								    .param("id", "0")
+								    .param("action", "withdraw")
+								    .param("balance", "10.00")
+								    .param("amount", "10.01")
+				)
+				.andExpect(status().isInternalServerError())
+				.andExpect(model().size(4))
+				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("action", "withdraw"))
+				.andExpect(model().attribute("balance", "10.00"))
+				.andExpect(model().attribute("message", "Not enough money to complete operation"))
+				.andExpect(view().name("/bill/payment"));
+		}
+		
+		@Test
+		void bills_id_match_exception() throws Exception {
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+				    			.param("recipient", "0")
+							    .param("id", "0")
+							    .param("action", "transfer")
+							    .param("balance", "10.00")
+							    .param("amount", "10.00")
+			)
+			.andExpect(status().isInternalServerError())
+			.andExpect(model().size(4))
+			.andExpect(model().attribute("id", 0))
+			.andExpect(model().attribute("action", "transfer"))
+			.andExpect(model().attribute("balance", "10.00"))
+			.andExpect(model().attribute("message", "Source and target bills should not be the same"))
+			.andExpect(view().name("/bill/transfer"));			
+		}
+		
+		@Test
+		void currency_mismatch_exception() throws Exception {
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+										.param("recipient", "1")
+										.param("id", "0")
+										.param("action", "transfer")
+										.param("balance", "10.00")
+										.param("amount", "10.00")
+					)
+					.andExpect(status().isInternalServerError())
+					.andExpect(model().size(4))
+					.andExpect(model().attribute("id", 0))
+					.andExpect(model().attribute("action", "transfer"))
+					.andExpect(model().attribute("balance", "10.00"))
+					.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
+					.andExpect(view().name("/bill/transfer"));			
 		}
 		
 	}

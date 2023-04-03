@@ -1,3 +1,6 @@
+INSERT INTO bankdemo.bills(id, is_active, balance, currency, account_id, created_at)
+VALUES('0', '1', '0.00', 'RUB', '0', now());
+
 INSERT INTO bankdemo.operations(created_at, action, amount, currency, sender, recipient)
 VALUES(now(), 'deposit', '500.00' , 'RUB', '0', '1'),
 (now(), 'withdraw', '100.00' , 'RUB', '1', '0'),

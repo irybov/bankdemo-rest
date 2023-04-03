@@ -11,7 +11,6 @@ import javax.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -127,7 +126,7 @@ public class AccountServiceJPA implements AccountService {
 	
 	public void changePassword(String phone, String password) throws EntityNotFoundException {
 		Account account = accountService.getAccount(phone);
-		account.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(4)));
+		account.setPassword(bCryptPasswordEncoder.encode(password));
 		accountService.updateAccount(account);
 	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)

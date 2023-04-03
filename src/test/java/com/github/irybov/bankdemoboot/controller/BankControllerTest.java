@@ -148,7 +148,7 @@ class BankControllerTest {
 	void can_create_new_bill() throws Exception {
 		
 		Bill bill = new Bill("SEA", true, new Account());
-		bill.setBalance(BigDecimal.valueOf(9.99));
+		bill.setBalance(BigDecimal.valueOf(0.00));
 		bill.setCreatedAt(OffsetDateTime.now());
 		bill.setUpdatedAt(OffsetDateTime.now());
 		when(accountService.addBill(anyString(), anyString())).thenReturn(new BillResponseDTO(bill));
@@ -162,7 +162,7 @@ class BankControllerTest {
 			.andExpect(jsonPath("$.createdAt").exists())
 			.andExpect(jsonPath("$.updatedAt").exists())
 			.andExpect(jsonPath("$.active").value(true))
-			.andExpect(jsonPath("$.balance").value("9.99"))
+			.andExpect(jsonPath("$.balance").value("0.0"))
 			.andExpect(jsonPath("$.currency").value("SEA"))
 			.andExpect(jsonPath("$.owner").exists());
 		
@@ -294,7 +294,7 @@ class BankControllerTest {
 	void failure_password_change() throws Exception {
 		
 		pwDTO.setOldPassword("blackcorba");
-		pwDTO.setNewPassword("whitemamba");
+		pwDTO.setNewPassword("whitecobra");
 		
 		when(accountService.comparePassword(pwDTO.getOldPassword(), phone)).thenReturn(false);
 		
@@ -302,7 +302,7 @@ class BankControllerTest {
 														.param("oldPassword", pwDTO.getOldPassword())
 														.param("newPassword", pwDTO.getNewPassword())
 					)
-			.andExpect(status().isOk())
+			.andExpect(status().isBadRequest())
 			.andExpect(model().size(2))
 			.andExpect(model().attributeExists("password"))
 			.andExpect(model().attribute("message", "Old password mismatch"))

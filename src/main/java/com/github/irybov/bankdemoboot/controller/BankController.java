@@ -290,6 +290,7 @@ public class BankController {
 			if(!accountService.comparePassword(passwordRequestDTO.getOldPassword(), phone)) {
 				log.warn("User {} fails to confirm old password", authentication().getName());
 				model.addAttribute("message", "Old password mismatch");
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				return "/account/password";
 			}
 		}

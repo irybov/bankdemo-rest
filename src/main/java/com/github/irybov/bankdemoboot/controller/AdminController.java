@@ -299,6 +299,7 @@ public class AdminController {
 //	public void export2csv(@PathVariable int id, HttpServletResponse response) throws IOException {
 	public Resource export2csv(@PathVariable int id, HttpServletResponse response) {
 
+		List<String[]> data = new ArrayList<>();
 //		ExecutorService executorService = Executors.newFixedThreadPool
 //						(Runtime.getRuntime().availableProcessors());
 		CompletableFuture<List<OperationResponseDTO>> futureOperations =
@@ -308,17 +309,17 @@ public class AdminController {
 					   	catch(EntityNotFoundException exc) {log.error(exc.getMessage(), exc);
 					   	throw new CompletionException(exc);}
 				}, executorService);
-				
+		
+//		BillResponseDTO bill = billService.getBillDTO(id);
 		BillResponseDTO bill = futureBill.join();
 		AccountResponseDTO account = bill.getOwner();
 		
 		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};		
-		List<String[]> data = new ArrayList<>();
 		data.add(owner);
 		data.add(new String[0]);
 		
-		String[] info = {bill.getCurrency(), String.valueOf(bill.getBalance()), bill.getCreatedAt()
-				.toString()};
+		String[] info = {bill.getCurrency(), String.valueOf(bill.getBalance()),
+						 bill.getCreatedAt().toString()};
 		data.add(info);
 		data.add(new String[0]);
 		
