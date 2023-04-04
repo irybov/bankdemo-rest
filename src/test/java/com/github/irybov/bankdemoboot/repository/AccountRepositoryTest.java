@@ -38,6 +38,7 @@ class AccountRepositoryTest {
 	
 	@BeforeAll
 	void prepare() {
+		accountRepository.deleteAll();
 		oldPN = new String("0000000000");
 		newPN = new String("9999999999");
 		account = new Account
@@ -120,7 +121,6 @@ class AccountRepositoryTest {
     void clear() {
     	oldPN = null;
     	newPN = null;
-    	accountRepository.delete(account);
     	account = null;
     }
     

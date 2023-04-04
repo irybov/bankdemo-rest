@@ -3,6 +3,7 @@ package com.github.irybov.bankdemoboot.service;
 import java.util.List;
 
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.PersistenceException;
 
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
@@ -12,7 +13,7 @@ import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 public interface AccountService {
 
 	public void saveAccount(AccountRequestDTO accountRequestDTO) throws Exception;
-	public AccountResponseDTO getAccountDTO(String phone) throws EntityNotFoundException;
+	public AccountResponseDTO getAccountDTO(String phone) throws PersistenceException;
 //	public void updateAccount(Account account);
 	public boolean verifyAccount(String phone, String current) throws EntityNotFoundException;
 	public BillResponseDTO addBill(String phone, String currency) throws Exception;

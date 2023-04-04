@@ -1,6 +1,6 @@
 package com.github.irybov.bankdemoboot.controller;
 
-import javax.persistence.EntityNotFoundException;
+import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletResponse;
 
 //import javax.validation.Valid;
@@ -69,7 +69,7 @@ public class AuthController {
 			log.info("User {} has enter the system", account.getPhone());
 			return "/auth/success";
 		}
-		catch (EntityNotFoundException exc) {
+		catch (PersistenceException exc) {
 			log.error(exc.getMessage(), exc);
 			return "redirect:/home";
 		}

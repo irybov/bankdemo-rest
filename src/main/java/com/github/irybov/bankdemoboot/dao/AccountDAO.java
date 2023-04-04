@@ -32,7 +32,7 @@ public class AccountDAO {
 		return entityManager.createQuery("SELECT a FROM Account a WHERE a.phone=:phone",
 				Account.class)
 				.setParameter("phone", phone)
-				.getSingleResult();
+				.getResultStream().findFirst().orElse(null);
 	}
 	public Account getById(int id) {
 		return entityManager.find(Account.class, id);
@@ -42,7 +42,6 @@ public class AccountDAO {
 		return entityManager.createQuery("SELECT phone FROM Account WHERE phone=:check",
 				String.class)
 				.setParameter("check", check)
-//				.getSingleResult();
 				.getResultStream().findFirst().orElse(null);
 	}
 	

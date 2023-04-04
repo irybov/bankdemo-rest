@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS bankdemo.accounts(
 	surname VARCHAR(40) NOT NULL,
 	phone VARCHAR(10) UNIQUE NOT NULL CONSTRAINT phonechk CHECK (CHAR_LENGTH(phone) = 10),
 	birthday DATE NOT NULL,
-	password VARCHAR(100) NOT NULL
+	password VARCHAR(60) NOT NULL
 );
 CREATE TABLE IF NOT EXISTS bankdemo.bills(
 	id SERIAL PRIMARY KEY,

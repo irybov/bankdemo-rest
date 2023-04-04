@@ -27,7 +27,6 @@ import java.util.Set;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,7 +46,6 @@ import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
 //@Sql("/test-data-h2.sql")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @AutoConfigureMockMvc
 @Transactional
 public class BankDemoBootApplicationTests {
@@ -145,7 +143,7 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(post("/confirm").with(csrf())
 										 .param("birthday", "1998-12-10")
 										 .param("name", "Nia")
-										 .param("password", "blackmamba")
+										 .param("password", "blackmambarumba")
 										 .param("phone", "4444444444")
 										 .param("surname", "Nacci")
 						)
@@ -244,7 +242,7 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void can_change_account_status() throws Exception {
 			
-			mockMVC.perform(get("/accounts/status/{id}", "0"))
+			mockMVC.perform(get("/accounts/status/{id}", "1"))
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString("false")));
 		}
@@ -252,7 +250,7 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void can_change_bill_status() throws Exception {
 			
-			mockMVC.perform(get("/bills/status/{id}", "0"))
+			mockMVC.perform(get("/bills/status/{id}", "1"))
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString("false")));
 		}
@@ -295,7 +293,7 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void can_get_operations_page() throws Exception {
 			
-			mockMVC.perform(get("/operations/list/{id}", "0")
+			mockMVC.perform(get("/operations/list/{id}", "1")
 							.param("action", "")
 							.param("minval", "")
 							.param("maxval", "")
@@ -304,14 +302,14 @@ public class BankDemoBootApplicationTests {
 					)
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.content").isArray())
-				.andExpect(jsonPath("$.content.length()", is(4)));
+				.andExpect(jsonPath("$.content.length()", is(3)));
 		}
 		
 //		@Disabled
 		@Test
 		void can_export_data_2_csv_file() throws Exception {
 			
-			mockMVC.perform(get("/operations/print/{id}", "0"))
+			mockMVC.perform(get("/operations/print/{id}", "1"))
 				.andExpect(status().isCreated())
 				.andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE));
 //				.andExpect(content().bytes(output));
@@ -320,7 +318,7 @@ public class BankDemoBootApplicationTests {
 	}
 	
 	@Sql(statements = "INSERT INTO bankdemo.bills(id, is_active, balance, currency, account_id)"
-				 +" "+"VALUES('0', '1', '10.00', 'RUB', '0'),('1', '1', '10.00', 'SEA', '1');")
+				 +" "+"VALUES('1', '1', '10.00', 'RUB', '1'),('2', '1', '10.00', 'SEA', '2');")
 	@WithMockUser(username = "1111111111", roles = "CLIENT")
 	@Nested
 	class BankControllerTest{
@@ -370,7 +368,7 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void can_delete_own_bill() throws Exception {
 			
-			mockMVC.perform(delete("/bills/delete/{id}", "0").with(csrf()))
+			mockMVC.perform(delete("/bills/delete/{id}", "1").with(csrf()))
 					.andExpect(status().isOk());
 		}
 		
@@ -378,25 +376,25 @@ public class BankDemoBootApplicationTests {
 		void can_get_payment_html() throws Exception {
 			
 			mockMVC.perform(post("/bills/operate").with(csrf())
-											   .param("id", "0")
+											   .param("id", "1")
 											   .param("action", "deposit")
 											   .param("balance", "0.00")
 						)
 				.andExpect(status().isOk())
 				.andExpect(model().size(3))
-				.andExpect(model().attribute("id", "0"))
+				.andExpect(model().attribute("id", "1"))
 				.andExpect(model().attribute("action", "deposit"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(view().name("/bill/payment"));
 			
 			mockMVC.perform(post("/bills/operate").with(csrf())
-											   .param("id", "0")
+											   .param("id", "1")
 											   .param("action", "withdraw")
 											   .param("balance", "0.00")
 						)
 				.andExpect(status().isOk())
 				.andExpect(model().size(3))
-				.andExpect(model().attribute("id", "0"))
+				.andExpect(model().attribute("id", "1"))
 				.andExpect(model().attribute("action", "withdraw"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(view().name("/bill/payment"));
@@ -406,13 +404,13 @@ public class BankDemoBootApplicationTests {
 		void can_get_transfer_html() throws Exception {
 			
 			mockMVC.perform(post("/bills/operate").with(csrf())
-											   .param("id", "0")
+											   .param("id", "1")
 											   .param("action", "transfer")
 											   .param("balance", "0.00")
 						)
 				.andExpect(status().isOk())
 				.andExpect(model().size(3))
-				.andExpect(model().attribute("id", "0"))
+				.andExpect(model().attribute("id", "1"))
 				.andExpect(model().attribute("action", "transfer"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(view().name("/bill/transfer"));
@@ -421,7 +419,7 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void check_bill_owner() throws Exception {
 			
-			mockMVC.perform(get("/bills/validate/{id}", "0"))
+			mockMVC.perform(get("/bills/validate/{id}", "1"))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.valueOf("text/plain;charset=UTF-8")))
 				.andExpect(content().string(containsString("Admin Adminsky")));
@@ -492,15 +490,15 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void wrong_format_input() throws Exception {
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 										.param("recipient", "XXX")
-									    .param("id", "0")
+									    .param("id", "1")
 									    .param("action", "transfer")
 									    .param("balance", "10.00")
 					)
 					.andExpect(status().isBadRequest())
 					.andExpect(model().size(4))
-					.andExpect(model().attribute("id", 0))
+					.andExpect(model().attribute("id", 1))
 					.andExpect(model().attribute("action", "transfer"))
 					.andExpect(model().attribute("balance", "10.00"))
 					.andExpect(model().attribute("message", "Please provide correct bill number"))
@@ -510,8 +508,8 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void successful_payment() throws Exception {
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-									    .param("id", "0")
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+									    .param("id", "1")
 									    .param("action", "deposit")
 									    .param("balance", "10.00")
 									    .param("amount", "10.00")
@@ -519,8 +517,8 @@ public class BankDemoBootApplicationTests {
 					.andExpect(status().is3xxRedirection())
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-									    .param("id", "0")
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+									    .param("id", "1")
 									    .param("action", "withdraw")
 									    .param("balance", "20.00")
 									    .param("amount", "20.00")
@@ -532,29 +530,29 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void zero_amount_exception() throws Exception {
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-								    .param("id", "0")
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+								    .param("id", "1")
 								    .param("action", "deposit")
 								    .param("balance", "10.00")
 								    .param("amount", "0.00")
 				)
 				.andExpect(status().isInternalServerError())
 				.andExpect(model().size(4))
-				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("id", 1))
 				.andExpect(model().attribute("action", "deposit"))
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
 				.andExpect(view().name("/bill/payment"));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-								    .param("id", "0")
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+								    .param("id", "1")
 								    .param("action", "withdraw")
 								    .param("balance", "10.00")
 								    .param("amount", "0.00")
 				)
 				.andExpect(status().isInternalServerError())
 				.andExpect(model().size(4))
-				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("id", 1))
 				.andExpect(model().attribute("action", "withdraw"))
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
@@ -564,15 +562,15 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void negative_balance_exception() throws Exception {
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-								    .param("id", "0")
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+								    .param("id", "1")
 								    .param("action", "withdraw")
 								    .param("balance", "10.00")
 								    .param("amount", "10.01")
 				)
 				.andExpect(status().isInternalServerError())
 				.andExpect(model().size(4))
-				.andExpect(model().attribute("id", 0))
+				.andExpect(model().attribute("id", 1))
 				.andExpect(model().attribute("action", "withdraw"))
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Not enough money to complete operation"))
@@ -582,8 +580,8 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void bills_id_match_exception() throws Exception {
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-				    			.param("recipient", "0")
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+				    			.param("recipient", "1")
 							    .param("id", "0")
 							    .param("action", "transfer")
 							    .param("balance", "10.00")
@@ -591,7 +589,7 @@ public class BankDemoBootApplicationTests {
 			)
 			.andExpect(status().isInternalServerError())
 			.andExpect(model().size(4))
-			.andExpect(model().attribute("id", 0))
+			.andExpect(model().attribute("id", 1))
 			.andExpect(model().attribute("action", "transfer"))
 			.andExpect(model().attribute("balance", "10.00"))
 			.andExpect(model().attribute("message", "Source and target bills should not be the same"))
@@ -601,16 +599,16 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void currency_mismatch_exception() throws Exception {
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-										.param("recipient", "1")
-										.param("id", "0")
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+										.param("recipient", "2")
+										.param("id", "1")
 										.param("action", "transfer")
 										.param("balance", "10.00")
 										.param("amount", "10.00")
 					)
 					.andExpect(status().isInternalServerError())
 					.andExpect(model().size(4))
-					.andExpect(model().attribute("id", 0))
+					.andExpect(model().attribute("id", 1))
 					.andExpect(model().attribute("action", "transfer"))
 					.andExpect(model().attribute("balance", "10.00"))
 					.andExpect(model().attribute("message", "Wrong currency type of the target bill"))

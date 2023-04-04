@@ -5,7 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityNotFoundException;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +28,8 @@ import com.github.irybov.bankdemoboot.entity.Account;
 @Transactional
 public class AccountServiceDAO implements AccountService {
 
-	@Autowired
-	AccountServiceDAO accountService;
+//	@Autowired
+//	AccountServiceDAO accountService;
 	@Autowired
 	private AccountDAO accountDAO;
 	
@@ -60,18 +60,16 @@ public class AccountServiceDAO implements AccountService {
 	}
 	
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
-	public AccountResponseDTO getAccountDTO(String phone) throws EntityNotFoundException {
+	public AccountResponseDTO getAccountDTO(String phone) throws NoResultException {
 		return new AccountResponseDTO(getAccount(phone));
 	}
 	@Transactional(propagation = Propagation.MANDATORY, readOnly = true)
-	Account getAccount(String phone) throws EntityNotFoundException {
+	Account getAccount(String phone) throws NoResultException {
 		Account account = accountDAO.getAccount(phone);
 		if(account == null) {
-			throw new EntityNotFoundException
-			("Account with phone " + phone + " not found");
+			throw new NoResultException("Account with phone " + phone + " not found");
 		}
 		return account;
-//		return accountDAO.getAccount(phone);
 	}
 /*	@Transactional(readOnly = true)
 	public AccountResponseDTO getById(int id) {
@@ -83,7 +81,7 @@ public class AccountServiceDAO implements AccountService {
 	}
 	
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
-	public boolean verifyAccount(String phone, String current) throws EntityNotFoundException{
+	public boolean verifyAccount(String phone, String current) throws NoResultException{
 		if(getAccount(phone).getPhone() == null || !phone.equals(current)) {
 			return false;
 		}
@@ -100,11 +98,11 @@ public class AccountServiceDAO implements AccountService {
 	}
 	
 	public BillResponseDTO addBill(String phone, String currency) throws Exception {
-		Account account = accountService.getAccount(phone);
+		Account account = getAccount(phone);
 		Bill bill = new Bill(currency, true, account);
 		billService.saveBill(bill);
 		account.addBill(bill);
-		accountService.updateAccount(account);
+		updateAccount(account);
 		return new BillResponseDTO(bill);
 	}
 	
@@ -120,13 +118,13 @@ public class AccountServiceDAO implements AccountService {
 		accountService.updateAccount(account);
 	}*/
 	
-	public void changePassword(String phone, String password) throws EntityNotFoundException {
-		Account account = accountService.getAccount(phone);
+	public void changePassword(String phone, String password) throws NoResultException {
+		Account account = getAccount(phone);
 		account.setPassword(bCryptPasswordEncoder.encode(password));
-		accountService.updateAccount(account);
+		updateAccount(account);
 	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
-	public boolean comparePassword(String oldPassword, String phone) throws EntityNotFoundException {
+	public boolean comparePassword(String oldPassword, String phone) throws NoResultException {
 		Account account = getAccount(phone);
 		return bCryptPasswordEncoder.matches(oldPassword, account.getPassword());
 	}
@@ -140,7 +138,7 @@ public class AccountServiceDAO implements AccountService {
 		else {
 			account.setActive(true);
 		}
-		accountService.updateAccount(account);
+		updateAccount(account);
 		return account.isActive();
 	}
 

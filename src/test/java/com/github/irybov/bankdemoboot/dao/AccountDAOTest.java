@@ -51,7 +51,9 @@ class AccountDAOTest {
 	}
 	
 	@BeforeEach
-	void set_up() {		
+	void set_up() {
+		entityManager.createNativeQuery("DELETE FROM {h-schema}roles").executeUpdate();
+		entityManager.createNativeQuery("DELETE FROM {h-schema}accounts").executeUpdate();
 		account = new Account
 				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 		account.addRole(Role.ADMIN);

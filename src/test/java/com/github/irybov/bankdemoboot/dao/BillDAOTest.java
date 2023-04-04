@@ -41,7 +41,7 @@ class BillDAOTest {
 	@BeforeEach
 	void set_up() {
 		account = new Account
-				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
+				("Nia", "Nacci", "4444444444", LocalDate.of(1998, 12, 10), "blackmamba", true);
 		bill = new Bill("SEA", true, account);
 		billDAO.saveBill(bill);
 	}

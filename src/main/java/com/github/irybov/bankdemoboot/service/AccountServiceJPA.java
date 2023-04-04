@@ -29,8 +29,8 @@ import com.github.irybov.bankdemoboot.entity.Account;
 @Transactional
 public class AccountServiceJPA implements AccountService {
 
-	@Autowired
-	AccountServiceJPA accountService;
+//	@Autowired
+//	AccountServiceJPA accountService;
 	@Autowired
 	private AccountRepository accountRepository;
 	
@@ -56,7 +56,7 @@ public class AccountServiceJPA implements AccountService {
 			accountRepository.save(account);
 		}
 		catch (RuntimeException exc) {
-			throw new DataIntegrityViolationException("This number is already in use.");
+			throw new DataIntegrityViolationException("Number " + account.getPhone() + " is already in use.");
 		}
 	}
 	
@@ -68,8 +68,7 @@ public class AccountServiceJPA implements AccountService {
 	Account getAccount(String phone) throws EntityNotFoundException {
 		Account account = accountRepository.findByPhone(phone);
 		if(account == null) {
-			throw new EntityNotFoundException
-			("Account with phone " + phone + " not found");
+			throw new EntityNotFoundException("Account with phone " + phone + " not found");
 		}
 		return account;
 //		return accountRepository.getByPhone(phone);
@@ -104,11 +103,11 @@ public class AccountServiceJPA implements AccountService {
 	}
 	
 	public BillResponseDTO addBill(String phone, String currency) throws Exception {
-		Account account = accountService.getAccount(phone);
+		Account account = getAccount(phone);
 		Bill bill = new Bill(currency, true, account);
 		billService.saveBill(bill);
 		account.addBill(bill);
-		accountService.updateAccount(account);
+		updateAccount(account);
 		return new BillResponseDTO(bill);
 	}
 	
@@ -125,9 +124,9 @@ public class AccountServiceJPA implements AccountService {
 	}*/
 	
 	public void changePassword(String phone, String password) throws EntityNotFoundException {
-		Account account = accountService.getAccount(phone);
+		Account account = getAccount(phone);
 		account.setPassword(bCryptPasswordEncoder.encode(password));
-		accountService.updateAccount(account);
+		updateAccount(account);
 	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public boolean comparePassword(String oldPassword, String phone) throws EntityNotFoundException {
@@ -145,7 +144,7 @@ public class AccountServiceJPA implements AccountService {
 		else {
 			account.setActive(true);
 		}
-		accountService.updateAccount(account);
+		updateAccount(account);
 		return account.isActive();
 	}
 

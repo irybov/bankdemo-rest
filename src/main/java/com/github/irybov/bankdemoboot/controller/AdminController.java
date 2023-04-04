@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,7 +107,7 @@ public class AdminController {
 			model.addAttribute("admin", admin);
 			log.info("Admin {} has enter admin's zone", admin.getPhone());
 		}
-		catch (EntityNotFoundException exc) {
+		catch (PersistenceException exc) {
 			log.error(exc.getMessage(), exc);
 		}
 /*		AccountResponseDTO target = null;
@@ -146,7 +147,7 @@ public class AdminController {
 			log.info("Admin {} requests data about client {}", authentication().getName(), phone);
 			return new ResponseEntity<AccountResponseDTO>(target, HttpStatus.OK);
 		}
-		catch (EntityNotFoundException exc) {
+		catch (PersistenceException exc) {
 			log.error("Database exception: account with phone {} not found", phone, exc);
 			String message = "Account with phone " + phone + " not found";
 			

@@ -1,5 +1,5 @@
-INSERT INTO bankdemo.accounts(id, is_active, birthday, name, password, phone, surname, created_at, updated_at)
-VALUES('0', '1', '2001-01-01', 'Admin', 'superadmin', '0000000000', 'Adminsky', now(), now());
+INSERT INTO bankdemo.accounts(is_active, birthday, name, password, phone, surname, created_at, updated_at)
+VALUES('1', '2001-01-01', 'Admin', 'superadmin', '0000000000', 'Adminsky', now(), now());
 INSERT INTO bankdemo.accounts(is_active, birthday, name, password, phone, surname, created_at, updated_at)
 VALUES('1', '1981-09-26', 'Marica', 'supervixen', '1111111111', 'Hase', now(), now()),
 ('1', '1983-12-02', 'Sarah', 'bustyblonde', '2222222222', 'Vandella', now(), now()),

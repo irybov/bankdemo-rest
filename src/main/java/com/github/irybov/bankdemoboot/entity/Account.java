@@ -96,8 +96,8 @@ public class Account{
 	private LocalDate birthday;
 	
 	@NotBlank(message = "Password must not be empty")
-	@Size(min=10, max=50, message = "Password should be 10-50 symbols length")
-	@Column(nullable = false, length=50)
+	@Size(min=10, max=60, message = "Password should be 10-60 symbols length")
+	@Column(nullable = false, length=60)
 	private String password;
 	
 //	@EqualsAndHashCode.Exclude
