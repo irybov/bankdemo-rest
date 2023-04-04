@@ -72,14 +72,14 @@ public class Account{
 	@NotBlank(message = "Name must not be empty")
 	@Size(min=2, max=20, message = "Name should be 2-20 chars length")
 	@Pattern(regexp = "^[A-Z][a-z]{1,19}", message = "Please input name like Xx")
-	@Column(nullable = false)
+	@Column(nullable = false, length=20)
 	private String name;
 	
 	@NotBlank(message = "Surname must not be empty")
 	@Size(min=2, max=40, message = "Surname should be 2-40 chars length")
 	@Pattern(regexp = "^[A-Z][a-z]{1,19}([-][A-Z][a-z]{1,19})?",
 			message = "Please input surname like Xx or Xx-Xx")
-	@Column(nullable = false)
+	@Column(nullable = false, length=40)
 	private String surname;
 	
 	@NotBlank(message = "Phone number must not be empty")
@@ -96,8 +96,8 @@ public class Account{
 	private LocalDate birthday;
 	
 	@NotBlank(message = "Password must not be empty")
-	@Size(min=10, max=100, message = "Password should be 10-50 symbols length")
-	@Column(nullable = false)
+	@Size(min=10, max=50, message = "Password should be 10-50 symbols length")
+	@Column(nullable = false, length=50)
 	private String password;
 	
 //	@EqualsAndHashCode.Exclude

@@ -47,7 +47,7 @@ public class Bill {
 	private boolean isActive;
 	
 	@NotNull
-	@Column(columnDefinition = "Decimal(19,2) default '0.00'", precision = 2)
+	@Column(columnDefinition = "Decimal(19,2) default '0.00'", scale = 2, precision = 2)
 //	@JsonFormat(shape = JsonFormat.Shape.NUMBER_FLOAT)
 	private BigDecimal balance = BigDecimal.valueOf(0.00).setScale(2);
 
