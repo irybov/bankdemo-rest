@@ -55,8 +55,8 @@ class AccountServiceDAOTest {
 	private BillService billService;
 	@Spy
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
-	@Mock
-	AccountServiceDAO accountServiceDAO;
+//	@Mock
+//	AccountServiceDAO accountServiceDAO;
 	@Mock
 	private AccountDAO accountDAO;
 	@InjectMocks
@@ -80,7 +80,7 @@ class AccountServiceDAOTest {
     	autoClosable = MockitoAnnotations.openMocks(this);
     	accountService = new AccountServiceDAO();
 		ReflectionTestUtils.setField(accountService, "accountDAO", accountDAO);
-		ReflectionTestUtils.setField(accountService, "accountService", accountServiceDAO);
+//		ReflectionTestUtils.setField(accountService, "accountService", accountServiceDAO);
 		ReflectionTestUtils.setField(accountService, "bCryptPasswordEncoder", bCryptPasswordEncoder);
 		ReflectionTestUtils.setField(accountService, "billService", billService);		
     }
@@ -92,14 +92,14 @@ class AccountServiceDAOTest {
     	Bill billOne = new Bill(currency, true, adminEntity);
     	Bill billTwo = new Bill(currency, true, adminEntity);
     	
-    	given(accountServiceDAO.getAccount(phone)).willReturn(adminEntity);
+    	given(accountDAO.getAccount(phone)).willReturn(adminEntity);
     	doAnswer(new Answer<Account>() {
 			@Override
 			public Account answer(InvocationOnMock invocation) throws Throwable {
 				adminEntity.addBill(billOne);
 				adminEntity.addBill(billTwo);
 				return adminEntity;
-			}}).when(accountServiceDAO).updateAccount(adminEntity);
+			}}).when(accountDAO).updateAccount(adminEntity);
     	
     	try {
     		org.assertj.core.api.BDDAssertions.then(accountService.addBill(phone, currency))
@@ -108,7 +108,7 @@ class AccountServiceDAOTest {
     	catch (Exception exc) {
 			exc.printStackTrace();
 		}
-    	verify(accountServiceDAO).getAccount(phone);
+    	verify(accountDAO).getAccount(phone);
     	
     	given(accountDAO.getById(anyInt())).willReturn(adminEntity);
     	then(accountService.getBills(anyInt())).hasSize(3);
@@ -188,14 +188,14 @@ class AccountServiceDAOTest {
     @Test
     void can_change_password() {
     	
-    	String password = "nightmare";
-    	given(accountServiceDAO.getAccount(phone)).willReturn(adminEntity);
+    	String password = "nightrider";
+    	given(accountDAO.getAccount(phone)).willReturn(adminEntity);
     	doAnswer(new Answer<Account>() {
 			@Override
 			public Account answer(InvocationOnMock invocation) throws Throwable {
 				adminEntity.setPassword(password);
 				return adminEntity;
-			}}).when(accountServiceDAO).updateAccount(adminEntity);
+			}}).when(accountDAO).updateAccount(adminEntity);
     	
     	try {
 			accountService.changePassword(phone, password);
@@ -203,7 +203,7 @@ class AccountServiceDAOTest {
     	catch (Exception exc) {
 			exc.printStackTrace();
 		}
-    	verify(accountServiceDAO).getAccount(phone);
+    	verify(accountDAO).getAccount(phone);
     	org.assertj.core.api.BDDAssertions.then(adminEntity.getPassword()).isEqualTo(password);
     }
     

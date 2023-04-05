@@ -34,8 +34,8 @@ import com.github.irybov.bankdemoboot.exception.PaymentException;
 
 class BillServiceDAOTest {
 	
-	@Mock
-	BillServiceDAO billServiceDAO;
+//	@Mock
+//	BillServiceDAO billServiceDAO;
 	@Mock
 	private BillDAO billDAO;
 	@InjectMocks
@@ -58,7 +58,7 @@ class BillServiceDAOTest {
 		autoClosable = MockitoAnnotations.openMocks(this);
 		billService = new BillServiceDAO();
 		ReflectionTestUtils.setField(billService, "billDAO", billDAO);
-		ReflectionTestUtils.setField(billService, "billService", billServiceDAO);
+//		ReflectionTestUtils.setField(billService, "billService", billServiceDAO);
 	}
 
 	@Test
@@ -82,14 +82,14 @@ class BillServiceDAOTest {
 	@Test
 	void can_change_status() {
 		
-		when(billServiceDAO.getBill(anyInt())).thenReturn(bill);
+		when(billDAO.getBill(anyInt())).thenReturn(bill);
 		try {
 			assertThat(billService.changeStatus(anyInt())).isFalse();
 		}
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
-		verify(billServiceDAO).getBill(anyInt());
+		verify(billDAO).getBill(anyInt());
 	}
 	
 	@Test
@@ -146,7 +146,7 @@ class BillServiceDAOTest {
 	@CsvSource({"0.01", "0.02", "0.03"})
 	void can_deposit_money(double amount) {
 		
-		when(billServiceDAO.getBill(anyInt())).thenReturn(bill);
+		when(billDAO.getBill(anyInt())).thenReturn(bill);
 		try {
 			billService.deposit(anyInt(), amount);
 		}
@@ -154,34 +154,34 @@ class BillServiceDAOTest {
 			exc.printStackTrace();
 		}
 		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), amount, 0.00);
-		verify(billServiceDAO).getBill(anyInt());
+		verify(billDAO).getBill(anyInt());
 	}
 	
 	@Test
 	void withdraw_not_enough_money() {
 		
-		when(billServiceDAO.getBill(anyInt())).thenReturn(bill);
+		when(billDAO.getBill(anyInt())).thenReturn(bill);
 		assertThatThrownBy(() -> billService.withdraw(anyInt(), 0.05))
 			.isInstanceOf(PaymentException.class)
 			.hasMessage("Not enough money to complete operation");
-		verify(billServiceDAO).getBill(anyInt());
+		verify(billDAO).getBill(anyInt());
 	}
 	
 	@Test
 	void transfer_not_enough_money() {
 		
-		when(billServiceDAO.getBill(anyInt())).thenReturn(bill);
+		when(billDAO.getBill(anyInt())).thenReturn(bill);
 		assertThatThrownBy(() -> billService.transfer(0, 0.05, 1))
 			.isInstanceOf(PaymentException.class)
 			.hasMessage("Not enough money to complete operation");
-		verify(billServiceDAO, times(2)).getBill(anyInt());
+		verify(billDAO, times(2)).getBill(anyInt());
 	}
 	
 	@Test
 	void can_withdraw_money() {
 		
 		bill.setBalance(new BigDecimal(1.00));
-		when(billServiceDAO.getBill(anyInt())).thenReturn(bill);
+		when(billDAO.getBill(anyInt())).thenReturn(bill);
 		try {
 			billService.withdraw(anyInt(), 0.5);
 		}
@@ -190,7 +190,7 @@ class BillServiceDAOTest {
 		}
 		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), 0.5, 0.00);
 		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(0.5);
-		verify(billServiceDAO).getBill(anyInt());
+		verify(billDAO).getBill(anyInt());
 	}
 	
 	@Test
@@ -205,13 +205,13 @@ class BillServiceDAOTest {
 		
 		bill.setBalance(new BigDecimal(1.00));
 		Bill target = new Bill("XXX", false, owner);		
-		when(billServiceDAO.getBill(1)).thenReturn(target);
-		when(billServiceDAO.getBill(0)).thenReturn(bill);
+		when(billDAO.getBill(1)).thenReturn(target);
+		when(billDAO.getBill(0)).thenReturn(bill);
 		
 		assertThatThrownBy(() -> billService.transfer(0, 0.01, 1))
 	    	.isInstanceOf(PaymentException.class)
 	    	.hasMessage("Wrong currency type of the target bill");
-		verify(billServiceDAO, times(2)).getBill(anyInt());
+		verify(billDAO, times(2)).getBill(anyInt());
 	}
 	
 	@Test
@@ -219,8 +219,8 @@ class BillServiceDAOTest {
 		
 		bill.setBalance(new BigDecimal(1.00));
 		Bill target = new Bill("SEA", false, owner);		
-		when(billServiceDAO.getBill(1)).thenReturn(target);
-		when(billServiceDAO.getBill(0)).thenReturn(bill);
+		when(billDAO.getBill(1)).thenReturn(target);
+		when(billDAO.getBill(0)).thenReturn(bill);
 		
 		try {
 			billService.transfer(0, 0.01, 1);
@@ -228,7 +228,7 @@ class BillServiceDAOTest {
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
-		verify(billServiceDAO, times(2)).getBill(anyInt());
+		verify(billDAO, times(4)).getBill(anyInt());
 	}
 
 	@AfterEach

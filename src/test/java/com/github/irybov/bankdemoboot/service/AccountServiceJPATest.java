@@ -55,8 +55,8 @@ class AccountServiceJPATest {
 	private BillService billService;
 	@Spy
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
-	@Mock
-	AccountServiceJPA accountServiceJPA;
+//	@Mock
+//	AccountServiceJPA accountServiceJPA;
 	@Mock
 	private AccountRepository accountRepository;
 	@InjectMocks
@@ -80,7 +80,7 @@ class AccountServiceJPATest {
     	autoClosable = MockitoAnnotations.openMocks(this);
     	accountService = new AccountServiceJPA();
 		ReflectionTestUtils.setField(accountService, "accountRepository", accountRepository);
-		ReflectionTestUtils.setField(accountService, "accountService", accountServiceJPA);
+//		ReflectionTestUtils.setField(accountService, "accountService", accountServiceJPA);
 		ReflectionTestUtils.setField(accountService, "bCryptPasswordEncoder", bCryptPasswordEncoder);
 		ReflectionTestUtils.setField(accountService, "billService", billService);
     }
@@ -92,14 +92,14 @@ class AccountServiceJPATest {
     	Bill billOne = new Bill(currency, true, adminEntity);
     	Bill billTwo = new Bill(currency, true, adminEntity);
     	
-    	given(accountServiceJPA.getAccount(phone)).willReturn(adminEntity);
+    	given(accountRepository.findByPhone(phone)).willReturn(adminEntity);
     	doAnswer(new Answer<Account>() {
 			@Override
 			public Account answer(InvocationOnMock invocation) throws Throwable {
 				adminEntity.addBill(billOne);
 				adminEntity.addBill(billTwo);
 				return adminEntity;
-			}}).when(accountServiceJPA).updateAccount(adminEntity);
+			}}).when(accountRepository).save(adminEntity);
     	
     	try {
     		org.assertj.core.api.BDDAssertions.then(accountService.addBill(phone, currency))
@@ -108,7 +108,7 @@ class AccountServiceJPATest {
     	catch (Exception exc) {
 			exc.printStackTrace();
 		}
-    	verify(accountServiceJPA).getAccount(phone);
+    	verify(accountRepository).findByPhone(phone);
 
     	given(accountRepository.getById(anyInt())).willReturn(adminEntity);
     	then(accountService.getBills(anyInt())).hasSize(3);
@@ -187,14 +187,14 @@ class AccountServiceJPATest {
     @Test
     void can_change_password() {
     	
-    	String password = "nightmare";
-    	given(accountServiceJPA.getAccount(phone)).willReturn(adminEntity);
+    	String password = "nightrider";
+    	given(accountRepository.findByPhone(phone)).willReturn(adminEntity);
     	doAnswer(new Answer<Account>() {
 			@Override
 			public Account answer(InvocationOnMock invocation) throws Throwable {
 				adminEntity.setPassword(password);
 				return adminEntity;
-			}}).when(accountServiceJPA).updateAccount(adminEntity);
+			}}).when(accountRepository).save(adminEntity);
     	
     	try {
 			accountService.changePassword(phone, password);
@@ -202,7 +202,7 @@ class AccountServiceJPATest {
     	catch (Exception exc) {
 			exc.printStackTrace();
 		}
-    	verify(accountServiceJPA).getAccount(phone);
+    	verify(accountRepository).findByPhone(phone);
     	org.assertj.core.api.BDDAssertions.then(adminEntity.getPassword()).isEqualTo(password);
     }
     

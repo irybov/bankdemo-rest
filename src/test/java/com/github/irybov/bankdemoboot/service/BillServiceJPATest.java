@@ -36,8 +36,8 @@ import com.github.irybov.bankdemoboot.repository.BillRepository;
 //@ExtendWith(MockitoExtension.class)
 class BillServiceJPATest {
 
-	@Mock
-	BillServiceJPA billServiceJPA;
+//	@Mock
+//	BillServiceJPA billServiceJPA;
 	@Mock
 	private BillRepository billRepository;
 	@InjectMocks
@@ -60,7 +60,7 @@ class BillServiceJPATest {
 		autoClosable = MockitoAnnotations.openMocks(this);
 		billService = new BillServiceJPA();
 		ReflectionTestUtils.setField(billService, "billRepository", billRepository);
-		ReflectionTestUtils.setField(billService, "billService", billServiceJPA);
+//		ReflectionTestUtils.setField(billService, "billService", billServiceJPA);
 	}
 	
 	@Test
@@ -84,14 +84,14 @@ class BillServiceJPATest {
 	@Test
 	void can_change_status() {
 		
-		when(billServiceJPA.getBill(anyInt())).thenReturn(bill);
+		when(billRepository.findById(anyInt())).thenReturn(Optional.of(bill));
 		try {
 			assertThat(billService.changeStatus(anyInt())).isFalse();
 		}
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
-		verify(billServiceJPA).getBill(anyInt());
+		verify(billRepository).findById(anyInt());
 	}
 	
 	@Test
@@ -148,7 +148,7 @@ class BillServiceJPATest {
 	@CsvSource({"0.01", "0.02", "0.03"})
 	void can_deposit_money(double amount) {
 		
-		when(billServiceJPA.getBill(anyInt())).thenReturn(bill);
+		when(billRepository.findById(anyInt())).thenReturn(Optional.of(bill));
 		try {
 			billService.deposit(anyInt(), amount);
 		}
@@ -156,34 +156,34 @@ class BillServiceJPATest {
 			exc.printStackTrace();
 		}
 		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), amount, 0.00);
-		verify(billServiceJPA).getBill(anyInt());
+		verify(billRepository).findById(anyInt());
 	}
 	
 	@Test
 	void withdraw_not_enough_money() {
 		
-		when(billServiceJPA.getBill(anyInt())).thenReturn(bill);
+		when(billRepository.findById(anyInt())).thenReturn(Optional.of(bill));
 		assertThatThrownBy(() -> billService.withdraw(anyInt(), 0.05))
 			.isInstanceOf(PaymentException.class)
 			.hasMessage("Not enough money to complete operation");
-		verify(billServiceJPA).getBill(anyInt());
+		verify(billRepository).findById(anyInt());
 	}
 	
 	@Test
 	void transfer_not_enough_money() {
 		
-		when(billServiceJPA.getBill(anyInt())).thenReturn(bill);
+		when(billRepository.findById(anyInt())).thenReturn(Optional.of(bill));
 		assertThatThrownBy(() -> billService.transfer(0, 0.05, 1))
 			.isInstanceOf(PaymentException.class)
 			.hasMessage("Not enough money to complete operation");
-		verify(billServiceJPA, times(2)).getBill(anyInt());
+		verify(billRepository, times(2)).findById(anyInt());
 	}
 	
 	@Test
 	void can_withdraw_money() {
 		
 		bill.setBalance(new BigDecimal(1.00));
-		when(billServiceJPA.getBill(anyInt())).thenReturn(bill);
+		when(billRepository.findById(anyInt())).thenReturn(Optional.of(bill));
 		try {
 			billService.withdraw(anyInt(), 0.5);
 		}
@@ -192,7 +192,7 @@ class BillServiceJPATest {
 		}
 		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), 0.5, 0.00);
 		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(0.5);
-		verify(billServiceJPA).getBill(anyInt());
+		verify(billRepository).findById(anyInt());
 	}
 	
 	@Test
@@ -207,13 +207,13 @@ class BillServiceJPATest {
 		
 		bill.setBalance(new BigDecimal(1.00));
 		Bill target = new Bill("XXX", false, owner);		
-		when(billServiceJPA.getBill(1)).thenReturn(target);
-		when(billServiceJPA.getBill(0)).thenReturn(bill);
+		when(billRepository.findById(1)).thenReturn(Optional.of(target));
+		when(billRepository.findById(0)).thenReturn(Optional.of(bill));
 		
 		assertThatThrownBy(() -> billService.transfer(0, 0.01, 1))
 	    	.isInstanceOf(PaymentException.class)
 	    	.hasMessage("Wrong currency type of the target bill");
-		verify(billServiceJPA, times(2)).getBill(anyInt());
+		verify(billRepository, times(2)).findById(anyInt());
 	}
 	
 	@Test
@@ -221,8 +221,8 @@ class BillServiceJPATest {
 		
 		bill.setBalance(new BigDecimal(1.00));
 		Bill target = new Bill("SEA", false, owner);		
-		when(billServiceJPA.getBill(1)).thenReturn(target);
-		when(billServiceJPA.getBill(0)).thenReturn(bill);
+		when(billRepository.findById(1)).thenReturn(Optional.of(target));
+		when(billRepository.findById(0)).thenReturn(Optional.of(bill));
 		
 		try {
 			billService.transfer(0, 0.01, 1);
@@ -230,7 +230,7 @@ class BillServiceJPATest {
 		catch (Exception exc) {
 			exc.printStackTrace();
 		}
-		verify(billServiceJPA, times(2)).getBill(anyInt());
+		verify(billRepository, times(4)).findById(anyInt());
 	}
 	
 	@AfterEach

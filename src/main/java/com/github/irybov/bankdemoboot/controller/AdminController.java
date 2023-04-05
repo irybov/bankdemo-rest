@@ -301,8 +301,7 @@ public class AdminController {
 	public Resource export2csv(@PathVariable int id, HttpServletResponse response) {
 
 		List<String[]> data = new ArrayList<>();
-//		ExecutorService executorService = Executors.newFixedThreadPool
-//						(Runtime.getRuntime().availableProcessors());
+
 		CompletableFuture<List<OperationResponseDTO>> futureOperations =
 				CompletableFuture.supplyAsync(() -> operationService.getAll(id), executorService);
 		CompletableFuture<BillResponseDTO> futureBill = CompletableFuture.supplyAsync

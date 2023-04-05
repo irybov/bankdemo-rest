@@ -143,7 +143,7 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(post("/confirm").with(csrf())
 										 .param("birthday", "1998-12-10")
 										 .param("name", "Nia")
-										 .param("password", "blackmambarumba")
+										 .param("password", "blackmamba")
 										 .param("phone", "4444444444")
 										 .param("surname", "Nacci")
 						)
