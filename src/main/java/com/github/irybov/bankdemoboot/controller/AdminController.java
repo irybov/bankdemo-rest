@@ -47,8 +47,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 //import org.springframework.ui.ModelMap;
@@ -76,7 +74,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 //@Validated
 @Controller
-public class AdminController {
+public class AdminController extends BaseController {
 
 	@Autowired
 	@Qualifier("accountServiceAlias")
@@ -91,10 +89,6 @@ public class AdminController {
 	private final Executor executorService;
 	public AdminController(@Qualifier("asyncExecutor")Executor executorService) {
 		this.executorService = executorService;
-	}
-
-	private Authentication authentication() {
-		return SecurityContextHolder.getContext().getAuthentication();
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
@@ -149,7 +143,7 @@ public class AdminController {
 		}
 		catch (PersistenceException exc) {
 			log.error("Database exception: account with phone {} not found", phone, exc);
-			String message = "Account with phone " + phone + " not found";
+			String message = new String("Account with phone " + phone + " not found");
 			
 			ObjectMapper objectMapper = new ObjectMapper();
 			Map<String, String> map = Stream.of(new String[][] {{"report", message},})
@@ -373,6 +367,12 @@ public class AdminController {
         response.setContentLength((int)file.length());
         response.setHeader("Content-Disposition", "attachment; filename="+FILENAME+"");
         response.getWriter().print(file);*/
+	}
+
+	@Override
+	String setServiceImpl(String impl) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

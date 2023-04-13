@@ -1,6 +1,8 @@
 package com.github.irybov.bankdemoboot.service;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -115,6 +117,12 @@ public class BillServiceDAO implements BillService {
 		}
 		updateBill(bill);
 		return bill.isActive();
+	}
+
+	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
+	public List<BillResponseDTO> getAll(int id) {
+		List<Bill> bills = billDAO.getByOwner(id);
+		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());
 	}
 	
 }

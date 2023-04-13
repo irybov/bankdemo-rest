@@ -10,6 +10,7 @@ import javax.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import com.github.irybov.bankdemoboot.repository.AccountRepository;
 import com.github.irybov.bankdemoboot.security.Role;
 import com.github.irybov.bankdemoboot.entity.Account;
 
+@Primary
 @Service
 @Transactional
 public class AccountServiceJPA implements AccountService {
@@ -98,8 +100,10 @@ public class AccountServiceJPA implements AccountService {
 	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public List<BillResponseDTO> getBills(int id){
-		List<Bill> bills = accountRepository.getById(id).getBills();
-		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());
+//		List<Bill> bills = accountRepository.getById(id).getBills();
+//		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());		
+		return billService.getAll(id);
+		
 	}
 	
 	public BillResponseDTO addBill(String phone, String currency) throws Exception {

@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -44,7 +45,7 @@ import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 
-@SpringBootTest(webEnvironment = WebEnvironment.MOCK)
+@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 //@Sql("/test-data-h2.sql")
 @AutoConfigureMockMvc
 @Transactional
@@ -318,7 +319,7 @@ public class BankDemoBootApplicationTests {
 	}
 	
 	@Sql(statements = "INSERT INTO bankdemo.bills(id, is_active, balance, currency, account_id)"
-				 +" "+"VALUES('1', '1', '10.00', 'RUB', '1'),('2', '1', '10.00', 'SEA', '2');")
+				 +" "+"VALUES('2', '1', '10.00', 'SEA', '2');")
 	@WithMockUser(username = "1111111111", roles = "CLIENT")
 	@Nested
 	class BankControllerTest{
@@ -613,6 +614,32 @@ public class BankDemoBootApplicationTests {
 					.andExpect(model().attribute("balance", "10.00"))
 					.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
 					.andExpect(view().name("/bill/transfer"));			
+		}
+		
+	}
+	
+	@WithMockUser(username = "0000000000", roles = "ADMIN")
+	@Nested
+	class MegaControllerTest{
+		
+		@Test
+		void can_change_implementations() throws Exception {
+
+			String impl = "DAO";
+			String bean = "AccountService".concat(impl);
+			
+			mockMVC.perform(put("/control").with(csrf()).param("impl", impl))
+				.andExpect(status().isOk())
+				.andExpect(content()
+					.string(containsString("Services impementation has been switched to " + bean)));
+
+			impl = "JPA";
+			bean = "AccountService".concat(impl);
+
+			mockMVC.perform(put("/control").with(csrf()).param("impl", impl))
+				.andExpect(status().isOk())
+				.andExpect(content()
+					.string(containsString("Services impementation has been switched to " + bean)));
 		}
 		
 	}

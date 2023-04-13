@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.PersistenceException;
 
@@ -70,9 +71,8 @@ class AccountServiceDAOTest {
 	@BeforeAll
 	static void prepare() {
 		phone = new String("0000000000");
-		adminEntity = new Account
-				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
-						BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
+		adminEntity = new Account("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
+										 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
 	}
 	
     @BeforeEach
@@ -110,9 +110,12 @@ class AccountServiceDAOTest {
 		}
     	verify(accountDAO).getAccount(phone);
     	
-    	given(accountDAO.getById(anyInt())).willReturn(adminEntity);
+//    	given(accountDAO.getById(anyInt())).willReturn(adminEntity);
+    	given(billService.getAll(anyInt())).willReturn(adminEntity.getBills().stream()
+				.map(BillResponseDTO::new).collect(Collectors.toList()));    	
     	then(accountService.getBills(anyInt())).hasSize(3);
-    	verify(accountDAO).getById(anyInt());
+//    	verify(accountDAO).getById(anyInt());
+    	verify(billService).getAll(anyInt());    	
     }
     
     @Test

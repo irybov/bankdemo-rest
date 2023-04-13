@@ -1,5 +1,7 @@
 package com.github.irybov.bankdemoboot.service;
 
+import java.util.List;
+
 import javax.persistence.EntityNotFoundException;
 
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
@@ -15,4 +17,5 @@ public interface BillService {
 	public String transfer(int id, double valueOf, int target) throws Exception;
 	public boolean changeStatus(int id);
 	public BillResponseDTO getBillDTO(int id) throws EntityNotFoundException;
+	public List<BillResponseDTO> getAll(int id);
 }

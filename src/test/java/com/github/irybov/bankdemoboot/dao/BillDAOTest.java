@@ -59,7 +59,10 @@ class BillDAOTest {
 		assertThat(updated).isEqualTo(fromDB);
 		billDAO.deleteBill(id);
 		List<Bill> bills = billDAO.getAll();
-		assertThat(bills.size()).isEqualTo(0);
+		assertThat(bills.size()).isEqualTo(1);
+		
+		bills = billDAO.getByOwner(1);
+		assertThat(bills.size()).isEqualTo(1);
 	}
 	
     @AfterEach

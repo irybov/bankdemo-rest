@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -17,8 +18,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 //import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -48,7 +47,7 @@ import com.github.irybov.bankdemoboot.service.BillService;
 @Slf4j
 //@Validated
 @Controller
-public class BankController {
+public class BankController extends BaseController {
 
 	@Autowired
 	@Qualifier("accountServiceAlias")
@@ -59,13 +58,11 @@ public class BankController {
 	@Autowired
 	@Qualifier("operationServiceAlias")
 	private OperationService operationService;
-		
-	private Authentication authentication() {
-		return SecurityContextHolder.getContext().getAuthentication();
-	}
-	
-	private final Set<Currency> currencies = new HashSet<>();
-	{
+
+	private Set<Currency> currencies;
+	@PostConstruct
+	private void init() {
+		currencies = new HashSet<>();
 		Currency usd = Currency.getInstance("USD");
 		currencies.add(usd);
 		Currency eur = Currency.getInstance("EUR");
@@ -312,6 +309,12 @@ public class BankController {
 		model.addAttribute("success", "Password changed");
 		log.info("User {} changes password to a new one", authentication().getName());
 		return "/account/password";
+	}
+
+	@Override
+	String setServiceImpl(String impl) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 /*	@GetMapping("/operations/list")

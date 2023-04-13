@@ -56,4 +56,10 @@ public class BillDAO {
 		return entityManager.createQuery("SELECT b FROM Bill b", Bill.class).getResultList();
 	}
 	
+	public List<Bill> getByOwner(int id){
+		return entityManager.createQuery("SELECT b FROM Bill b WHERE b.owner.id=:id", Bill.class)
+							.setParameter("id", id)
+							.getResultList();
+	}
+	
 }

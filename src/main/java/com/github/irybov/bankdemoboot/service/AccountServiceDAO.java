@@ -93,8 +93,9 @@ public class AccountServiceDAO implements AccountService {
 	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public List<BillResponseDTO> getBills(int id) {
-		List<Bill> bills = accountDAO.getById(id).getBills();
-		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());
+//		List<Bill> bills = accountDAO.getById(id).getBills();
+//		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());
+		return billService.getAll(id);
 	}
 	
 	public BillResponseDTO addBill(String phone, String currency) throws Exception {

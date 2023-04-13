@@ -1,5 +1,5 @@
-INSERT INTO bankdemo.bills(id, is_active, balance, currency, account_id, created_at)
-VALUES('1', '1', '10.00', 'RUB', '1', now());
+--INSERT INTO bankdemo.bills(id, is_active, balance, currency, account_id, created_at)
+--VALUES('1', '1', '10.00', 'RUB', '1', now());
 
 INSERT INTO bankdemo.operations(created_at, action, amount, currency, sender, recipient)
 VALUES(now(), 'deposit', '500.00' , 'RUB', '0', '1'),

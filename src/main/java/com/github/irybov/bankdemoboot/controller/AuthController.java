@@ -7,8 +7,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -21,26 +19,24 @@ import org.springframework.web.bind.annotation.PostMapping;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.service.AccountService;
+import com.github.irybov.bankdemoboot.service.AccountServiceDAO;
+import com.github.irybov.bankdemoboot.service.AccountServiceJPA;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 //@Validated
 @Controller
-public class AuthController {
+public class AuthController extends BaseController {
 	
 	@Autowired
-	@Qualifier("accountServiceAlias")
+//	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 	
 	@Qualifier("beforeCreateAccountValidator")
 	private final Validator accountValidator;
 	public AuthController(Validator accountValidator) {
 		this.accountValidator = accountValidator;
-	}
-
-	private Authentication authentication() {
-		return SecurityContextHolder.getContext().getAuthentication();
 	}
 
 	@GetMapping("/home")
@@ -96,6 +92,14 @@ public class AuthController {
 			response.setStatus(HttpServletResponse.SC_CONFLICT);
 			return "/auth/register";
 		}
+	}
+
+	@Override
+	String setServiceImpl(String impl) {
+		
+		if(impl.equals("JPA")) accountService = context.getBean(AccountServiceJPA.class);
+		else if(impl.equals("DAO")) accountService = context.getBean(AccountServiceDAO.class);
+		return accountService.getClass().getSimpleName();
 	}
 	
 }

@@ -52,6 +52,7 @@ class AccountDAOTest {
 	
 	@BeforeEach
 	void set_up() {
+		entityManager.createNativeQuery("DELETE FROM {h-schema}bills").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM {h-schema}roles").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM {h-schema}accounts").executeUpdate();
 		account = new Account

@@ -36,17 +36,17 @@ public class AppConfig {
 	}
 	
     @Bean
-    public AccountService accountServiceAlias(@Value("${bean.service-impl.account}")
+    public AccountService accountServiceAlias(@Value("accountService"+"${bean.service-impl}")
     String qualifier) {
         return (AccountService) context.getBean(qualifier);
     }
     @Bean
-    public BillService billServiceAlias(@Value("${bean.service-impl.bill}")
+    public BillService billServiceAlias(@Value("billService"+"${bean.service-impl}")
     String qualifier) {
         return (BillService) context.getBean(qualifier);
     }
     @Bean
-    public OperationService operationServiceAlias(@Value("${bean.service-impl.operation}")
+    public OperationService operationServiceAlias(@Value("operationService"+"${bean.service-impl}")
     String qualifier) {
         return (OperationService) context.getBean(qualifier);
     }    

@@ -14,6 +14,7 @@ import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -70,9 +71,8 @@ class AccountServiceJPATest {
 	@BeforeAll
 	static void prepare() {
 		phone = new String("0000000000");
-		adminEntity = new Account
-				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
-						BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
+		adminEntity = new Account("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
+										 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
 	}
 	
     @BeforeEach
@@ -110,9 +110,12 @@ class AccountServiceJPATest {
 		}
     	verify(accountRepository).findByPhone(phone);
 
-    	given(accountRepository.getById(anyInt())).willReturn(adminEntity);
+//    	given(accountRepository.getById(anyInt())).willReturn(adminEntity);
+    	given(billService.getAll(anyInt())).willReturn(adminEntity.getBills().stream()
+    						.map(BillResponseDTO::new).collect(Collectors.toList()));
     	then(accountService.getBills(anyInt())).hasSize(3);
-    	verify(accountRepository).getById(anyInt());
+//    	verify(accountRepository).getById(anyInt());
+    	verify(billService).getAll(anyInt());
     }
     
     @Test

@@ -48,12 +48,15 @@ class BillRepositoryTest {
 		assertThat(updated.get()).isEqualTo(fromDB.get());
 		billRepository.deleteById(id);
 		List<Bill> bills = (List<Bill>) billRepository.findAll();
-		assertThat(bills.size()).isEqualTo(0);
+		assertThat(bills.size()).isEqualTo(1);
+		
+		bills = billRepository.findByOwnerId(1);
+		assertThat(bills.size()).isEqualTo(1);
 	}
 
     @AfterAll
     void clear() {
-    	billRepository.deleteAll();
+//    	billRepository.deleteAll();
     	bill = null;
     	account = null;
     }
