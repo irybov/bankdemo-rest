@@ -154,6 +154,7 @@ class BankControllerTest {
 		bill.setBalance(BigDecimal.valueOf(0.00));
 		bill.setCreatedAt(OffsetDateTime.now());
 		bill.setUpdatedAt(OffsetDateTime.now());
+		bill.setId(0);
 		when(accountService.addBill(anyString(), anyString())).thenReturn(new BillResponseDTO(bill));
 		
 		mockMVC.perform(post("/bills/add").with(csrf())

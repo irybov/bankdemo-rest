@@ -18,8 +18,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-//import com.fasterxml.jackson.annotation.JsonFormat;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -33,14 +31,14 @@ public class Bill {
 	@EqualsAndHashCode.Exclude
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(updatable = false)
 	private Integer id;
 
 //	@NotNull
-//	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	@Column(updatable = false)
 	private OffsetDateTime createdAt;
 	
 //	@NotNull
-//	@JsonFormat(shape = JsonFormat.Shape.STRING)
 	private OffsetDateTime updatedAt;
 	
 	@NotNull
@@ -48,12 +46,11 @@ public class Bill {
 	
 	@NotNull
 	@Column(columnDefinition = "Decimal(19,2) default '0.00'", scale = 2, precision = 2)
-//	@JsonFormat(shape = JsonFormat.Shape.NUMBER_FLOAT)
 	private BigDecimal balance = BigDecimal.valueOf(0.00).setScale(2);
 
 	@NotNull
 	@Size(min=3, max=3)
-	@Column(length=3)
+	@Column(length=3, updatable = false)
 	private String currency;
 	
 	@ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.DETACH,

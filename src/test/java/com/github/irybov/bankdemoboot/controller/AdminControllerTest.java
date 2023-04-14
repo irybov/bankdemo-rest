@@ -119,6 +119,7 @@ class AdminControllerTest {
 				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 		entity.setCreatedAt(OffsetDateTime.now());
 		entity.setUpdatedAt(OffsetDateTime.now());
+		entity.setId(0);
 	}
 	
 	@BeforeEach
