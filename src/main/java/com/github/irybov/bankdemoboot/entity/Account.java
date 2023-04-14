@@ -127,8 +127,8 @@ public class Account{
 		if(bills == null) {
 			bills = new ArrayList<>();
 		}
-//		bill.setOwner(this);
 		bills.add(bill);
+		bill.setOwner(this);
 	}
 
 	public void addRole(Role role) {

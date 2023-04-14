@@ -6,6 +6,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -80,6 +81,8 @@ class AccountDAOTest {
 	void search_by_phone() {
 		Account fromDB = accountDAO.getAccount(oldPN);
 		assertThat(fromDB).isEqualTo(account);
+		fromDB = accountDAO.getWithBills(oldPN);
+		assertThat(fromDB).isEqualTo(account);
 	}
 
 	@Test
@@ -89,7 +92,7 @@ class AccountDAOTest {
 		fromDB.setPhone(newPN);
 		accountDAO.updateAccount(fromDB);
 		Account updated = accountDAO.getAccount(newPN);		
-		assertThat(fromDB).isEqualTo(updated);		
+		assertThat(fromDB).isEqualTo(updated);
 	}
     
     @Test
@@ -111,9 +114,7 @@ class AccountDAOTest {
 		gingerEntity.addRole(Role.ADMIN);
 		
     	List<Account> whores = new ArrayList<>();
-    	whores.add(vixenEntity);
-    	whores.add(blondeEntity);
-    	whores.add(gingerEntity);
+    	Collections.addAll(whores, vixenEntity, blondeEntity, gingerEntity);
     	whores.forEach(accountDAO::saveAccount);
     	
     	clients = accountDAO.getAll();

@@ -6,6 +6,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterAll;
@@ -66,6 +67,8 @@ class AccountRepositoryTest {
 		assertThat(fromDB).isEqualTo(account);
 		fromDB = accountRepository.getByPhone(oldPN);
 		assertThat(fromDB).isEqualTo(account);
+		fromDB = accountRepository.getWithBills(oldPN);
+		assertThat(fromDB).isEqualTo(account);
 	}
 	
     @Test
@@ -97,9 +100,7 @@ class AccountRepositoryTest {
 		gingerEntity.addRole(Role.ADMIN);
 		
     	List<Account> whores = new ArrayList<>();
-    	whores.add(vixenEntity);
-    	whores.add(blondeEntity);
-    	whores.add(gingerEntity);
+    	Collections.addAll(whores, vixenEntity, blondeEntity, gingerEntity);
     	accountRepository.saveAll(whores);
     	
     	clients = accountRepository.getAll();

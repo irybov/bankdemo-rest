@@ -25,4 +25,5 @@ public interface AccountService {
 	public String getPhone(String phone);
 	public List<BillResponseDTO> getBills(int id);
 	public List<AccountResponseDTO> getAll();
+	public AccountResponseDTO getFullDTO(String phone) throws PersistenceException;
 }

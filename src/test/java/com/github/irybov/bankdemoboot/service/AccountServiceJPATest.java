@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -157,20 +158,21 @@ class AccountServiceJPATest {
 		("Marica", "Hase", "1111111111", LocalDate.of(1981, Month.SEPTEMBER, 26), "supervixen", true);
 		vixenEntity.addRole(Role.CLIENT);
 		vixenEntity.setId(3);
+		vixenEntity.setBills(new ArrayList<Bill>());
 		Account blondeEntity = new Account
 		("Sarah", "Vandella", "2222222222", LocalDate.of(1983, Month.DECEMBER, 02), "bustyblonde", true);
 		blondeEntity.addRole(Role.CLIENT);
 		blondeEntity.setId(2);
+		blondeEntity.setBills(new ArrayList<Bill>());
 		Account gingerEntity = new Account
 		("Lily", "Cade", "3333333333", LocalDate.of(1995, Month.JANUARY, 25), "gingerchick", true);
 		gingerEntity.addRole(Role.CLIENT);
 		gingerEntity.addRole(Role.ADMIN);
 		gingerEntity.setId(1);
+		gingerEntity.setBills(new ArrayList<Bill>());
     	
     	List<Account> clients = new ArrayList<>();
-    	clients.add(vixenEntity);
-    	clients.add(blondeEntity);
-    	clients.add(gingerEntity);
+    	Collections.addAll(clients, vixenEntity, blondeEntity, gingerEntity);
     	
     	given(accountRepository.getAll()).willReturn(clients);
     	then(accountService.getAll()).hasSameSizeAs(clients)

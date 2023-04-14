@@ -24,10 +24,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
+//import java.util.ArrayList;
 import java.util.Currency;
 import java.util.HashSet;
-import java.util.List;
+//import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -116,22 +116,25 @@ class BankControllerTest {
 	void can_get_client_html() throws Exception {
 
 		AccountResponseDTO account = new AccountResponseDTO(entity);		
-		List<BillResponseDTO> bills = new ArrayList<>();
+//		List<BillResponseDTO> bills = new ArrayList<>();
 		
-		when(accountService.getAccountDTO(phone)).thenReturn(account);
-		when(accountService.getBills(account.getId())).thenReturn(bills);
+//		when(accountService.getAccountDTO(phone)).thenReturn(account);
+//		when(accountService.getBills(account.getId())).thenReturn(bills);
+		when(accountService.getFullDTO(phone)).thenReturn(account);
 		
 		mockMVC.perform(get("/accounts/show/{phone}", phone))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("Private area")))
 			.andExpect(model().size(3))
 			.andExpect(model().attribute("account", account))
-			.andExpect(model().attribute("bills", bills))
+//			.andExpect(model().attribute("bills", bills))			
+			.andExpect(model().attribute("bills", account.getBills()))
 			.andExpect(model().attribute("currencies", currencies))
 			.andExpect(view().name("/account/private"));
 		
-		verify(accountService).getAccountDTO(phone);
-		verify(accountService).getBills(account.getId());
+//		verify(accountService).getAccountDTO(phone);
+//		verify(accountService).getBills(account.getId());
+		verify(accountService).getFullDTO(phone);
 	}
 	
 	@Test

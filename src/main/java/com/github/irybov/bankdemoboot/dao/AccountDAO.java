@@ -21,7 +21,8 @@ public class AccountDAO {
 	}
 	
 	public void updateAccount(Account account) {
-		entityManager.merge(account);
+		if(entityManager.contains(account)) entityManager.merge(account);
+		else saveAccount(account);
 	}
 	
 	public void deleteAccount(Account account) {
@@ -45,12 +46,19 @@ public class AccountDAO {
 				.getResultStream().findFirst().orElse(null);
 	}
 	
-	public List<Account> getAll(){
+	public List<Account> getAll() {
 		return entityManager.createQuery
 				("SELECT DISTINCT a FROM Account a JOIN a.roles r WHERE r=:role ORDER BY a.id ASC",
 				Account.class)
 				.setParameter("role", Role.CLIENT)
 				.getResultList();
+	}
+	
+	public Account getWithBills(String phone) {
+		return entityManager.createQuery("SELECT a FROM Account a LEFT JOIN FETCH a.bills WHERE a.phone=:phone",
+				Account.class)
+				.setParameter("phone", phone)
+				.getResultStream().findFirst().orElse(null);
 	}
 	
 }

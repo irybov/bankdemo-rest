@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-import javax.persistence.EntityNotFoundException;
+import javax.persistence.PersistenceException;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -203,26 +203,30 @@ class AdminControllerTest {
 	void entity_not_found_exception() throws Exception {
 		
 		String wrong = "9999999999";
-		when(accountService.getAccountDTO(wrong))
-			.thenThrow(new EntityNotFoundException("Account with phone " + wrong + " not found"));
+//		when(accountService.getAccountDTO(wrong))
+		when(accountService.getFullDTO(wrong))
+			.thenThrow(new PersistenceException("Account with phone " + wrong + " not found"));
 		
 		mockMVC.perform(get("/accounts/search/{phone}", wrong))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.report").value("Account with phone " + wrong + " not found"));
 		
-	    verify(accountService).getAccountDTO(wrong);
+//	    verify(accountService).getAccountDTO(wrong);
+	    verify(accountService).getFullDTO(wrong);
 	}
 	
 	@Test
 	void can_get_account_info() throws Exception {
 		
 		AccountResponseDTO account = new AccountResponseDTO(entity);
-		when(accountService.getAccountDTO(phone)).thenReturn(account);
 		List<BillResponseDTO> bills = new ArrayList<>();
 		Bill bill = new Bill();
 		bill.setOwner(entity);
 		bills.add(new BillResponseDTO(bill));
-		when(accountService.getBills(anyInt())).thenReturn(bills);
+		account.setBills(bills);
+//		when(accountService.getAccountDTO(phone)).thenReturn(account);
+		when(accountService.getFullDTO(phone)).thenReturn(account);
+//		when(accountService.getBills(anyInt())).thenReturn(bills);
 		
 		mockMVC.perform(get("/accounts/search/{phone}", phone))
 			.andExpect(status().isOk())
@@ -238,8 +242,9 @@ class AdminControllerTest {
 			.andExpect(jsonPath("$.bills").isArray())
 			.andExpect(jsonPath("$.bills").isNotEmpty());
 		
-	    verify(accountService).getAccountDTO(phone);
-	    verify(accountService).getBills(anyInt());
+//	    verify(accountService).getAccountDTO(phone);
+//	    verify(accountService).getBills(anyInt());
+	    verify(accountService).getFullDTO(phone);
 	}
 	
 	@Test
