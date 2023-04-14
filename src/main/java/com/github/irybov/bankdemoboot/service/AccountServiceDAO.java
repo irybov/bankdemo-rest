@@ -60,6 +60,16 @@ public class AccountServiceDAO implements AccountService {
 	}
 	
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
+	public AccountResponseDTO getFullDTO(String phone) throws NoResultException {
+		Account account = accountDAO.getWithBills(phone);
+		if(account == null) {
+			throw new NoResultException("Account with phone " + phone + " not found");
+		}
+		AccountResponseDTO dto = new AccountResponseDTO(account);
+		dto.setBills(account.getBills().stream().map(BillResponseDTO::new).collect(Collectors.toList()));
+		return dto;
+	}
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public AccountResponseDTO getAccountDTO(String phone) throws NoResultException {
 		return new AccountResponseDTO(getAccount(phone));
 	}

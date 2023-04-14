@@ -2,7 +2,7 @@ package com.github.irybov.bankdemoboot.controller;
 
 import java.util.Currency;
 import java.util.HashSet;
-import java.util.List;
+//import java.util.List;
 //import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
@@ -97,14 +97,16 @@ public class BankController extends BaseController {
 		
 		AccountResponseDTO account = null;
 		try {
-			account = accountService.getAccountDTO(current);
+//			account = accountService.getAccountDTO(current);
+			account = accountService.getFullDTO(current);
 		}
 		catch (EntityNotFoundException exc) {
 			log.error(exc.getMessage(), exc);
 		}
-		List<BillResponseDTO> bills = accountService.getBills(account.getId());
+//		List<BillResponseDTO> bills = accountService.getBills(account.getId());
 		modelMap.addAttribute("account", account);
-		modelMap.addAttribute("bills", bills);
+//		modelMap.addAttribute("bills", bills);
+		modelMap.addAttribute("bills", account.getBills());
 		modelMap.addAttribute("currencies", currencies);
 		log.info("User {} has enter own private area", account.getPhone());
 		return "/account/private";

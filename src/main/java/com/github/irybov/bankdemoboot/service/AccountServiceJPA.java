@@ -63,6 +63,16 @@ public class AccountServiceJPA implements AccountService {
 	}
 	
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
+	public AccountResponseDTO getFullDTO(String phone) throws EntityNotFoundException {
+		Account account = accountRepository.getWithBills(phone);
+		if(account == null) {
+			throw new EntityNotFoundException("Account with phone " + phone + " not found");
+		}
+		AccountResponseDTO dto = new AccountResponseDTO(account);
+		dto.setBills(account.getBills().stream().map(BillResponseDTO::new).collect(Collectors.toList()));
+		return dto;
+	}	
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public AccountResponseDTO getAccountDTO(String phone) throws EntityNotFoundException {
 		return new AccountResponseDTO(getAccount(phone));
 	}

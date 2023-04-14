@@ -135,9 +135,10 @@ public class AdminController extends BaseController {
 		
 		AccountResponseDTO target = null;
 		try {
-			target = accountService.getAccountDTO(phone);
-			List<BillResponseDTO> bills = accountService.getBills(target.getId());
-			target.setBills(bills);
+//			target = accountService.getAccountDTO(phone);
+			target = accountService.getFullDTO(phone);
+//			List<BillResponseDTO> bills = accountService.getBills(target.getId());
+//			target.setBills(bills);
 			log.info("Admin {} requests data about client {}", authentication().getName(), phone);
 			return new ResponseEntity<AccountResponseDTO>(target, HttpStatus.OK);
 		}
