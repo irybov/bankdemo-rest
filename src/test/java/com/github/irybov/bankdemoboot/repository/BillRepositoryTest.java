@@ -29,6 +29,7 @@ class BillRepositoryTest {
 	
 	@BeforeAll
 	void prepare() {
+    	billRepository.deleteAll();
 		account = new Account
 				("Nia", "Nacci", "4444444444", LocalDate.of(1998, 12, 10), "blackmamba", true);
 		bill = new Bill("SEA", true, account);
@@ -48,15 +49,14 @@ class BillRepositoryTest {
 		assertThat(updated.get()).isEqualTo(fromDB.get());
 		billRepository.deleteById(id);
 		List<Bill> bills = (List<Bill>) billRepository.findAll();
-		assertThat(bills.size()).isEqualTo(1);
+		assertThat(bills.size()).isEqualTo(0);
 		
 		bills = billRepository.findByOwnerId(1);
-		assertThat(bills.size()).isEqualTo(1);
+		assertThat(bills.size()).isEqualTo(0);
 	}
 
     @AfterAll
     void clear() {
-//    	billRepository.deleteAll();
     	bill = null;
     	account = null;
     }

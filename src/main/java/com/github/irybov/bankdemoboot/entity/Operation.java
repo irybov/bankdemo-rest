@@ -33,7 +33,7 @@ public class Operation {
 	@EqualsAndHashCode.Exclude
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	private long id;
+	private Long id;
 	
 //	@NotNull
 //	@Builder.Default
@@ -42,7 +42,7 @@ public class Operation {
 	private OffsetDateTime createdAt;
 	
 	@NotNull
-	private double amount;
+	private Double amount;
 
 	@NotNull
 	private String action;
@@ -52,8 +52,8 @@ public class Operation {
 	@Column(length=3)
 	private String currency;
 	
-	private int sender;
+	private Integer sender;
 		
-	private int recipient;
+	private Integer recipient;
 	
 }

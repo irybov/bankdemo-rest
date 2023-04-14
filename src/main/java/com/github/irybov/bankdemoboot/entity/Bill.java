@@ -33,7 +33,7 @@ public class Bill {
 	@EqualsAndHashCode.Exclude
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	private int id;
+	private Integer id;
 
 //	@NotNull
 //	@JsonFormat(shape = JsonFormat.Shape.STRING)

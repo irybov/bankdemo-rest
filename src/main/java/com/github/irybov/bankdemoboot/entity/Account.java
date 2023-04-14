@@ -52,7 +52,7 @@ public class Account{
 //	@EqualsAndHashCode.Exclude
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	private int id;
+	private Integer id;
 
 //	@EqualsAndHashCode.Exclude
 //	@NotNull
