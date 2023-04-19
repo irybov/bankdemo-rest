@@ -362,8 +362,8 @@ public class BankDemoBootApplicationTests {
 					.andExpect(jsonPath("$.updatedAt").isEmpty())
 					.andExpect(jsonPath("$.active").value(true))
 					.andExpect(jsonPath("$.balance").value("0.0"))
-					.andExpect(jsonPath("$.currency").value("SEA"))
-					.andExpect(jsonPath("$.owner").exists());
+					.andExpect(jsonPath("$.currency").value("SEA"));
+//					.andExpect(jsonPath("$.owner").exists());
 		}
 		
 		@Test

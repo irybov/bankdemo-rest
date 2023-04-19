@@ -13,7 +13,7 @@ $(document).ready(function(){
  			var information = '';
  			$.each(response.content, function(key, value){
 				information += '<tr>';
-				information += '<td align=center>'+value.id+'</td>';
+//				information += '<td align=center>'+value.id+'</td>';
 				information += '<td align=center>'+value.action+'</td>';
 				information += '<td></td>';
 				information += '<td align=center>'+value.amount+'</td>';
@@ -67,7 +67,7 @@ $(document).ready(function(){
 	 			var information = '';
 	 			$.each(response.content, function(key, value){
 					information += '<tr>';
-					information += '<td align=center>'+value.id+'</td>';
+//					information += '<td align=center>'+value.id+'</td>';
 					information += '<td align=center>'+value.action+'</td>';
 					information += '<td></td>';
 					information += '<td align=center>'+value.amount+'</td>';

@@ -277,15 +277,15 @@ public class AdminController extends BaseController {
 		OffsetDateTime dateFrom = OffsetDateTime.of(from, LocalTime.MIN, ZoneOffset.UTC);
 		OffsetDateTime dateTo = OffsetDateTime.of(to, LocalTime.MAX, ZoneOffset.UTC);
 		
-		OperationPage page = new OperationPage();
-		page.setPageNumber(pageable.getPageNumber());
-		page.setPageSize(pageable.getPageSize());
+//		OperationPage page = new OperationPage();
+//		page.setPageNumber(pageable.getPageNumber());
+//		page.setPageSize(pageable.getPageSize());
 		
 		log.info("Admin {} requests list of operations with bill {}",
 		authentication().getName(), id);
 		
 		return operationService.getPage(id, action.orElse("_"),
-				minval.orElse(0.01), maxval.orElse(10000.00), dateFrom, dateTo, page);
+				minval.orElse(0.01), maxval.orElse(10000.00), dateFrom, dateTo, pageable);
 	}
 	
 	@PreAuthorize("hasRole('ADMIN')")
@@ -305,7 +305,6 @@ public class AdminController extends BaseController {
 					   	throw new CompletionException(exc);}
 				}, executorService);
 		
-//		BillResponseDTO bill = billService.getBillDTO(id);
 		BillResponseDTO bill = futureBill.join();
 		AccountResponseDTO account = bill.getOwner();
 		

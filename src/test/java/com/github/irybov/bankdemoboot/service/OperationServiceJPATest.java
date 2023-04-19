@@ -28,6 +28,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -115,9 +116,11 @@ class OperationServiceJPATest {
 		final int id = new Random().nextInt();
 		final double value = new Random().nextDouble();
 		OperationPage page = new OperationPage();
+		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
+				   page.getSortDirection(), page.getSortBy());
 		
 		Page<OperationResponseDTO> dtos = operationService.getPage(id, "^[a-z]{7,8}", value, value,
-				any(OffsetDateTime.class), any(OffsetDateTime.class), page);
+				any(OffsetDateTime.class), any(OffsetDateTime.class), pageable);
 		assertThat(dtos)
 			.hasSameClassAs(new PageImpl<OperationResponseDTO>(new ArrayList<OperationResponseDTO>()));
 		assertThat(dtos.getContent().size()).isEqualTo(size);
