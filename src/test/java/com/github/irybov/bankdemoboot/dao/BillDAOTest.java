@@ -15,12 +15,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.InjectMocks;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.entity.Bill;
 
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DataJpaTest
 class BillDAOTest {
@@ -40,6 +42,7 @@ class BillDAOTest {
 	
 	@BeforeEach
 	void set_up() {
+		entityManager.createNativeQuery("DELETE FROM {h-schema}bills").executeUpdate();
 		account = new Account
 				("Nia", "Nacci", "4444444444", LocalDate.of(1998, 12, 10), "blackmamba", true);
 		bill = new Bill("SEA", true, account);
@@ -59,10 +62,10 @@ class BillDAOTest {
 		assertThat(updated).isEqualTo(fromDB);
 		billDAO.deleteBill(id);
 		List<Bill> bills = billDAO.getAll();
-		assertThat(bills.size()).isEqualTo(1);
+		assertThat(bills.size()).isEqualTo(0);
 		
 		bills = billDAO.getByOwner(1);
-		assertThat(bills.size()).isEqualTo(1);
+		assertThat(bills.size()).isEqualTo(0);
 	}
 	
     @AfterEach

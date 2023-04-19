@@ -7,6 +7,7 @@ import java.util.List;
 //import java.util.Set;
 //import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 //import com.github.irybov.bankdemoboot.Role;
 import com.github.irybov.bankdemoboot.entity.Account;
 //import com.github.irybov.bankdemoboot.entity.Bill;
@@ -16,7 +17,7 @@ import lombok.Getter;
 @Getter
 public class AccountResponseDTO {
 	
-	private int id;
+	private Integer id;
 	private OffsetDateTime createdAt;
 	private OffsetDateTime updatedAt;	
 	private boolean active;	
@@ -25,6 +26,7 @@ public class AccountResponseDTO {
 	private String phone;
 	private LocalDate birthday;
 //	private String password;
+	@JsonManagedReference
 	private List<BillResponseDTO> bills;
 //	private Set<Role> roles;
 

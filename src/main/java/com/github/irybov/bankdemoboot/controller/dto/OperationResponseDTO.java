@@ -9,17 +9,17 @@ import lombok.Getter;
 @Getter
 public class OperationResponseDTO {
 
-	private long id;
+//	private Long id;
 	private OffsetDateTime createdAt;
-	private double amount;
+	private Double amount;
 	private String action;
 	private String currency;	
-	private int sender;		
-	private int recipient;
+	private Integer sender;		
+	private Integer recipient;
 	
 	public OperationResponseDTO(Operation operation) {
 		
-		this.id = operation.getId();
+//		this.id = operation.getId();
 		this.createdAt = operation.getCreatedAt();
 		this.amount = operation.getAmount();
 		this.action = operation.getAction();

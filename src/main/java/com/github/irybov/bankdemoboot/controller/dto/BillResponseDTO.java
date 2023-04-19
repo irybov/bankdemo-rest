@@ -3,6 +3,7 @@ package com.github.irybov.bankdemoboot.controller.dto;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.github.irybov.bankdemoboot.entity.Bill;
 
 import lombok.Getter;
@@ -10,12 +11,13 @@ import lombok.Getter;
 @Getter
 public class BillResponseDTO {
 
-	private int id;
+	private Integer id;
 	private OffsetDateTime createdAt;
 	private OffsetDateTime updatedAt;
 	private boolean active;
 	private BigDecimal balance;
 	private String currency;
+	@JsonBackReference
 	private AccountResponseDTO owner;
 	
 	public BillResponseDTO(Bill bill) {

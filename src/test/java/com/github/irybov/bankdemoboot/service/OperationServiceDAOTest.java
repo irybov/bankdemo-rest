@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -115,10 +116,12 @@ class OperationServiceDAOTest {
 		final int id = new Random().nextInt();
 		final double value = new Random().nextDouble();
 		OperationPage page = new OperationPage();
+		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
+				   page.getSortDirection(), page.getSortBy());
 		OffsetDateTime date = OffsetDateTime.now();
 		
 		Page<OperationResponseDTO> dtos = operationService.getPage(id, "^[a-z]{7,8}",
-				value, value, date, date, page);
+				value, value, date, date, pageable);
 		assertThat(dtos)
 			.hasSameClassAs(new PageImpl<OperationResponseDTO>(new ArrayList<OperationResponseDTO>()));
 		assertThat(dtos.getContent().size()).isEqualTo(size);

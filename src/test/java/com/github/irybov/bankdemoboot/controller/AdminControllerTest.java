@@ -119,6 +119,7 @@ class AdminControllerTest {
 				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 		entity.setCreatedAt(OffsetDateTime.now());
 		entity.setUpdatedAt(OffsetDateTime.now());
+		entity.setId(0);
 	}
 	
 	@BeforeEach
@@ -252,14 +253,13 @@ class AdminControllerTest {
 		
 		List<OperationResponseDTO> operations = new ArrayList<>();
 		operations.add(new OperationResponseDTO(new Operation()));
-		OperationPage page = new OperationPage();
-		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
-										   page.getSortDirection(), page.getSortBy());
-		Page<OperationResponseDTO> operationPage = new PageImpl<>
-						(operations, pageable, operations.size());
+//		OperationPage page = new OperationPage();
+//		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
+//										   page.getSortDirection(), page.getSortBy());
+		Page<OperationResponseDTO> operationPage = new PageImpl<>(operations);
 		
 		when(operationService.getPage(anyInt(), anyString(), anyDouble(), anyDouble(),
-				any(OffsetDateTime.class), any(OffsetDateTime.class),refEq(page)))
+				any(OffsetDateTime.class), any(OffsetDateTime.class), any(Pageable.class)))
 				.thenReturn(operationPage);
 		
 		mockMVC.perform(get("/operations/list/{id}", "0"))
@@ -269,7 +269,7 @@ class AdminControllerTest {
 			.andExpect(jsonPath("$.content").isNotEmpty());
 		
 		verify(operationService).getPage(anyInt(), anyString(), anyDouble(), anyDouble(),
-				any(OffsetDateTime.class), any(OffsetDateTime.class),refEq(page));
+				any(OffsetDateTime.class), any(OffsetDateTime.class), any(Pageable.class));
 	}
 	
 	@Test

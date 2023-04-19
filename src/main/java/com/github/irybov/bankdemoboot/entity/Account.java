@@ -32,7 +32,6 @@ import javax.validation.constraints.Size;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
-//import com.fasterxml.jackson.annotation.JsonFormat;
 import com.github.irybov.bankdemoboot.security.Role;
 
 import lombok.Data;
@@ -52,18 +51,18 @@ public class Account{
 //	@EqualsAndHashCode.Exclude
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	private int id;
+	@Column(updatable = false)
+	private Integer id;
 
 //	@EqualsAndHashCode.Exclude
 //	@NotNull
 	@ToString.Exclude
-//	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	@Column(updatable = false)
 	private OffsetDateTime createdAt;
 	
 //	@EqualsAndHashCode.Exclude
 //	@NotNull
 	@ToString.Exclude
-//	@JsonFormat(shape = JsonFormat.Shape.STRING)
 	private OffsetDateTime updatedAt;
 	
 	@NotNull
@@ -91,7 +90,6 @@ public class Account{
 	@Past(message = "Birthday cant be future time")
 	@NotNull(message = "Please select your date of birth")
 	@Column(columnDefinition = "date")
-//	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private LocalDate birthday;
 	

@@ -12,11 +12,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.entity.Bill;
 
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DataJpaTest
 class BillRepositoryTest {
@@ -29,6 +31,7 @@ class BillRepositoryTest {
 	
 	@BeforeAll
 	void prepare() {
+    	billRepository.deleteAll();
 		account = new Account
 				("Nia", "Nacci", "4444444444", LocalDate.of(1998, 12, 10), "blackmamba", true);
 		bill = new Bill("SEA", true, account);
@@ -48,15 +51,14 @@ class BillRepositoryTest {
 		assertThat(updated.get()).isEqualTo(fromDB.get());
 		billRepository.deleteById(id);
 		List<Bill> bills = (List<Bill>) billRepository.findAll();
-		assertThat(bills.size()).isEqualTo(1);
+		assertThat(bills.size()).isEqualTo(0);
 		
 		bills = billRepository.findByOwnerId(1);
-		assertThat(bills.size()).isEqualTo(1);
+		assertThat(bills.size()).isEqualTo(0);
 	}
 
     @AfterAll
     void clear() {
-//    	billRepository.deleteAll();
     	bill = null;
     	account = null;
     }

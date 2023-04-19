@@ -82,10 +82,10 @@ public class OperationServiceDAO implements OperationService {
 	}*/
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public Page<OperationResponseDTO> getPage(int id, String action, double minval, double maxval,
-			OffsetDateTime mindate, OffsetDateTime maxdate, OperationPage page) {
+			OffsetDateTime mindate, OffsetDateTime maxdate, Pageable pageable) {
 		
-		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
-											page.getSortDirection(), page.getSortBy());
+//		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
+//											page.getSortDirection(), page.getSortBy());
 		return operationDAO.getPage(id, action, minval, maxval, mindate, maxdate, pageable)
 				.map(OperationResponseDTO::new);
 	}
