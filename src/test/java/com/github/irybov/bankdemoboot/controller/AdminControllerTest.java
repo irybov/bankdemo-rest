@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -46,7 +45,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -61,7 +59,6 @@ import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.entity.Operation;
-import com.github.irybov.bankdemoboot.model.OperationPage;
 import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
@@ -72,9 +69,6 @@ import com.opencsv.CSVWriter;
 @WebMvcTest(controllers = AdminController.class)
 class AdminControllerTest {
 
-	@Autowired
-	@Qualifier("asyncExecutor")
-	private Executor executorService;
 	@MockBean
 	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
@@ -110,6 +104,7 @@ class AdminControllerTest {
 	    	executor.initialize();
 	    	return executor;
 	    }
+		
 	}
 
 	@BeforeAll
@@ -264,7 +259,8 @@ class AdminControllerTest {
 		
 		mockMVC.perform(get("/operations/list/{id}", "0"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.content").exists())
+			.andExpect(jsonPath("$.pageable").exists())
+			.andExpect(jsonPath("$.sort").exists())
 			.andExpect(jsonPath("$.content").isArray())
 			.andExpect(jsonPath("$.content").isNotEmpty());
 		

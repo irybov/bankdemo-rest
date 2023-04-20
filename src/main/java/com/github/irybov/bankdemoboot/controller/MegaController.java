@@ -39,8 +39,9 @@ public class MegaController {
 		
 		details.setServiceImpl(impl);
 		String bean = auth.setServiceImpl(impl);
-		log.info("Admin {} has switched services impementation", authentication().getName());
-		return "Services impementation has been switched to " + bean;		
+		log.info("Admin {} has switched services impementation to {}",
+				authentication().getName(), impl);
+		return "Services impementation has been switched to " + bean;
 	}
 	
 }

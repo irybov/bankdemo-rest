@@ -62,6 +62,53 @@ public class BankDemoBootApplicationTests {
 	void contextLoads(ApplicationContext context) {
 		assertThat(context).isNotNull();
 	}
+	
+	@WithMockUser(username = "0000000000", roles = "ADMIN")
+    @Nested
+    class SwaggerAccessTest{
+    	
+		@Test
+		void swagger_allowed() throws Exception {
+			
+	        mockMVC.perform(get("/swagger-ui/"))
+	    		.andExpect(status().isOk());
+		}
+		
+		@WithMockUser(username = "1111111111", roles = "CLIENT")
+		@Test
+		void swagger_denied() throws Exception {
+			
+	        mockMVC.perform(get("/swagger-ui/"))
+				.andExpect(status().isForbidden());
+		}
+		
+	    @Test
+	    void can_get_swagger_html() throws Exception {
+
+	        mockMVC.perform(get("/swagger-ui/index.html"))
+	        	.andExpect(status().isOk());
+	    }
+		
+	    @Test
+	    void can_get_api_docs() throws Exception {
+
+	        mockMVC.perform(get("/v2/api-docs"))
+				.andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
+		
+		}
+
+	    @Disabled
+	    @Test
+	    void can_get_swagger_config() throws Exception {
+
+	        mockMVC.perform(get("/v2/api-docs/swagger-config"))
+				.andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
+		
+		}
+		
+    }	
 
 	@Nested
 	class AuthControllerTest{
@@ -302,18 +349,18 @@ public class BankDemoBootApplicationTests {
 							.param("maxdate", "")
 					)
 				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.pageable").exists())
+				.andExpect(jsonPath("$.sort").exists())
 				.andExpect(jsonPath("$.content").isArray())
 				.andExpect(jsonPath("$.content.length()", is(3)));
 		}
 		
-//		@Disabled
 		@Test
 		void can_export_data_2_csv_file() throws Exception {
 			
 			mockMVC.perform(get("/operations/print/{id}", "1"))
 				.andExpect(status().isCreated())
 				.andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE));
-//				.andExpect(content().bytes(output));
 		}
 		
 	}

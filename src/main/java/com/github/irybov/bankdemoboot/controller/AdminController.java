@@ -63,7 +63,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
-import com.github.irybov.bankdemoboot.model.OperationPage;
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
@@ -87,7 +86,7 @@ public class AdminController extends BaseController {
 	private OperationService operationService;
 	
 	private final Executor executorService;
-	public AdminController(@Qualifier("asyncExecutor")Executor executorService) {
+	public AdminController(Executor executorService) {
 		this.executorService = executorService;
 	}
 	
