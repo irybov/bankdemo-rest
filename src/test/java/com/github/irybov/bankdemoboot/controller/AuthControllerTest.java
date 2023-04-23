@@ -51,7 +51,7 @@ class AuthControllerTest {
 	@Qualifier("beforeCreateAccountValidator")
 	private Validator accountValidator;
 	@MockBean
-	@Qualifier("accountServiceAlias")
+//	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 	@MockBean
 	private AccountDetailsService accountDetailsService;

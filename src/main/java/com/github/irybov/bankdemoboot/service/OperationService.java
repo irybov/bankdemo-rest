@@ -8,13 +8,38 @@ import org.springframework.data.domain.Pageable;
 
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.entity.Operation;
-import com.github.irybov.bankdemoboot.model.OperationPage;
+//import com.github.irybov.bankdemoboot.model.OperationPage;
 
 public interface OperationService {
 
-	public void transfer(double amount, String action, String currency, int sender, int recipient);
-	public void deposit(double amount, String action, String currency, int recipient);
-	public void withdraw(double amount, String action, String currency, int sender);
+	public default Operation transfer(double amount, String action, String currency, int sender, int recipient) {
+		return Operation.builder()
+				.amount(amount)
+				.action(action)
+				.currency(currency)
+				.sender(sender)
+				.recipient(recipient)
+				.createdAt(OffsetDateTime.now())
+				.build();
+	};
+	public default Operation deposit(double amount, String action, String currency, int recipient) {
+		return Operation.builder()
+				.amount(amount)
+				.action(action)
+				.currency(currency)
+				.recipient(recipient)
+				.createdAt(OffsetDateTime.now())
+				.build();
+	};
+	public default Operation withdraw(double amount, String action, String currency, int sender) {
+		return Operation.builder()
+				.amount(amount)
+				.action(action)
+				.currency(currency)
+				.sender(sender)
+				.createdAt(OffsetDateTime.now())
+				.build();
+	};
 	public Operation getOne(long id);
 	public List<OperationResponseDTO> getAll(int id);
 //	public Page<OperationResponseDTO> getPage(int id, OperationPage page);

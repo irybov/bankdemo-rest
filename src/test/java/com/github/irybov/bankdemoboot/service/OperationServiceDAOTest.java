@@ -8,7 +8,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+//import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -65,16 +65,18 @@ class OperationServiceDAOTest {
 	}
 	
 	@Test
-	void create_and_save_operation() {
+	void can_create_entity() {
 		
+		String currency = "SEA";		
 		when(builder.build()).thenReturn(operation);
-		operationService.deposit(new Random().nextDouble(), anyString(), "^[A-Z]{3}",
-				new Random().nextInt());
-		operationService.withdraw(new Random().nextDouble(), anyString(), "^[A-Z]{3}",
-				new Random().nextInt());
-		operationService.transfer(new Random().nextDouble(), anyString(), "^[A-Z]{3}",
-				new Random().nextInt(), new Random().nextInt());
-		verify(operationDAO, times(3)).save(any(Operation.class));
+		
+		assertThat(operationService.deposit(new Random().nextDouble(), currency, "^[A-Z]{3}",
+				new Random().nextInt())).hasSameClassAs(operation);
+		assertThat(operationService.withdraw(new Random().nextDouble(), currency, "^[A-Z]{3}",
+				new Random().nextInt())).hasSameClassAs(operation);
+		assertThat(operationService.transfer(new Random().nextDouble(), currency, "^[A-Z]{3}",
+				new Random().nextInt(), new Random().nextInt())).hasSameClassAs(operation);
+//		verify(operationDAO, times(3)).save(any(Operation.class));
 	}
 	
 	@Test

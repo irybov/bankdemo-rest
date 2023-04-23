@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+//import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,51 +15,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.dao.OperationDAO;
 import com.github.irybov.bankdemoboot.entity.Operation;
-import com.github.irybov.bankdemoboot.model.OperationPage;
+//import com.github.irybov.bankdemoboot.model.OperationPage;
 
 @Service
-@Transactional
+//@Transactional
 public class OperationServiceDAO implements OperationService {
 
 	@Autowired
 	private OperationDAO operationDAO;
-	
-	public void transfer(double amount, String action, String currency, int sender, int recipient) {
-		
-		Operation operation = Operation.builder()
-				.amount(amount)
-				.action(action)
-				.currency(currency)
-				.sender(sender)
-				.recipient(recipient)
-				.createdAt(OffsetDateTime.now())
-				.build();
-		operationDAO.save(operation);
-	}
-	
-	public void deposit(double amount, String action, String currency, int recipient) {
-		
-		Operation operation = Operation.builder()
-				.amount(amount)
-				.action(action)
-				.currency(currency)
-				.recipient(recipient)
-				.createdAt(OffsetDateTime.now())
-				.build();
-		operationDAO.save(operation);
-	}
-	
-	public void withdraw(double amount, String action, String currency, int sender) {
-		
-		Operation operation = Operation.builder()
-				.amount(amount)
-				.action(action)
-				.currency(currency)
-				.sender(sender)
-				.createdAt(OffsetDateTime.now())
-				.build();
-		operationDAO.save(operation);
-	}
 	
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public Operation getOne(long id) {
@@ -75,7 +38,7 @@ public class OperationServiceDAO implements OperationService {
 				.map(OperationResponseDTO::new)
 				.collect(Collectors.toList());
 	}
-/*	@Transactional(readOnly = true)
+/*	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public Page<OperationResponseDTO> getPage(int id, OperationPage page) {		
 		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize());
 		return operationDAO.getPage(id, pageable).map(OperationResponseDTO::new);

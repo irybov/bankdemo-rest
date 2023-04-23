@@ -13,7 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.dao.BillDAO;
+import com.github.irybov.bankdemoboot.dao.OperationDAO;
 import com.github.irybov.bankdemoboot.entity.Bill;
+import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.exception.PaymentException;
 
 @Service
@@ -24,6 +26,8 @@ public class BillServiceDAO implements BillService {
 //	BillServiceDAO billService;
 	@Autowired
 	private BillDAO billDAO;
+	@Autowired
+	private OperationDAO operationDAO;
 	
 	@Transactional(propagation = Propagation.MANDATORY)
 	public void saveBill(Bill bill) {
@@ -52,39 +56,46 @@ public class BillServiceDAO implements BillService {
 		return new BillResponseDTO(getBill(id));
 	}
 	
-	public String deposit(int id, double amount) throws Exception {
-		
+	public void deposit(Operation operation) throws Exception {
+
+		double amount = operation.getAmount();
 		if(amount < 0.01) {
 			throw new PaymentException("Amount of money should be higher than zero");
 		}		
 		
+		int id = operation.getRecipient();
 		Bill bill = getBill(id);
 		bill.setBalance(bill.getBalance().add(BigDecimal.valueOf(amount)));
 		updateBill(bill);
-		return bill.getCurrency();
+		operationDAO.save(operation);
 	}
 	
-	public String withdraw(int id, double amount) throws Exception {
+	public void withdraw(Operation operation) throws Exception {
 		
+		double amount = operation.getAmount();
 		if(amount < 0.01) {
 			throw new PaymentException("Amount of money should be higher than zero");
 		}
 		
+		int id = operation.getSender();
 		Bill bill = getBill(id);
 		if(bill.getBalance().compareTo(BigDecimal.valueOf(amount)) == -1) {
 			throw new PaymentException("Not enough money to complete operation");
 		}
 		bill.setBalance(bill.getBalance().subtract(BigDecimal.valueOf(amount)));
 		updateBill(bill);
-		return bill.getCurrency();
+		operationDAO.save(operation);
 	}
 	
-	public String transfer(int from, double amount, int to) throws Exception {
+	public void transfer(Operation operation) throws Exception {
 
+		double amount = operation.getAmount();
 		if(amount < 0.01) {
 			throw new PaymentException("Amount of money should be higher than zero");
 		}
 		
+		int from = operation.getSender();
+		int to = operation.getRecipient();
 		if(from == to) {
 			throw new PaymentException("Source and target bills should not be the same");
 		}		
@@ -101,9 +112,11 @@ public class BillServiceDAO implements BillService {
 			throw new PaymentException("Not enough money to complete operation");
 		}
 		
-		withdraw(from, amount);
-		deposit(to, amount);
-		return bill.getCurrency();
+		target.setBalance(target.getBalance().add(BigDecimal.valueOf(amount)));
+		bill.setBalance(bill.getBalance().subtract(BigDecimal.valueOf(amount)));
+		updateBill(target);
+		updateBill(bill);
+		operationDAO.save(operation);
 	}
 	
 	public boolean changeStatus(int id) {

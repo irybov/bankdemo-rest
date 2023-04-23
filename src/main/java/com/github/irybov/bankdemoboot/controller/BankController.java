@@ -37,6 +37,7 @@ import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 //import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
+import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.service.OperationService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -209,13 +210,13 @@ public class BankController extends BaseController {
 		}		
 		log.info("User {} performs {} operation with bill {}", phone, params.get("action"), id);
 		
-		String currency;
+		String currency = billService.getBillDTO(id).getCurrency();
 		switch(params.get("action")) {
 		case "deposit":
 			try {
-				currency = billService.deposit(id, Double.valueOf(params.get("amount")));
-				operationService.deposit
+				Operation operation = operationService.deposit
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id);
+				billService.deposit(operation);
 				log.info("{} has been added", params.get("amount"));
 			}
 			catch (Exception exc) {
@@ -230,9 +231,9 @@ public class BankController extends BaseController {
 			break;
 		case "withdraw":
 			try {
-				currency = billService.withdraw(id, Double.valueOf(params.get("amount")));
-				operationService.withdraw
+				Operation operation = operationService.withdraw
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id);
+				billService.withdraw(operation);
 				log.info("{} has been taken", params.get("amount"));
 			}
 			catch (Exception exc) {
@@ -247,9 +248,9 @@ public class BankController extends BaseController {
 			break;
 		case "transfer":
 			try {
-				currency = billService.transfer(id, Double.valueOf(params.get("amount")), target);
-				operationService.transfer
+				Operation operation = operationService.transfer
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, target);
+				billService.transfer(operation);
 				log.info("{} has been sent to bill {}", params.get("amount"), target);
 			}
 			catch (Exception exc) {
