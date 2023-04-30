@@ -1,5 +1,7 @@
 package com.github.irybov.bankdemoboot.controller;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -35,13 +37,19 @@ public class MegaController {
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@PutMapping("/control")
-	public String changeServiceImpl(@RequestParam String impl) {
+	public String changeServiceImpl(@RequestParam String impl, HttpServletResponse response) {
 		
-		details.setServiceImpl(impl);
-		String bean = auth.setServiceImpl(impl);
-		log.info("Admin {} has switched services impementation to {}",
-				authentication().getName(), impl);
-		return "Services impementation has been switched to " + bean;
+		if(impl.equals("JPA") || impl.equals("DAO")) {
+		
+			details.setServiceImpl(impl);
+			String bean = auth.setServiceImpl(impl);
+			log.info("Admin {} has switched services impementation to {}",
+					authentication().getName(), impl);
+			return "Services impementation has been switched to " + bean;
+		}
+		else {response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return "Wrong implementation type, retry";
+		}
 	}
 	
 }

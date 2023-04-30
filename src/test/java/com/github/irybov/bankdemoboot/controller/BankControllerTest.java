@@ -52,8 +52,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.OperationRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.entity.Bill;
@@ -350,7 +352,7 @@ class BankControllerTest {
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
 														.param("recipient", "XXX")
-													    .param("id", "0")
+//													    .param("id", "0")
 													    .param("action", "transfer")
 													    .param("balance", "0.00")
 						)
@@ -372,12 +374,13 @@ class BankControllerTest {
 		doNothing().when(billService).deposit(operation);
 		doNothing().when(billService).withdraw(operation);
 		doNothing().when(billService).transfer(operation);
+		doNothing().when(billService).external(operation);
 		when(operationService.deposit(anyDouble(), anyString(), anyString(), anyInt())).thenReturn(operation);
 		when(operationService.withdraw(anyDouble(), anyString(), anyString(), anyInt())).thenReturn(operation);
 		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt())).thenReturn(operation);
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-													    .param("id", "0")
+//													    .param("id", "0")
 													    .param("action", "deposit")
 													    .param("balance", "0.00")
 													    .param("amount", "0.00")
@@ -386,7 +389,7 @@ class BankControllerTest {
 			.andExpect(redirectedUrl("/accounts/show/" + phone));
 				
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-													    .param("id", "0")
+//													    .param("id", "0")
 													    .param("action", "withdraw")
 													    .param("balance", "0.00")
 													    .param("amount", "0.00")
@@ -395,7 +398,7 @@ class BankControllerTest {
 			.andExpect(redirectedUrl("/accounts/show/" + phone));
 				
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-														.param("id", "0")
+//														.param("id", "0")
 														.param("action", "transfer")
 														.param("balance", "0.00")
 														.param("amount", "0.00")
@@ -403,13 +406,22 @@ class BankControllerTest {
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/accounts/show/" + phone));
 		
+		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "USD", 0.01);
+		mockMVC.perform(patch("/bills/external")
+												.contentType(MediaType.APPLICATION_JSON)
+												.content(new ObjectMapper().writeValueAsString(dto))
+						)
+			.andExpect(status().isOk())
+			.andExpect(content().string(containsString("Successful")));
+		
 		verify(billService, times(3)).getBillDTO(anyInt());
 		verify(billService).deposit(operation);
 		verify(billService).withdraw(operation);
 		verify(billService).transfer(operation);
+		verify(billService).external(operation);
 		verify(operationService).deposit(anyDouble(), anyString(), anyString(), anyInt());
 		verify(operationService).withdraw(anyDouble(), anyString(), anyString(), anyInt());
-		verify(operationService).transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt());
+		verify(operationService, times(2)).transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt());
 	}
 	
 	@Test
@@ -429,7 +441,7 @@ class BankControllerTest {
 			.when(billService).transfer(operation);
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-													    .param("id", "0")
+//													    .param("id", "0")
 													    .param("action", "deposit")
 													    .param("balance", "0.00")
 													    .param("amount", "0.00")
@@ -443,7 +455,7 @@ class BankControllerTest {
 				.andExpect(view().name("/bill/payment"));
 				
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-													    .param("id", "0")
+//													    .param("id", "0")
 													    .param("action", "withdraw")
 													    .param("balance", "0.00")
 													    .param("amount", "0.00")
@@ -457,7 +469,7 @@ class BankControllerTest {
 				.andExpect(view().name("/bill/payment"));
 				
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-														.param("id", "0")
+//														.param("id", "0")
 														.param("action", "transfer")
 														.param("balance", "0.00")
 														.param("amount", "0.00")
@@ -469,6 +481,14 @@ class BankControllerTest {
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
 				.andExpect(view().name("/bill/transfer"));
+		
+		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "USD", 0.00);
+		mockMVC.perform(patch("/bills/external")
+												.contentType(MediaType.APPLICATION_JSON)
+												.content(new ObjectMapper().writeValueAsString(dto))
+						)
+			.andExpect(status().isBadRequest())
+			.andExpect(content().string(containsString("Amount of money should be higher than zero")));		
 
 		verify(operationService).deposit(anyDouble(), anyString(), anyString(), anyInt());
 		verify(operationService).withdraw(anyDouble(), anyString(), anyString(), anyInt());
@@ -493,7 +513,7 @@ class BankControllerTest {
 			.when(billService).transfer(operation);
 				
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-													    .param("id", "0")
+//													    .param("id", "0")
 													    .param("action", "withdraw")
 													    .param("balance", "0.00")
 													    .param("amount", "0.01")
@@ -507,7 +527,7 @@ class BankControllerTest {
 				.andExpect(view().name("/bill/payment"));
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-														.param("id", "0")
+//														.param("id", "0")
 														.param("action", "transfer")
 														.param("balance", "0.00")
 														.param("amount", "0.01")
@@ -526,7 +546,7 @@ class BankControllerTest {
 		verify(billService).withdraw(operation);
 		verify(billService).transfer(operation);
 	}
-	
+
 	@Test
 	void bills_id_match_exception() throws Exception {
 		
@@ -536,9 +556,11 @@ class BankControllerTest {
 		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt())).thenReturn(operation);
 		doThrow(new PaymentException("Source and target bills should not be the same"))
 			.when(billService).transfer(operation);
+		doThrow(new PaymentException("Source and target bills should not be the same"))
+		.when(billService).external(operation);
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-													    .param("id", "0")
+//													    .param("id", "0")
 													    .param("action", "transfer")
 													    .param("balance", "0.00")
 													    .param("amount", "0.00")
@@ -550,10 +572,19 @@ class BankControllerTest {
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Source and target bills should not be the same"))
 				.andExpect(view().name("/bill/transfer"));
+		
+		OperationRequestDTO dto = new OperationRequestDTO(777, 777, "USD", 0.01);
+		mockMVC.perform(patch("/bills/external")
+												.contentType(MediaType.APPLICATION_JSON)
+												.content(new ObjectMapper().writeValueAsString(dto))
+						)
+			.andExpect(status().isInternalServerError())
+			.andExpect(content().string(containsString("Source and target bills should not be the same")));	
 
-		verify(operationService).transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt());
+		verify(operationService, times(2)).transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt());
 		verify(billService).getBillDTO(anyInt());
 		verify(billService).transfer(operation);
+		verify(billService).external(operation);
 	}
 	
 	@Test
@@ -565,10 +596,12 @@ class BankControllerTest {
 		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt())).thenReturn(operation);
 		doThrow(new PaymentException("Wrong currency type of the target bill"))
 			.when(billService).transfer(operation);
+		doThrow(new PaymentException("Wrong currency type of the target bill"))
+		.when(billService).external(operation);
 				
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
 														.param("recipient", "1")
-														.param("id", "0")
+//														.param("id", "0")
 														.param("action", "transfer")
 														.param("balance", "0.01")
 														.param("amount", "0.01")
@@ -580,10 +613,33 @@ class BankControllerTest {
 				.andExpect(model().attribute("balance", "0.01"))
 				.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
 				.andExpect(view().name("/bill/transfer"));
+		
+		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "SEA", 0.01);
+		mockMVC.perform(patch("/bills/external")
+												.contentType(MediaType.APPLICATION_JSON)
+												.content(new ObjectMapper().writeValueAsString(dto))
+						)
+			.andExpect(status().isInternalServerError())
+			.andExpect(content().string(containsString("Wrong currency type of the target bill")));	
 
-		verify(operationService).transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt());
+		verify(operationService, times(2)).transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt());
 		verify(billService).getBillDTO(anyInt());
 		verify(billService).transfer(operation);
+		verify(billService).external(operation);
+	}
+	
+	@Test
+	void constraint_violation_exception() throws Exception {
+		
+		OperationRequestDTO dto = new OperationRequestDTO(1_000_000_000, -1, "yuan", 0.01);
+		mockMVC.perform(patch("/bills/external")
+												.contentType(MediaType.APPLICATION_JSON)
+												.content(new ObjectMapper().writeValueAsString(dto))
+						)
+			.andExpect(status().isBadRequest())
+			.andExpect(content().string(containsString("Sender's bill number should be less than 10 digits length")))
+			.andExpect(content().string(containsString("Recepient's bill number should be positive number")))
+			.andExpect(content().string(containsString("Currency code should be 3 capital characters length")));		
 	}
 	
 	@AfterEach

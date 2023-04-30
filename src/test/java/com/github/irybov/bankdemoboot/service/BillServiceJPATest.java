@@ -220,7 +220,7 @@ class BillServiceJPATest {
 		
 		verify(operationRepository).save(operation);
 	}
-	
+
 	@Test
 	void transfer_source_matches_target() {
 		

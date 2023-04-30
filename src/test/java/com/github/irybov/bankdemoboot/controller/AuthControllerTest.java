@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -37,6 +38,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.Validator;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.entity.Account;
@@ -158,18 +161,18 @@ class AuthControllerTest {
 	void accepted_registration() throws Exception {
 		
 		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
-		accountRequestDTO.setBirthday("2001-01-01");
+//		accountRequestDTO.setBirthday("2001-01-01");
+		accountRequestDTO.setBirthday(LocalDate.of(2001, 01, 01));
 		accountRequestDTO.setName("Admin");
 		accountRequestDTO.setPassword("superadmin");
 		accountRequestDTO.setPhone("0000000000");
 		accountRequestDTO.setSurname("Adminov");
 		
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
 		mockMVC.perform(post("/confirm").with(csrf())
-									 .param("birthday", accountRequestDTO.getBirthday())
-									 .param("name", accountRequestDTO.getName())
-									 .param("password", accountRequestDTO.getPassword())
-									 .param("phone", accountRequestDTO.getPhone())
-									 .param("surname", accountRequestDTO.getSurname())
+								.contentType(MediaType.APPLICATION_JSON)
+								.content(mapper.writeValueAsString(accountRequestDTO))
 					)
 			.andExpect(status().isCreated())
 			.andExpect(view().name("/auth/login"));
@@ -185,12 +188,11 @@ class AuthControllerTest {
 		accountRequestDTO.setPhone("xxx");
 		accountRequestDTO.setSurname("a");
 		
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
 		mockMVC.perform(post("/confirm").with(csrf())
-									 .param("birthday", accountRequestDTO.getBirthday())
-									 .param("name", accountRequestDTO.getName())
-									 .param("password", accountRequestDTO.getPassword())
-									 .param("phone", accountRequestDTO.getPhone())
-									 .param("surname", accountRequestDTO.getSurname())
+								.contentType(MediaType.APPLICATION_JSON)
+								.content(mapper.writeValueAsString(accountRequestDTO))
 					)
 			.andExpect(status().isBadRequest())
 	        .andExpect(model().size(1))
@@ -202,7 +204,7 @@ class AuthControllerTest {
 	void interrupted_registration() throws Exception {
 		
 		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
-		accountRequestDTO.setBirthday(LocalDate.now().minusYears(10L).toString());
+		accountRequestDTO.setBirthday(LocalDate.now().minusYears(10L));
 		accountRequestDTO.setName("Admin");
 		accountRequestDTO.setPassword("superadmin");
 		accountRequestDTO.setPhone("0000000000");
@@ -211,12 +213,11 @@ class AuthControllerTest {
 		doThrow(new RegistrationException("You must be 18+ to register"))
 		.when(accountService).saveAccount(refEq(accountRequestDTO));
 		
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
 		mockMVC.perform(post("/confirm").with(csrf())
-									 .param("birthday", accountRequestDTO.getBirthday())
-									 .param("name", accountRequestDTO.getName())
-									 .param("password", accountRequestDTO.getPassword())
-									 .param("phone", accountRequestDTO.getPhone())
-									 .param("surname", accountRequestDTO.getSurname())
+								.contentType(MediaType.APPLICATION_JSON)
+								.content(mapper.writeValueAsString(accountRequestDTO))
 					)
 			.andExpect(status().isConflict())
 	        .andExpect(model().size(2))
@@ -231,7 +232,8 @@ class AuthControllerTest {
 	void violated_registration() throws Exception {
 		
 		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
-		accountRequestDTO.setBirthday("2001-01-01");
+//		accountRequestDTO.setBirthday("2001-01-01");
+		accountRequestDTO.setBirthday(LocalDate.of(2001, 01, 01));
 		accountRequestDTO.setName("Admin");
 		accountRequestDTO.setPassword("superadmin");
 		accountRequestDTO.setPhone("0000000000");
@@ -240,12 +242,11 @@ class AuthControllerTest {
 		doThrow(new RuntimeException("This number is already in use."))
 		.when(accountService).saveAccount(refEq(accountRequestDTO));
 		
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
 		mockMVC.perform(post("/confirm").with(csrf())
-									 .param("birthday", accountRequestDTO.getBirthday())
-									 .param("name", accountRequestDTO.getName())
-									 .param("password", accountRequestDTO.getPassword())
-									 .param("phone", accountRequestDTO.getPhone())
-									 .param("surname", accountRequestDTO.getSurname())
+								.contentType(MediaType.APPLICATION_JSON)
+								.content(mapper.writeValueAsString(accountRequestDTO))
 					)
 			.andExpect(status().isConflict())
 	        .andExpect(model().size(2))

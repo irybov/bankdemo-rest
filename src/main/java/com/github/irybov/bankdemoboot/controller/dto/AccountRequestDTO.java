@@ -1,5 +1,7 @@
 package com.github.irybov.bankdemoboot.controller.dto;
 
+import java.time.LocalDate;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -37,7 +39,7 @@ public class AccountRequestDTO {
 	@JsonProperty("birthday")
 	@NotNull(message = "Please select your date of birth")
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-	private String birthday;
+	private LocalDate birthday;
 
 	@JsonProperty("password")
 	@NotBlank(message = "Password must not be empty")

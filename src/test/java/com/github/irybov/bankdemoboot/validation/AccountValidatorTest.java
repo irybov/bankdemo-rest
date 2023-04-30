@@ -5,6 +5,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
+
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
@@ -62,7 +64,8 @@ class AccountValidatorTest {
 	void check_dto_validation() {
 		
 		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
-		accountRequestDTO.setBirthday("2001-01-01");
+//		accountRequestDTO.setBirthday("2001-01-01");
+		accountRequestDTO.setBirthday(LocalDate.of(2001, 01, 01));
 		accountRequestDTO.setName("Admin");
 		accountRequestDTO.setPassword("superadmin");
 		accountRequestDTO.setPhone(phone);
@@ -72,7 +75,8 @@ class AccountValidatorTest {
 				
 		when(accountService.getPhone(accountRequestDTO.getPhone())).thenReturn(null);
 		accountValidator.validate(accountRequestDTO, errors);
-		assertFalse(errors.hasErrors());		
+		assertFalse(errors.hasErrors());
+		
 		when(accountService.getPhone(accountRequestDTO.getPhone())).thenReturn(phone);
 		accountValidator.validate(accountRequestDTO, errors);
 		assertTrue(errors.hasFieldErrors("phone"));

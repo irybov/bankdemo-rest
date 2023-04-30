@@ -96,7 +96,7 @@ public class BillServiceJPA implements BillService {
 		Bill bill = getBill(from);
 		if(!bill.getCurrency().equals(target.getCurrency())){
 			throw new PaymentException("Wrong currency type of the target bill");
-		}		
+		}
 		if(bill.getBalance().compareTo(BigDecimal.valueOf(amount)) == -1) {
 			throw new PaymentException("Not enough money to complete operation");
 		}
@@ -105,6 +105,24 @@ public class BillServiceJPA implements BillService {
 		bill.setBalance(bill.getBalance().subtract(BigDecimal.valueOf(amount)));
 		updateBill(target);
 		updateBill(bill);
+		operationRepository.save(operation);
+	}
+	
+	public void external(Operation operation) throws Exception {
+		
+		double amount = operation.getAmount();
+		if(amount < 0.01) throw new PaymentException("Amount of money should be higher than zero");
+		
+		int from = operation.getSender();
+		int to = operation.getRecipient();
+		if(from == to) throw new PaymentException("Source and target bills should not be the same");
+		
+		Bill target = getBill(to);
+		if(!operation.getCurrency().equals(target.getCurrency())){
+			throw new PaymentException("Wrong currency type of the target bill");
+		}
+		target.setBalance(target.getBalance().add(BigDecimal.valueOf(amount)));
+		updateBill(target);
 		operationRepository.save(operation);
 	}
 	

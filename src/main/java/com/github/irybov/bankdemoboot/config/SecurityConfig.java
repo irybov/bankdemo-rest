@@ -68,7 +68,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			.anyRequest().authenticated()
 				.and()
 		    .csrf()
-		    .ignoringAntMatchers("/control")
+		    .ignoringAntMatchers("/control", "/bills/external")
 		        .and()
 			.formLogin()
 			.usernameParameter("phone")
@@ -88,7 +88,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
             .deleteCookies("JSESSIONID")
 			.logoutSuccessUrl("/home")
 			.permitAll();
-//		http.csrf().disable();
 //		http.headers().frameOptions().disable();
 	}
 	

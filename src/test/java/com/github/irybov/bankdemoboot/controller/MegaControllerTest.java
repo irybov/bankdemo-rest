@@ -43,6 +43,26 @@ class MegaControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(content()
 					.string(containsString("Services impementation has been switched to " + bean)));
+		
+		impl = "JPA";
+		bean = "AccountServicePJA";
+		doNothing().when(details).setServiceImpl(impl);
+		when(auth.setServiceImpl(impl)).thenReturn(bean);
+		mockMVC.perform(put("/control").with(csrf()).param("impl", impl))
+				.andExpect(status().isOk())
+				.andExpect(content()
+					.string(containsString("Services impementation has been switched to " + bean)));
+	}
+	
+	@WithMockUser(username = "0000000000", roles = "ADMIN")
+	@Test
+	void wrong_implementation_type() throws Exception {
+		
+		String impl = "XXX";
+		mockMVC.perform(put("/control").with(csrf()).param("impl", impl))
+				.andExpect(status().isBadRequest())
+				.andExpect(content()
+					.string(containsString("Wrong implementation type, retry")));
 	}
 
 }

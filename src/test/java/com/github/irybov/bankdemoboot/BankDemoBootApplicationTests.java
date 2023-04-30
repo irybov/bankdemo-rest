@@ -41,8 +41,10 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.OperationRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
@@ -540,7 +542,7 @@ public class BankDemoBootApplicationTests {
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 										.param("recipient", "XXX")
-									    .param("id", "1")
+//									    .param("id", "1")
 									    .param("action", "transfer")
 									    .param("balance", "10.00")
 					)
@@ -557,7 +559,7 @@ public class BankDemoBootApplicationTests {
 		void successful_payment() throws Exception {
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
-									    .param("id", "1")
+//									    .param("id", "1")
 									    .param("action", "deposit")
 									    .param("balance", "10.00")
 									    .param("amount", "10.00")
@@ -566,20 +568,28 @@ public class BankDemoBootApplicationTests {
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
-									    .param("id", "1")
+//									    .param("id", "1")
 									    .param("action", "withdraw")
 									    .param("balance", "20.00")
 									    .param("amount", "20.00")
 					)
 					.andExpect(status().is3xxRedirection())
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
+			
+			OperationRequestDTO dto = new OperationRequestDTO(777, 2, "SEA", 0.01);
+			mockMVC.perform(patch("/bills/external")
+													.contentType(MediaType.APPLICATION_JSON)
+													.content(new ObjectMapper().writeValueAsString(dto))
+							)
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("Successful")));
 		}
 		
 		@Test
 		void zero_amount_exception() throws Exception {
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
-								    .param("id", "1")
+//								    .param("id", "1")
 								    .param("action", "deposit")
 								    .param("balance", "10.00")
 								    .param("amount", "0.00")
@@ -593,7 +603,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(view().name("/bill/payment"));
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
-								    .param("id", "1")
+//								    .param("id", "1")
 								    .param("action", "withdraw")
 								    .param("balance", "10.00")
 								    .param("amount", "0.00")
@@ -605,13 +615,21 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
 				.andExpect(view().name("/bill/payment"));
+			
+			OperationRequestDTO dto = new OperationRequestDTO(777, 2, "SEA", 0.00);
+			mockMVC.perform(patch("/bills/external")
+													.contentType(MediaType.APPLICATION_JSON)
+													.content(new ObjectMapper().writeValueAsString(dto))
+							)
+				.andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString("Amount of money should be higher than zero")));	
 		}
 		
 		@Test
 		void negative_balance_exception() throws Exception {
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
-								    .param("id", "1")
+//								    .param("id", "1")
 								    .param("action", "withdraw")
 								    .param("balance", "10.00")
 								    .param("amount", "10.01")
@@ -630,7 +648,7 @@ public class BankDemoBootApplicationTests {
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 				    			.param("recipient", "1")
-							    .param("id", "0")
+//							    .param("id", "1")
 							    .param("action", "transfer")
 							    .param("balance", "10.00")
 							    .param("amount", "10.00")
@@ -641,7 +659,15 @@ public class BankDemoBootApplicationTests {
 			.andExpect(model().attribute("action", "transfer"))
 			.andExpect(model().attribute("balance", "10.00"))
 			.andExpect(model().attribute("message", "Source and target bills should not be the same"))
-			.andExpect(view().name("/bill/transfer"));			
+			.andExpect(view().name("/bill/transfer"));
+			
+			OperationRequestDTO dto = new OperationRequestDTO(777, 777, "SEA", 0.01);
+			mockMVC.perform(patch("/bills/external")
+													.contentType(MediaType.APPLICATION_JSON)
+													.content(new ObjectMapper().writeValueAsString(dto))
+							)
+				.andExpect(status().isInternalServerError())
+				.andExpect(content().string(containsString("Source and target bills should not be the same")));
 		}
 		
 		@Test
@@ -649,7 +675,7 @@ public class BankDemoBootApplicationTests {
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 										.param("recipient", "2")
-										.param("id", "1")
+//										.param("id", "1")
 										.param("action", "transfer")
 										.param("balance", "10.00")
 										.param("amount", "10.00")
@@ -661,6 +687,20 @@ public class BankDemoBootApplicationTests {
 					.andExpect(model().attribute("balance", "10.00"))
 					.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
 					.andExpect(view().name("/bill/transfer"));			
+		}
+		
+		@Test
+		void constraint_violation_exception() throws Exception {
+			
+			OperationRequestDTO dto = new OperationRequestDTO(1_000_000_000, -1, "yuan", 0.01);
+			mockMVC.perform(patch("/bills/external")
+													.contentType(MediaType.APPLICATION_JSON)
+													.content(new ObjectMapper().writeValueAsString(dto))
+							)
+				.andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString("Sender's bill number should be less than 10 digits length")))
+				.andExpect(content().string(containsString("Recepient's bill number should be positive number")))
+				.andExpect(content().string(containsString("Currency code should be 3 capital characters length")));		
 		}
 		
 	}
@@ -687,6 +727,17 @@ public class BankDemoBootApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(content()
 					.string(containsString("Services impementation has been switched to " + bean)));
+		}
+		
+		
+		@Test
+		void wrong_implementation_type() throws Exception {
+			
+			String impl = "XXX";
+			mockMVC.perform(put("/control").with(csrf()).param("impl", impl))
+					.andExpect(status().isBadRequest())
+					.andExpect(content()
+						.string(containsString("Wrong implementation type, retry")));
 		}
 		
 	}

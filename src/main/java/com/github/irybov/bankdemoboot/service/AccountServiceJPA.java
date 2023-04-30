@@ -45,13 +45,13 @@ public class AccountServiceJPA implements AccountService {
 	
 	public void saveAccount(AccountRequestDTO accountRequestDTO) throws Exception {
 		
-		LocalDate birthday = LocalDate.parse(accountRequestDTO.getBirthday());
-		if (LocalDate.from(birthday).until(LocalDate.now(), ChronoUnit.YEARS) < 18) {
+//		LocalDate birthday = LocalDate.parse(accountRequestDTO.getBirthday());
+		if (accountRequestDTO.getBirthday().until(LocalDate.now(), ChronoUnit.YEARS) < 18) {
 			throw new RegistrationException("You must be 18+ to register");
 		}
 		
 		Account account = new Account(accountRequestDTO.getName(), accountRequestDTO.getSurname(),
-				accountRequestDTO.getPhone(), birthday,
+				accountRequestDTO.getPhone(), accountRequestDTO.getBirthday(),
 				bCryptPasswordEncoder.encode(accountRequestDTO.getPassword()), true);
 		account.addRole(Role.CLIENT);
 		try {

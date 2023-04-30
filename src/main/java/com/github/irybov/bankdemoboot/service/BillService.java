@@ -16,6 +16,7 @@ public interface BillService {
 	public void deposit(Operation operation) throws Exception;
 	public void withdraw(Operation operation) throws Exception;
 	public void transfer(Operation operation) throws Exception;
+	public void external(Operation operation) throws Exception;
 	public boolean changeStatus(int id);
 	public BillResponseDTO getBillDTO(int id) throws EntityNotFoundException;
 	public List<BillResponseDTO> getAll(int id);

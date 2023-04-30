@@ -230,7 +230,8 @@ class AccountServiceJPATest {
 	void save_and_verify_identity() {
 
 		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
-		accountRequestDTO.setBirthday("2001-01-01");
+//		accountRequestDTO.setBirthday("2001-01-01");
+		accountRequestDTO.setBirthday(LocalDate.of(2001, 01, 01));
 		accountRequestDTO.setName("Admin");
 		accountRequestDTO.setPassword("superadmin");
 		accountRequestDTO.setPhone("0000000000");
@@ -258,7 +259,7 @@ class AccountServiceJPATest {
 	void save_and_catch_exceptions() {
 		
 		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
-		accountRequestDTO.setBirthday(LocalDate.now().minusYears(10L).toString());
+		accountRequestDTO.setBirthday(LocalDate.now().minusYears(10L));
 		accountRequestDTO.setName("Admin");
 		accountRequestDTO.setPassword("superadmin");
 		accountRequestDTO.setPhone("0000000000");
@@ -267,7 +268,7 @@ class AccountServiceJPATest {
 		assertThatExceptionOfType(RegistrationException.class)
 		.isThrownBy(() -> {accountService.saveAccount(accountRequestDTO);});
 		
-		accountRequestDTO.setBirthday(LocalDate.now().minusYears(20L).toString());		
+		accountRequestDTO.setBirthday(LocalDate.now().minusYears(20L));		
 		doThrow(new DataIntegrityViolationException(null)).when(accountRepository).save(adminEntity);
 		
 		assertThatExceptionOfType(DataIntegrityViolationException.class)

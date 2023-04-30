@@ -218,7 +218,7 @@ class BillServiceDAOTest {
 		
 		verify(operationDAO).save(operation);
 	}
-	
+
 	@Test
 	void transfer_source_matches_target() {
 		

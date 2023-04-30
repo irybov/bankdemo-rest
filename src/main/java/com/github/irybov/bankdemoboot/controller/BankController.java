@@ -1,8 +1,9 @@
 package com.github.irybov.bankdemoboot.controller;
 
+import java.util.ArrayList;
 import java.util.Currency;
 import java.util.HashSet;
-//import java.util.List;
+import java.util.List;
 //import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
@@ -10,18 +11,25 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 //import org.springframework.data.domain.Page;
 //import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.CrossOrigin;
 //import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,12 +37,14 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 //import com.github.irybov.bankdemoboot.Currency;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.OperationRequestDTO;
 //import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 import com.github.irybov.bankdemoboot.entity.Operation;
@@ -60,10 +70,10 @@ public class BankController extends BaseController {
 	@Qualifier("operationServiceAlias")
 	private OperationService operationService;
 
-	private Set<Currency> currencies;
+	private final Set<Currency> currencies = new HashSet<>(4);
 	@PostConstruct
 	private void init() {
-		currencies = new HashSet<>();
+//		currencies = new HashSet<>();
 		Currency usd = Currency.getInstance("USD");
 		currencies.add(usd);
 		Currency eur = Currency.getInstance("EUR");
@@ -76,7 +86,8 @@ public class BankController extends BaseController {
 	
 	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping("/accounts/show/{phone}")
-	public String getAccount(@PathVariable String phone, ModelMap modelMap, HttpServletResponse response) {
+	public String getAccount(@PathVariable String phone, ModelMap modelMap,
+			HttpServletResponse response) {
 
 		String current = authentication().getName();
 		if(!current.equals(phone)) {
@@ -127,7 +138,8 @@ public class BankController extends BaseController {
 	@PreAuthorize("hasRole('CLIENT')")
 	@PostMapping("/bills/add")
 	@ResponseBody
-	public BillResponseDTO createBill(@RequestParam Map<String, String> params, HttpServletResponse response) {
+	public BillResponseDTO createBill(@RequestParam Map<String, String> params,
+			HttpServletResponse response) {
 
 		log.info("Client {} creates new {} bill", params.get("phone"), params.get("currency"));
 //		if(params.get("currency").isEmpty()) return "Please choose currency type";
@@ -191,7 +203,8 @@ public class BankController extends BaseController {
 	@PreAuthorize("hasRole('CLIENT')")
 	@PatchMapping("/bills/launch/{id}")
 	public String driveMoney(@PathVariable int id, @RequestParam(required=false) String recipient,
-			@RequestParam Map<String, String> params, ModelMap modelMap, HttpServletResponse response) {
+			@RequestParam Map<String, String> params, ModelMap modelMap,
+			HttpServletResponse response) {
 		
 		String phone = authentication().getName();
 		int target = 0;
@@ -265,6 +278,40 @@ public class BankController extends BaseController {
 			break;			
 		}
 		return "redirect:/accounts/show/" + phone;
+	}
+	
+	@CrossOrigin
+	@PatchMapping("/bills/external")
+//	@ResponseBody
+//	public String outerIncome(String sender, String recipient, String currency, double amount,
+//			HttpServletResponse response) {
+	public ResponseEntity<?> outerIncome(@RequestBody OperationRequestDTO dto) {	
+		
+		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+		Validator validator = factory.getValidator();
+		Set<ConstraintViolation<OperationRequestDTO>> violations = validator.validate(dto);		
+		if(!violations.isEmpty()) {
+//			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			List<String> messages = new ArrayList<>();
+			for (ConstraintViolation<OperationRequestDTO> violation : violations) {
+				messages.add(violation.getMessage());
+			}			
+			return new ResponseEntity<List<String>>(messages, HttpStatus.BAD_REQUEST);
+		}
+		
+		try {
+			Operation operation = operationService.transfer
+			(dto.getAmount(), "external", dto.getCurrency(), dto.getSender(), dto.getRecipient());
+			billService.external(operation);
+			log.info("{} has been sent to bill {}", operation.getAmount(), operation.getRecipient());
+		}
+		catch (Exception exc) {
+			log.warn(exc.getMessage(), exc);
+//			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<String>(exc.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+//		response.setStatus(HttpServletResponse.SC_OK);
+		return new ResponseEntity<String>("Successful", HttpStatus.OK);
 	}
 	
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
