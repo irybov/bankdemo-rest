@@ -30,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -38,8 +37,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.Validator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.entity.Account;
@@ -167,13 +164,8 @@ class AuthControllerTest {
 		accountRequestDTO.setPassword("superadmin");
 		accountRequestDTO.setPhone("0000000000");
 		accountRequestDTO.setSurname("Adminov");
-		
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.registerModule(new JavaTimeModule());
-		mockMVC.perform(post("/confirm").with(csrf())
-								.contentType(MediaType.APPLICATION_JSON)
-								.content(mapper.writeValueAsString(accountRequestDTO))
-					)
+
+		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequestDTO))
 			.andExpect(status().isCreated())
 			.andExpect(view().name("/auth/login"));
 	}
@@ -187,13 +179,8 @@ class AuthControllerTest {
 		accountRequestDTO.setPassword("superb");
 		accountRequestDTO.setPhone("xxx");
 		accountRequestDTO.setSurname("a");
-		
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.registerModule(new JavaTimeModule());
-		mockMVC.perform(post("/confirm").with(csrf())
-								.contentType(MediaType.APPLICATION_JSON)
-								.content(mapper.writeValueAsString(accountRequestDTO))
-					)
+
+		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequestDTO))
 			.andExpect(status().isBadRequest())
 	        .andExpect(model().size(1))
 	        .andExpect(model().attributeExists("account"))
@@ -212,13 +199,8 @@ class AuthControllerTest {
 		
 		doThrow(new RegistrationException("You must be 18+ to register"))
 		.when(accountService).saveAccount(refEq(accountRequestDTO));
-		
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.registerModule(new JavaTimeModule());
-		mockMVC.perform(post("/confirm").with(csrf())
-								.contentType(MediaType.APPLICATION_JSON)
-								.content(mapper.writeValueAsString(accountRequestDTO))
-					)
+
+		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequestDTO))
 			.andExpect(status().isConflict())
 	        .andExpect(model().size(2))
 	        .andExpect(model().attributeExists("account"))
@@ -241,13 +223,8 @@ class AuthControllerTest {
 		
 		doThrow(new RuntimeException("This number is already in use."))
 		.when(accountService).saveAccount(refEq(accountRequestDTO));
-		
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.registerModule(new JavaTimeModule());
-		mockMVC.perform(post("/confirm").with(csrf())
-								.contentType(MediaType.APPLICATION_JSON)
-								.content(mapper.writeValueAsString(accountRequestDTO))
-					)
+
+		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequestDTO))
 			.andExpect(status().isConflict())
 	        .andExpect(model().size(2))
 	        .andExpect(model().attributeExists("account"))

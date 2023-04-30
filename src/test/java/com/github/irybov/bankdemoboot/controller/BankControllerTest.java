@@ -83,6 +83,8 @@ class BankControllerTest {
 	private AccountDetailsService accountDetailsService;
 	@Autowired
 	private MockMvc mockMVC;
+	@Autowired
+	private ObjectMapper mapper;
 	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
@@ -409,7 +411,7 @@ class BankControllerTest {
 		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "USD", 0.01);
 		mockMVC.perform(patch("/bills/external")
 												.contentType(MediaType.APPLICATION_JSON)
-												.content(new ObjectMapper().writeValueAsString(dto))
+												.content(mapper.writeValueAsString(dto))
 						)
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("Successful")));
@@ -485,7 +487,7 @@ class BankControllerTest {
 		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "USD", 0.00);
 		mockMVC.perform(patch("/bills/external")
 												.contentType(MediaType.APPLICATION_JSON)
-												.content(new ObjectMapper().writeValueAsString(dto))
+												.content(mapper.writeValueAsString(dto))
 						)
 			.andExpect(status().isBadRequest())
 			.andExpect(content().string(containsString("Amount of money should be higher than zero")));		
@@ -576,7 +578,7 @@ class BankControllerTest {
 		OperationRequestDTO dto = new OperationRequestDTO(777, 777, "USD", 0.01);
 		mockMVC.perform(patch("/bills/external")
 												.contentType(MediaType.APPLICATION_JSON)
-												.content(new ObjectMapper().writeValueAsString(dto))
+												.content(mapper.writeValueAsString(dto))
 						)
 			.andExpect(status().isInternalServerError())
 			.andExpect(content().string(containsString("Source and target bills should not be the same")));	
@@ -617,7 +619,7 @@ class BankControllerTest {
 		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "SEA", 0.01);
 		mockMVC.perform(patch("/bills/external")
 												.contentType(MediaType.APPLICATION_JSON)
-												.content(new ObjectMapper().writeValueAsString(dto))
+												.content(mapper.writeValueAsString(dto))
 						)
 			.andExpect(status().isInternalServerError())
 			.andExpect(content().string(containsString("Wrong currency type of the target bill")));	
@@ -634,7 +636,7 @@ class BankControllerTest {
 		OperationRequestDTO dto = new OperationRequestDTO(1_000_000_000, -1, "yuan", 0.01);
 		mockMVC.perform(patch("/bills/external")
 												.contentType(MediaType.APPLICATION_JSON)
-												.content(new ObjectMapper().writeValueAsString(dto))
+												.content(mapper.writeValueAsString(dto))
 						)
 			.andExpect(status().isBadRequest())
 			.andExpect(content().string(containsString("Sender's bill number should be less than 10 digits length")))
