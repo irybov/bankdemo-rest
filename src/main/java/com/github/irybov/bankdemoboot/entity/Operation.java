@@ -41,9 +41,11 @@ public class Operation {
 	private OffsetDateTime createdAt;
 	
 	@NotNull
+	@Column(updatable = false)
 	private Double amount;
 
 	@NotNull
+	@Column(updatable = false)
 	private String action;
 	
 	@NotNull

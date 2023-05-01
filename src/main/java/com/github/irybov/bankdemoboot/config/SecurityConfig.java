@@ -56,7 +56,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 
 		http
 			.authorizeRequests()
-			.antMatchers("/home", "/register", "/confirm", "/webjars/**", "/css/**", "/js/**")
+			.antMatchers("/login", "/register", "/confirm", "/webjars/**", "/css/**", "/js/**")
 			.permitAll()
 				.and()	
 			.authorizeRequests()
@@ -72,7 +72,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		        .and()
 			.formLogin()
 			.usernameParameter("phone")
-			.loginPage("/login")
+			.loginPage("/home")
 			.loginProcessingUrl("/auth")
 //			.successHandler((request, response, authentication) ->
 //			response.sendRedirect("/accounts/show/" + authentication.getName()))

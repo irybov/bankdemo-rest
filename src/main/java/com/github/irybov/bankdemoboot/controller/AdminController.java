@@ -368,6 +368,7 @@ public class AdminController extends BaseController {
         response.getWriter().print(file);*/
 	}
 
+	@PreAuthorize("hasRole('ADMIN')")
 	@Override
 	String setServiceImpl(String impl) {
 		// TODO Auto-generated method stub
