@@ -4,7 +4,7 @@ $(document).ready(function(){
 	$('#info_table tbody').empty();
     $.ajax({
         type: 'GET',
-        url: 'http://localhost:8080/bankdemo/operations/list/'+rowID,
+        url: '/bankdemo/operations/list/'+rowID,
         data: {
             "page": 0,
 //            "size": 5
@@ -53,7 +53,7 @@ $(document).ready(function(){
 		$('#info_table tbody').empty();
 	    $.ajax({
 	        type: 'GET',
-	        url: 'http://localhost:8080/bankdemo/operations/list/'+rowID,
+	        url: '/bankdemo/operations/list/'+rowID,
 	        data: {
 	            "page": startPage,
 	            "size": size,

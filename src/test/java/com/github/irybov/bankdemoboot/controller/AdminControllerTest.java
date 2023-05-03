@@ -273,10 +273,10 @@ class AdminControllerTest {
 		
 		List<OperationResponseDTO> operations = new ArrayList<>();
 		Operation operation = Operation.builder()
-				.amount(0.01)
-				.action("deposit")
+				.amount(0.00)
+				.action("infernal")
 				.currency("SEA")
-				.recipient(1)
+				.recipient(0)
 				.createdAt(OffsetDateTime.now())
 				.build();
 		operations.add(new OperationResponseDTO(operation));
@@ -286,7 +286,8 @@ class AdminControllerTest {
 		bill.setCreatedAt(OffsetDateTime.now());
 		BillResponseDTO fake = new BillResponseDTO(bill);
 		
-		CompletableFuture<List<OperationResponseDTO>> futureOperations = CompletableFuture.completedFuture(operations);
+		CompletableFuture<List<OperationResponseDTO>> futureOperations =
+				CompletableFuture.completedFuture(operations);
 		when(operationService.getAll(anyInt())).thenReturn(futureOperations.join());
 		CompletableFuture<BillResponseDTO> futureBill = CompletableFuture.completedFuture(fake);
 		when(billService.getBillDTO(anyInt())).thenReturn(futureBill.join());

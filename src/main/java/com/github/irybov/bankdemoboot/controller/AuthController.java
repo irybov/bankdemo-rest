@@ -95,7 +95,6 @@ public class AuthController extends BaseController {
 		}
 	}
 
-	@PreAuthorize("hasRole('ADMIN')")
 	@Override
 	String setServiceImpl(String impl) {
 		

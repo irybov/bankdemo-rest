@@ -180,7 +180,7 @@ public class BankDemoBootApplicationTests {
 		void unauthorized_success() throws Exception {
 			mockMVC.perform(get("/success"))
 				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("http://localhost/login"));
+				.andExpect(redirectedUrl("http://localhost/home"));
 		}
 		@Test
 		void unauthorized_confirm() throws Exception {
@@ -712,6 +712,12 @@ public class BankDemoBootApplicationTests {
 				.andExpect(content().string(containsString("Sender's bill number should be less than 10 digits length")))
 				.andExpect(content().string(containsString("Recepient's bill number should be positive number")))
 				.andExpect(content().string(containsString("Currency code should be 3 capital characters length")));		
+		}
+		
+		@Test
+		void establish_emitter_connection() throws Exception {
+			
+			mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
 		}
 		
 	}

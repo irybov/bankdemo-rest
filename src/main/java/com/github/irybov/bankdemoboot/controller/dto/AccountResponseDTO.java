@@ -7,6 +7,9 @@ import java.util.List;
 //import java.util.Set;
 //import java.util.stream.Collectors;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 //import com.github.irybov.bankdemoboot.Role;
 import com.github.irybov.bankdemoboot.entity.Account;
@@ -24,6 +27,8 @@ public class AccountResponseDTO {
 	private String name;	
 	private String surname;
 	private String phone;
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private LocalDate birthday;
 //	private String password;
 	@JsonManagedReference

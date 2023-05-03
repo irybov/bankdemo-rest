@@ -1,6 +1,5 @@
 package com.github.irybov.bankdemoboot.controller;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.HashSet;
@@ -9,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.concurrent.Executor;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityNotFoundException;
@@ -45,7 +44,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 //import com.github.irybov.bankdemoboot.Currency;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
@@ -54,7 +52,7 @@ import com.github.irybov.bankdemoboot.controller.dto.OperationRequestDTO;
 //import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
 import com.github.irybov.bankdemoboot.entity.Operation;
-import com.github.irybov.bankdemoboot.model.EmiiterLoad;
+import com.github.irybov.bankdemoboot.model.PayLoad;
 import com.github.irybov.bankdemoboot.service.OperationService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -76,10 +74,15 @@ public class BankController extends BaseController {
 	@Autowired
 	@Qualifier("operationServiceAlias")
 	private OperationService operationService;
+	
+	private final Executor executorService;
+	public BankController(Executor executorService) {
+		this.executorService = executorService;
+	}
 
 	@Autowired
 	private ObjectMapper mapper;
-	private Map<Integer, ResponseBodyEmitter> emitters = new ConcurrentHashMap<>();
+	private Map<String, ResponseBodyEmitter> emitters = new ConcurrentHashMap<>();
 	
 	private final Set<Currency> currencies = new HashSet<>(4, 1.0f);
 	@PostConstruct
@@ -126,9 +129,6 @@ public class BankController extends BaseController {
 		catch (EntityNotFoundException exc) {
 			log.error(exc.getMessage(), exc);
 		}
-		List<Integer> ids = account.getBills().stream().map(BillResponseDTO::getId)
-				.collect(Collectors.toList());
-		ids.stream().forEach(id -> emitters.put(id, null));
 //		List<BillResponseDTO> bills = accountService.getBills(account.getId());
 		modelMap.addAttribute("account", account);
 //		modelMap.addAttribute("bills", bills);
@@ -279,6 +279,10 @@ public class BankController extends BaseController {
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, target);
 				billService.transfer(operation);
 				log.info("{} has been sent to bill {}", params.get("amount"), target);
+
+				executorService.execute(() -> {
+					activateEmitter(operation.getRecipient(), operation.getAmount());
+				});
 			}
 			catch (Exception exc) {
 				log.warn(exc.getMessage(), exc);
@@ -319,26 +323,40 @@ public class BankController extends BaseController {
 			log.warn(exc.getMessage(), exc);
 			return new ResponseEntity<String>(exc.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		ResponseBodyEmitter emitter = new ResponseBodyEmitter(0L);
-		emitters.put(dto.getRecipient(), emitter);
-		try {
-			String load = mapper.writeValueAsString
-					(new EmiiterLoad(dto.getRecipient(), dto.getAmount()));
-			emitter.send(load);
-			emitter.complete();
-		}
-		catch (Exception exc) {
-			emitter.completeWithError(exc);
-			log.warn(exc.getMessage(), exc);
-		}
+		executorService.execute(() -> {
+			activateEmitter(dto.getRecipient(), dto.getAmount());
+		});
+		
 		return new ResponseEntity<String>("Successful", HttpStatus.OK);
 	}
 	
 	@PreAuthorize("hasRole('CLIENT')")
-	@GetMapping("/bills/notify")
-	public ResponseBodyEmitter registerClient() {
+	@GetMapping(path = "/bills/notify")
+	public ResponseBodyEmitter registerEmitter() {
+		
 		ResponseBodyEmitter emitter = new ResponseBodyEmitter(0L);
+		String phone = authentication().getName();
+		emitters.put(phone, emitter);	
+		
+		emitter.onTimeout(()-> emitters.remove(phone, emitter));
+		emitter.onError((e)-> emitters.remove(phone, emitter));
+		
 		return emitter;
+	}
+	private void activateEmitter(int id, double amount) {
+
+		BillResponseDTO bill = billService.getBillDTO(id);
+		String phone = bill.getOwner().getPhone();
+		ResponseBodyEmitter emitter = emitters.get(phone);
+		try {
+			String load = mapper.writeValueAsString(new PayLoad(id, amount));
+			emitter.send(load);
+			emitter.complete();
+		}
+		catch (Exception exc) {
+			log.warn(exc.getMessage(), exc);
+			emitter.completeWithError(exc);
+		}
 	}
 	
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
@@ -388,7 +406,6 @@ public class BankController extends BaseController {
 		return "/account/password";
 	}
 
-	@PreAuthorize("hasRole('ADMIN')")
 	@Override
 	String setServiceImpl(String impl) {
 		// TODO Auto-generated method stub

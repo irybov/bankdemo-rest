@@ -1,7 +1,7 @@
 $(document).ready(function(){
 	
 	$('#client_table tbody').empty();
-	$.getJSON('http://localhost:8080/bankdemo/accounts/list/0',
+	$.getJSON('/bankdemo/accounts/list/0',
 		$.each(data.content, function(key, value){
 	 		var account = '<tr>'
 				+ '<td class=align-middle align=center>'+value.id+'</td>'
@@ -21,7 +21,7 @@ $(document).ready(function(){
 	
 	function fetchNotes(startPage) {
 		$('#client_table tbody').empty();
-		$.getJSON('http://localhost:8080/bankdemo/operations/list/'+startPage,
+		$.getJSON('/bankdemo/operations/list/'+startPage,
  			$.each(response.content, function(key, value){
  		 		var account = '<tr>'
  					+ '<td class=align-middle align=center>'+value.id+'</td>'

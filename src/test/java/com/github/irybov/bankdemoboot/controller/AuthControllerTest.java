@@ -147,7 +147,7 @@ class AuthControllerTest {
 	void unauthorized_success() throws Exception {
 		mockMVC.perform(get("/success"))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("http://localhost/login"));
+			.andExpect(redirectedUrl("http://localhost/home"));
 	}
 	@Test
 	void unauthorized_confirm() throws Exception {

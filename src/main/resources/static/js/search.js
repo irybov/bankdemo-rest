@@ -4,7 +4,7 @@ $(document).ready(function(){
         ev.preventDefault();
 		$('#client_table tbody').empty();
 		$('#bill_table tbody').empty();
- 		$.getJSON('http://localhost:8080/bankdemo/accounts/search/'+$('#phone').val(),
+ 		$.getJSON('/bankdemo/accounts/search/'+$('#phone').val(),
  			function(data){
 	 		var account = '<tr>'
 				+ '<td class=align-middle align=center>'+data.id+'</td>'
@@ -24,7 +24,7 @@ $(document).ready(function(){
    				}
      			$.ajax({
     				type: 'GET',
-    				url: 'http://localhost:8080/bankdemo/accounts/status/'+data.id,
+    				url: '/bankdemo/accounts/status/'+data.id,
      	        	success: function(bool) {
      	        		$('#target_bool').html(bool);
      	        	}
@@ -56,7 +56,7 @@ $(document).ready(function(){
  					var switcher = '#bill_bool'+rowID;
  	     			$.ajax({
 	 					type: 'GET',
-	 					url: 'http://localhost:8080/bankdemo/bills/status/'+rowID,
+	 					url: '/bankdemo/bills/status/'+rowID,
 	 	 	        	success: function(bool) {
 	 	 	        		$(switcher).html(bool);
 	 	 	        	}
@@ -67,7 +67,7 @@ $(document).ready(function(){
 	 	    	$(eventsBTN).click(function(){
 	 	    		var billId = rowID;
 	 	    		var newWindow = window.open
-	 	    		('http://localhost:8080/bankdemo/operations/list/', '_blank');
+	 	    		('/bankdemo/operations/list/', '_blank');
 //	 	    		location.reload();
 	 	    		$(newWindow.document.body).append
 	 	    		('<script th:inline="javascript">var rowID = '+billId+';</script>');
@@ -116,7 +116,7 @@ $(document).ready(function(){
 	 			$(exportBTN).click(function(){
  	     			$.ajax({
 	 					type: 'GET',
-	 					url: 'http://localhost:8080/bankdemo/operations/print/'+rowID,
+	 					url: '/bankdemo/operations/print/'+rowID,
 	 	                success: function (data) {
 	 	                    //Convert the Byte Data to BLOB object.
 	 	                    var blob = new Blob([data], { type: "application/octetstream" });
@@ -146,7 +146,7 @@ $(document).ready(function(){
 // 		 		$.getJSON('http://localhost:8080/bankdemo/operations/list/'+rowID,
  	 		    $.ajax({
  	 		        type: 'GET',
- 	 		        url: 'http://localhost:8080/bankdemo/operations/list/'+billID,
+ 	 		        url: '/bankdemo/operations/list/'+billID,
  	 		        data: {
  	 		            "page": startPage,
  	 		            "size": 5

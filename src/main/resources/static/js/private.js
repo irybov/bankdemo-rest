@@ -8,9 +8,9 @@ $(document).ready(function(){
     requestHeaders[header] = token;
 	$.each(data, function(key, value){
     	var rowID = value.id;
- 		var info = '<tr id="row'+rowID+'">'
+ 		var dataRow = '<tr id="row'+rowID+'">'
 			+ '<td class=align-middle align=center>'+value.id+'</td>'
-			+ '<td class=align-middle align=center>'+value.balance+'</td>'
+			+ '<td id="balance'+rowID+'" class=align-middle align=center>'+value.balance+'</td>'
 			+ '<td class=align-middle align=center>'+value.currency+'</td>'
 			+ '<td class=align-middle align=center>'+value.active+'</td>'
 			+ '<td class=align-middle align=center><div class="btn-group" id="group'+rowID+'">'
@@ -20,13 +20,13 @@ $(document).ready(function(){
 			+ '</div></td>'
 			+ '<td><button class="btn btn-danger" id="erase'+rowID+'">Erase</button></td>'
 			+ '</tr>';
-    	$(info).appendTo('#bill_table tbody');
+    	$(dataRow).appendTo('#bill_table tbody');
 	 	
 	 	$('.btn-group .btn').click(function() {
 	 		var action = $(this).val();
 		 	var balance = value.balance;
    		 	var billForm =
-				$('<form action="http://localhost:8080/bankdemo/bills/operate" method="post">'
+				$('<form action="/bankdemo/bills/operate" method="post">'
 				+ '<input type="hidden" name="id" value="'+rowID+'"/>'		
   		 		+ '<input type="hidden" name="action" value="'+action+'"/>'
   		 		+ '<input type="hidden" name="balance" value="'+balance+'"/></form>');
@@ -36,7 +36,6 @@ $(document).ready(function(){
 	    		$(document.body).removeChild(billForm);
 	 	});
 	 	
-	 	var dataRow = '#row'+rowID;
 	 	var eraseBTN = '#erase'+rowID;
 	 	var groupBTN = '#group'+rowID;
 	 	if(value.active == false){
@@ -48,7 +47,7 @@ $(document).ready(function(){
                    return false;
   				}
 			$.ajax({
-			    url: 'http://localhost:8080/bankdemo/bills/delete/'+rowID,
+			    url: '/bankdemo/bills/delete/'+rowID,
 			    type: 'DELETE',
 			    headers: requestHeaders,
 			    success: function(){
@@ -57,6 +56,30 @@ $(document).ready(function(){
 			    }
 			});
 		});
+		
+		var connect = function(){
+			let xhr = new XMLHttpRequest();
+			xhr.open('GET', '/bankdemo/bills/notify');
+			xhr.onload = function() {
+				if (xhr.status != 200) {
+					alert('Request failed: ' + xhr.status + ', ' + xhr.statusText);
+				}
+				else {
+					const json = JSON.parse(xhr.responseText);
+					var cell = '#balance'+json.id;
+					var total = parseFloat($(cell).html(), 2) + json.income;
+					$(cell).text(total.toFixed(2));
+					alert('+ ' + json.income);
+					connect();
+				}			
+			};
+			xhr.onerror = function() {
+				alert('Request failed: ' + xhr.status + ', ' + xhr.statusText);
+			};
+			xhr.send();
+		};
+		connect();
+		
 	});
 	$('#bill_table tbody').hide().fadeIn('slow');
 	
@@ -74,7 +97,7 @@ $(document).ready(function(){
         requestHeaders[header] = token;
         $.ajax({
             type: 'POST',
-            url: 'http://localhost:8080/bankdemo/bills/add', 
+            url: '/bankdemo/bills/add', 
             data: {
             	"phone": phone,
                 "currency": type
@@ -100,7 +123,7 @@ $(document).ready(function(){
     		 		var action = $(this).val();
 	    		 	var balance = data.balance;
    	    		 	var billForm =
-					$('<form action="http://localhost:8080/bankdemo/bills/operate" method="post">'
+					$('<form action="/bankdemo/bills/operate" method="post">'
 					+ '<input type="hidden" name="id" value="'+rowID+'"/>'		
     		 		+ '<input type="hidden" name="action" value="'+action+'"/>'
     		 		+ '<input type="hidden" name="balance" value="'+balance+'"/></form>');
@@ -121,7 +144,7 @@ $(document).ready(function(){
                         return false;
        				}
     				$.ajax({
-    				    url: 'http://localhost:8080/bankdemo/bills/delete/'+rowID,
+    				    url: '/bankdemo/bills/delete/'+rowID,
     				    type: 'DELETE',
     				    headers: requestHeaders,
     				    success: function(){

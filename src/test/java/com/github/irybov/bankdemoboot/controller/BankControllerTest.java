@@ -644,6 +644,12 @@ class BankControllerTest {
 			.andExpect(content().string(containsString("Currency code should be 3 capital characters length")));		
 	}
 	
+	@Test
+	void establish_emitter_connection() throws Exception {
+		
+		mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
+	}
+	
 	@AfterEach
 	void tear_down() {
 		phone = null;

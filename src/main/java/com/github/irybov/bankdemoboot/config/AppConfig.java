@@ -63,7 +63,7 @@ public class AppConfig {
     	final int cores = Runtime.getRuntime().availableProcessors();
     	final ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     	executor.setCorePoolSize(cores);
-        executor.setMaxPoolSize(cores * 2);
+        executor.setMaxPoolSize(cores * 5);
         executor.setQueueCapacity(cores * 10);
     	executor.initialize();
     	return executor;
