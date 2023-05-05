@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
@@ -298,7 +299,7 @@ public class BankController extends BaseController {
 		return "redirect:/accounts/show/" + phone;
 	}
 	
-	@CrossOrigin
+	@CrossOrigin(origins = "*", methods = RequestMethod.PATCH)
 	@PatchMapping("/bills/external")
 	public ResponseEntity<?> outerIncome(@RequestBody OperationRequestDTO dto) {	
 		
@@ -323,6 +324,7 @@ public class BankController extends BaseController {
 			log.warn(exc.getMessage(), exc);
 			return new ResponseEntity<String>(exc.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+		
 		executorService.execute(() -> {
 			activateEmitter(dto.getRecipient(), dto.getAmount());
 		});
@@ -347,15 +349,18 @@ public class BankController extends BaseController {
 
 		BillResponseDTO bill = billService.getBillDTO(id);
 		String phone = bill.getOwner().getPhone();
-		ResponseBodyEmitter emitter = emitters.get(phone);
-		try {
-			String load = mapper.writeValueAsString(new PayLoad(id, amount));
-			emitter.send(load);
-			emitter.complete();
-		}
-		catch (Exception exc) {
-			log.warn(exc.getMessage(), exc);
-			emitter.completeWithError(exc);
+		
+		if(emitters.containsKey(phone)) {
+			ResponseBodyEmitter emitter = emitters.get(phone);
+			try {
+				String load = mapper.writeValueAsString(new PayLoad(id, amount));
+				emitter.send(load);
+				emitter.complete();
+			}
+			catch (Exception exc) {
+				log.warn(exc.getMessage(), exc);
+				emitter.completeWithError(exc);
+			}
 		}
 	}
 	

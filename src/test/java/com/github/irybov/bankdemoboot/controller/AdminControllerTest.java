@@ -100,7 +100,7 @@ class AdminControllerTest {
 	    	final ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 	    	executor.setCorePoolSize(cores);
 	        executor.setMaxPoolSize(cores * 2);
-	        executor.setQueueCapacity(cores * 10);
+	        executor.setQueueCapacity(cores * 4);
 	    	executor.initialize();
 	    	return executor;
 	    }

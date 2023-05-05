@@ -184,6 +184,16 @@ class AuthControllerTest {
 			.andExpect(status().isBadRequest())
 	        .andExpect(model().size(1))
 	        .andExpect(model().attributeExists("account"))
+	        .andExpect(model().hasErrors())
+			.andExpect(view().name("/auth/register"));
+		
+		accountRequestDTO.setBirthday(LocalDate.now().plusYears(10L));
+		
+		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequestDTO))
+			.andExpect(status().isBadRequest())
+	        .andExpect(model().size(1))
+	        .andExpect(model().attributeExists("account"))
+	        .andExpect(model().hasErrors())
 			.andExpect(view().name("/auth/register"));
 	}
 	

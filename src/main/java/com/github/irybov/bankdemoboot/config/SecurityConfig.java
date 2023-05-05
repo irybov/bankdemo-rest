@@ -1,10 +1,15 @@
 package com.github.irybov.bankdemoboot.config;
 
+import java.util.Arrays;
+
+import org.springframework.beans.factory.annotation.Value;
+
 //import javax.sql.DataSource;
 
 //import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,6 +17,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+//import org.springframework.web.servlet.config.annotation.CorsRegistry;
+//import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 
@@ -20,6 +30,11 @@ import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter{
 
+	@Value("${server.address}")
+	private String uri;
+	@Value("${server.port}")
+	private int port;
+	
 //	@Autowired
 //	private DataSource dataSource;
 	
@@ -55,6 +70,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	protected void configure(HttpSecurity http) throws Exception {
 
 		http
+			.cors(Customizer.withDefaults())
+//			.and()
 			.authorizeRequests()
 			.antMatchers("/login", "/register", "/confirm", "/webjars/**", "/css/**", "/js/**")
 			.permitAll()
@@ -91,4 +108,25 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 //		http.headers().frameOptions().disable();
 	}
 	
+/*    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://" + uri + ":" + port)
+                .allowedMethods("*");
+    }*/
+	
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+      CorsConfiguration configuration = new CorsConfiguration();
+      configuration.setAllowedOrigins(Arrays.asList("http://" + uri +":" + port));
+      configuration.setAllowedMethods(Arrays.asList("*"));
+      configuration.setAllowCredentials(true);
+//      configuration.setExposedHeaders(Arrays.asList("X-Get-Header"));
+      configuration.setMaxAge(3600L);
+//      configuration.setAllowedHeaders(Arrays.asList("Authorization", "Requestor-Type"));
+      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+      source.registerCorsConfiguration("/**", configuration);
+      return source;
+    }
+    
 }

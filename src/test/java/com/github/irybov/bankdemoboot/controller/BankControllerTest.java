@@ -1,7 +1,8 @@
 package com.github.irybov.bankdemoboot.controller;
 
-import static org.hamcrest.CoreMatchers.any;
+//import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
+//import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -33,6 +34,7 @@ import java.util.HashSet;
 //import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -85,6 +87,8 @@ class BankControllerTest {
 	private MockMvc mockMVC;
 	@Autowired
 	private ObjectMapper mapper;
+	@MockBean
+	private Executor executorService;
 	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
@@ -286,7 +290,7 @@ class BankControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(model().size(1))
 			.andExpect(model().attributeExists("password"))
-			.andExpect(model().attribute("password", any(PasswordRequestDTO.class)))
+			.andExpect(model().attribute("password", org.hamcrest.CoreMatchers.any(PasswordRequestDTO.class)))
 			.andExpect(view().name("/account/password"));
 	}
 	
@@ -372,14 +376,19 @@ class BankControllerTest {
 		
 		when(builder.build()).thenReturn(operation);		
 		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponseDTO(bill));
+		doNothing().when(executorService).execute(
+				(Runnable) org.mockito.ArgumentMatchers.any(Runnable.class));
 		
 		doNothing().when(billService).deposit(operation);
 		doNothing().when(billService).withdraw(operation);
 		doNothing().when(billService).transfer(operation);
 		doNothing().when(billService).external(operation);
-		when(operationService.deposit(anyDouble(), anyString(), anyString(), anyInt())).thenReturn(operation);
-		when(operationService.withdraw(anyDouble(), anyString(), anyString(), anyInt())).thenReturn(operation);
-		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt())).thenReturn(operation);
+		when(operationService.deposit(anyDouble(), anyString(), anyString(), anyInt()))
+			.thenReturn(operation);
+		when(operationService.withdraw(anyDouble(), anyString(), anyString(), anyInt()))
+			.thenReturn(operation);
+		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt()))
+			.thenReturn(operation);
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
 //													    .param("id", "0")
@@ -432,9 +441,12 @@ class BankControllerTest {
 		when(builder.build()).thenReturn(operation);
 		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponseDTO(bill));
 		
-		when(operationService.deposit(anyDouble(), anyString(), anyString(), anyInt())).thenReturn(operation);
-		when(operationService.withdraw(anyDouble(), anyString(), anyString(), anyInt())).thenReturn(operation);
-		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt())).thenReturn(operation);
+		when(operationService.deposit(anyDouble(), anyString(), anyString(), anyInt()))
+			.thenReturn(operation);
+		when(operationService.withdraw(anyDouble(), anyString(), anyString(), anyInt()))
+			.thenReturn(operation);
+		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt()))
+			.thenReturn(operation);
 		doThrow(new PaymentException("Amount of money should be higher than zero"))
 			.when(billService).deposit(operation);
 		doThrow(new PaymentException("Amount of money should be higher than zero"))
@@ -507,8 +519,10 @@ class BankControllerTest {
 		when(builder.build()).thenReturn(operation);
 		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponseDTO(bill));
 		
-		when(operationService.withdraw(anyDouble(), anyString(), anyString(), anyInt())).thenReturn(operation);
-		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt())).thenReturn(operation);
+		when(operationService.withdraw(anyDouble(), anyString(), anyString(), anyInt()))
+			.thenReturn(operation);
+		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt()))
+			.thenReturn(operation);
 		doThrow(new PaymentException("Not enough money to complete operation"))
 			.when(billService).withdraw(operation);
 		doThrow(new PaymentException("Not enough money to complete operation"))
@@ -555,11 +569,12 @@ class BankControllerTest {
 		when(builder.build()).thenReturn(operation);
 		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponseDTO(bill));
 
-		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt())).thenReturn(operation);
+		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt()))
+			.thenReturn(operation);
 		doThrow(new PaymentException("Source and target bills should not be the same"))
 			.when(billService).transfer(operation);
 		doThrow(new PaymentException("Source and target bills should not be the same"))
-		.when(billService).external(operation);
+			.when(billService).external(operation);
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
 //													    .param("id", "0")
@@ -595,11 +610,12 @@ class BankControllerTest {
 		when(builder.build()).thenReturn(operation);
 		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponseDTO(bill));
 
-		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt())).thenReturn(operation);
+		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt()))
+			.thenReturn(operation);
 		doThrow(new PaymentException("Wrong currency type of the target bill"))
 			.when(billService).transfer(operation);
 		doThrow(new PaymentException("Wrong currency type of the target bill"))
-		.when(billService).external(operation);
+			.when(billService).external(operation);
 				
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
 														.param("recipient", "1")
@@ -633,7 +649,7 @@ class BankControllerTest {
 	@Test
 	void constraint_violation_exception() throws Exception {
 		
-		OperationRequestDTO dto = new OperationRequestDTO(1_000_000_000, -1, "yuan", 0.01);
+		OperationRequestDTO dto = new OperationRequestDTO(1_000_000_000, -1, "yuan", -0.01);
 		mockMVC.perform(patch("/bills/external")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
@@ -641,12 +657,12 @@ class BankControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(content().string(containsString("Sender's bill number should be less than 10 digits length")))
 			.andExpect(content().string(containsString("Recepient's bill number should be positive number")))
-			.andExpect(content().string(containsString("Currency code should be 3 capital characters length")));		
+			.andExpect(content().string(containsString("Currency code should be 3 capital characters length")))
+			.andExpect(content().string(containsString("Amount of money should be higher than zero")));		
 	}
 	
 	@Test
-	void establish_emitter_connection() throws Exception {
-		
+	void establish_emitter_connection() throws Exception {		
 		mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
 	}
 	

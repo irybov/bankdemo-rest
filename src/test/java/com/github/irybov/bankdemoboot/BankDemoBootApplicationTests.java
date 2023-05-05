@@ -214,6 +214,20 @@ public class BankDemoBootApplicationTests {
 				.andExpect(status().isBadRequest())
 				.andExpect(model().size(1))
 				.andExpect(model().attribute("account", any(AccountRequestDTO.class)))
+				.andExpect(model().hasErrors())
+				.andExpect(view().name("/auth/register"));
+			
+			mockMVC.perform(post("/confirm").with(csrf())
+										 .param("birthday", LocalDate.now().plusYears(10L).toString())
+										 .param("name", "N")
+										 .param("password", "superb")
+										 .param("phone", "XXL")
+										 .param("surname", "N")
+						)
+				.andExpect(status().isBadRequest())
+				.andExpect(model().size(1))
+				.andExpect(model().attribute("account", any(AccountRequestDTO.class)))
+				.andExpect(model().hasErrors())
 				.andExpect(view().name("/auth/register"));
 		}
 		
@@ -703,7 +717,7 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void constraint_violation_exception() throws Exception {
 			
-			OperationRequestDTO dto = new OperationRequestDTO(1_000_000_000, -1, "yuan", 0.01);
+			OperationRequestDTO dto = new OperationRequestDTO(1_000_000_000, -1, "yuan", -0.01);
 			mockMVC.perform(patch("/bills/external")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -711,12 +725,12 @@ public class BankDemoBootApplicationTests {
 				.andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString("Sender's bill number should be less than 10 digits length")))
 				.andExpect(content().string(containsString("Recepient's bill number should be positive number")))
-				.andExpect(content().string(containsString("Currency code should be 3 capital characters length")));		
+				.andExpect(content().string(containsString("Currency code should be 3 capital characters length")))
+				.andExpect(content().string(containsString("Amount of money should be higher than zero")));		
 		}
 		
 		@Test
-		void establish_emitter_connection() throws Exception {
-			
+		void establish_emitter_connection() throws Exception {			
 			mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
 		}
 		
