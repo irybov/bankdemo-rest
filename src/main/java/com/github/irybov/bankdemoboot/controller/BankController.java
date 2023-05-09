@@ -1,11 +1,17 @@
 package com.github.irybov.bankdemoboot.controller;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.HashSet;
 import java.util.List;
 //import java.util.EnumSet;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -85,18 +91,53 @@ public class BankController extends BaseController {
 	private ObjectMapper mapper;
 	private Map<String, ResponseBodyEmitter> emitters = new ConcurrentHashMap<>();
 	
-	private final Set<Currency> currencies = new HashSet<>(4, 1.0f);
+	private final Set<Currency> currencies = new HashSet<>();
 	@PostConstruct
 	private void init() {
+		
+		final String SLASH = FileSystems.getDefault().getSeparator();
+		final String PATH = System.getProperty("user.dir") + SLASH + "files";
+		File dir = new File(PATH);
+		if(!dir.exists()) {new File(PATH).mkdir();}
+		
+		File file = new File(PATH + SLASH + "currencies.txt");
+		
+		if(file.exists() & file.length() > 0) {
+			Scanner scanner = null;
+			FileReader reader = null;
+			try {
+				reader = new FileReader(file);
+				scanner = new Scanner(reader);
+				while(scanner.hasNextLine() & scanner.nextLine().length() > 0) {
+					String line = scanner.nextLine();
+					Currency currency = Currency.getInstance(line.toUpperCase());
+					currencies.add(currency);
+				}
+			}
+			catch (FileNotFoundException exc) {
+				log.error(exc.getMessage(), exc);
+			}
+			finally {
+				scanner.close();
+				try {
+					reader.close();
+				} 
+				catch (IOException exc) {
+					log.error(exc.getMessage(), exc);
+				}
+			}
+		}
+		else {
 //		currencies = new HashSet<>();
-		Currency usd = Currency.getInstance("USD");
-		currencies.add(usd);
-		Currency eur = Currency.getInstance("EUR");
-		currencies.add(eur);
-		Currency gbp = Currency.getInstance("GBP");
-		currencies.add(gbp);
-		Currency rub = Currency.getInstance("RUB");
-		currencies.add(rub);
+			Currency usd = Currency.getInstance("USD");
+			currencies.add(usd);
+			Currency eur = Currency.getInstance("EUR");
+			currencies.add(eur);
+			Currency gbp = Currency.getInstance("GBP");
+			currencies.add(gbp);
+			Currency rub = Currency.getInstance("RUB");
+			currencies.add(rub);
+		}
 	}
 	
 	@PreAuthorize("hasRole('CLIENT')")

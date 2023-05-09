@@ -79,8 +79,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			.authorizeRequests()
 			.antMatchers("/bills/**", "/accounts/show", "/accounts/password")
 			.hasAnyRole("ADMIN", "CLIENT")
-			.antMatchers("/accounts/search", "/accounts/status", "/accounts/list/**",
-					"/actuator/**", "/operations/**", "/**/swagger*/**", "/**/api-docs/**")
+			.antMatchers("/accounts/search", "/accounts/status", "/accounts/list/**", "/actuator/**",
+					"/h2-console/**", "/operations/**", "/**/swagger*/**", "/**/api-docs/**")
 			.hasRole("ADMIN")
 			.anyRequest().authenticated()
 				.and()
@@ -117,16 +117,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
-      CorsConfiguration configuration = new CorsConfiguration();
-      configuration.setAllowedOrigins(Arrays.asList("http://" + uri +":" + port));
-      configuration.setAllowedMethods(Arrays.asList("*"));
-      configuration.setAllowCredentials(true);
-//      configuration.setExposedHeaders(Arrays.asList("X-Get-Header"));
-      configuration.setMaxAge(3600L);
-//      configuration.setAllowedHeaders(Arrays.asList("Authorization", "Requestor-Type"));
-      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-      source.registerCorsConfiguration("/**", configuration);
-      return source;
+    	
+		CorsConfiguration configuration = new CorsConfiguration();
+		configuration.setAllowedOrigins(Arrays.asList("http://" + uri +":" + port));
+		configuration.setAllowedMethods(Arrays.asList("*"));
+		configuration.setAllowCredentials(true);
+		configuration.setExposedHeaders(Arrays.asList("X-Get-Header"));
+		configuration.setMaxAge(3600L);
+		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Requestor-Type"));
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
+		return source;
     }
     
 }

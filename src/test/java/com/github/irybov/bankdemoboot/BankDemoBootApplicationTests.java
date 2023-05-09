@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -392,6 +393,11 @@ public class BankDemoBootApplicationTests {
 		
 		private static final String PHONE = "1111111111";
 		
+		@Value("${server.address}")
+		private String uri;
+		@Value("${server.port}")
+		private int port;
+		
 		@Test
 		void can_get_client_html() throws Exception {
 			
@@ -732,6 +738,16 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void establish_emitter_connection() throws Exception {			
 			mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
+		}
+		
+		@Test
+		void check_cors_protection() throws Exception {
+			
+			mockMVC.perform(get("/bills/notify").header("Origin", "http://evil.com"))
+				.andExpect(status().isForbidden());
+			
+			mockMVC.perform(get("/bills/notify").header("Origin", "http://" + uri +":" + port))
+				.andExpect(status().isOk());
 		}
 		
 	}

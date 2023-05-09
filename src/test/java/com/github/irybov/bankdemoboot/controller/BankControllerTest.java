@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -46,6 +47,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -102,6 +104,11 @@ class BankControllerTest {
 	private static Operation operation;	
 	private static Operation.OperationBuilder builder;
 	private static Bill bill;
+	
+	@Value("${server.address}")
+	private String uri;
+	@Value("${server.port}")
+	private int port;
 	
 	@BeforeAll
 	static void prepare() {
@@ -664,6 +671,16 @@ class BankControllerTest {
 	@Test
 	void establish_emitter_connection() throws Exception {		
 		mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
+	}
+	
+	@Test
+	void check_cors_protection() throws Exception {
+		
+		mockMVC.perform(get("/bills/notify").header("Origin", "http://evil.com"))
+			.andExpect(status().isForbidden());
+		
+		mockMVC.perform(options("/bills/notify").header("Origin", "http://" + uri +":" + port))
+			.andExpect(status().isOk());
 	}
 	
 	@AfterEach

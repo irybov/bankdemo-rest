@@ -1,0 +1,5 @@
+USD
+EUR
+GBP
+RUB
+NOK
