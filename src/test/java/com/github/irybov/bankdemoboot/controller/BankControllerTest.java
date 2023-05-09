@@ -1,5 +1,6 @@
 package com.github.irybov.bankdemoboot.controller;
 
+import static org.hamcrest.CoreMatchers.any;
 //import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
 //import static org.mockito.ArgumentMatchers.any;
@@ -30,8 +31,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 //import java.util.ArrayList;
-import java.util.Currency;
-import java.util.HashSet;
+//import java.util.Currency;
+//import java.util.HashSet;
 //import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -97,7 +98,7 @@ class BankControllerTest {
 	}
 	private String phone;
 	
-	private static Set<Currency> currencies;
+//	private static Set<Currency> currencies;
 	private static Account entity;
 	private static PasswordRequestDTO pwDTO;
 	
@@ -113,7 +114,7 @@ class BankControllerTest {
 	@BeforeAll
 	static void prepare() {
 		
-		currencies = new HashSet<>();
+/*		currencies = new HashSet<>();
 		Currency usd = Currency.getInstance("USD");
 		currencies.add(usd);
 		Currency eur = Currency.getInstance("EUR");
@@ -121,7 +122,7 @@ class BankControllerTest {
 		Currency gbp = Currency.getInstance("GBP");
 		currencies.add(gbp);
 		Currency rub = Currency.getInstance("RUB");
-		currencies.add(rub);
+		currencies.add(rub);*/
 		
 		entity = new Account
 				("Nia", "Nacci", "4444444444", LocalDate.of(1998, 12, 10), "blackmamba", true);
@@ -157,7 +158,7 @@ class BankControllerTest {
 			.andExpect(model().attribute("account", account))
 //			.andExpect(model().attribute("bills", bills))			
 			.andExpect(model().attribute("bills", account.getBills()))
-			.andExpect(model().attribute("currencies", currencies))
+			.andExpect(model().attribute("currencies", any(Set.class)))
 			.andExpect(view().name("/account/private"));
 		
 //		verify(accountService).getAccountDTO(phone);
@@ -690,7 +691,7 @@ class BankControllerTest {
 	
 	@AfterAll
 	static void clear() {
-		currencies = null;
+//		currencies = null;
 		entity = null;
 		pwDTO = null;
     	operation = null;

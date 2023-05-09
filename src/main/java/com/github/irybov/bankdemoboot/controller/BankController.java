@@ -1,7 +1,6 @@
 package com.github.irybov.bankdemoboot.controller;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -98,37 +97,25 @@ public class BankController extends BaseController {
 		final String SLASH = FileSystems.getDefault().getSeparator();
 		final String PATH = System.getProperty("user.dir") + SLASH + "files";
 		File dir = new File(PATH);
-		if(!dir.exists()) {new File(PATH).mkdir();}
-		
+		if(!dir.exists()) {new File(PATH).mkdir();}		
 		File file = new File(PATH + SLASH + "currencies.txt");
 		
-		if(file.exists() & file.length() > 0) {
-			Scanner scanner = null;
-			FileReader reader = null;
-			try {
-				reader = new FileReader(file);
-				scanner = new Scanner(reader);
-				while(scanner.hasNextLine() & scanner.nextLine().length() > 0) {
+		if(file.exists() & file.length() > 0) {			
+			try(FileReader reader = new FileReader(file); Scanner scanner = new Scanner(file)) {
+				while(scanner.hasNextLine()) {
 					String line = scanner.nextLine();
-					Currency currency = Currency.getInstance(line.toUpperCase());
-					currencies.add(currency);
+					if(line.length() > 0) {
+						Currency currency = Currency.getInstance(line.toUpperCase());
+						currencies.add(currency);
+					}
+					else break;
 				}
 			}
-			catch (FileNotFoundException exc) {
+			catch (IOException exc) {
 				log.error(exc.getMessage(), exc);
-			}
-			finally {
-				scanner.close();
-				try {
-					reader.close();
-				} 
-				catch (IOException exc) {
-					log.error(exc.getMessage(), exc);
-				}
 			}
 		}
 		else {
-//		currencies = new HashSet<>();
 			Currency usd = Currency.getInstance("USD");
 			currencies.add(usd);
 			Currency eur = Currency.getInstance("EUR");

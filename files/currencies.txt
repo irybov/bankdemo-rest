@@ -3,3 +3,5 @@ EUR
 GBP
 RUB
 NOK
+
+
