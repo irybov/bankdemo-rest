@@ -15,8 +15,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -34,23 +32,18 @@ public class Bill {
 	@Column(updatable = false)
 	private Integer id;
 
-//	@NotNull
 	@Column(updatable = false)
 	private OffsetDateTime createdAt;
 	
-//	@NotNull
 	private OffsetDateTime updatedAt;
 	
-	@NotNull
+	@Column(nullable = false)
 	private boolean isActive;
 	
-	@NotNull
-	@Column(columnDefinition = "Decimal(19,2) default '0.00'", scale = 2, precision = 2)
+	@Column(nullable = false, columnDefinition = "Decimal(19,2) default '0.00'", scale = 2, precision = 2)
 	private BigDecimal balance = BigDecimal.valueOf(0.00).setScale(2);
 
-	@NotNull
-	@Size(min=3, max=3)
-	@Column(length=3, updatable = false)
+	@Column(nullable = false, length=3, updatable = false)
 	private String currency;
 	
 	@ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.DETACH,

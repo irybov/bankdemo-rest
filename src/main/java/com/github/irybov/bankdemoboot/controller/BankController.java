@@ -100,11 +100,11 @@ public class BankController extends BaseController {
 		if(!dir.exists()) {new File(PATH).mkdir();}		
 		File file = new File(PATH + SLASH + "currencies.txt");
 		
-		if(file.exists() & file.length() > 0) {			
-			try(FileReader reader = new FileReader(file); Scanner scanner = new Scanner(file)) {
+		if(file.exists() & file.length() > 2) {			
+			try(Scanner scanner = new Scanner(new FileReader(file))) {
 				while(scanner.hasNextLine()) {
 					String line = scanner.nextLine();
-					if(line.length() > 0) {
+					if(line.length() > 2) {
 						Currency currency = Currency.getInstance(line.toUpperCase());
 						currencies.add(currency);
 					}

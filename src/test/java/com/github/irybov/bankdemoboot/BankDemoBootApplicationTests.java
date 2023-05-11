@@ -732,7 +732,18 @@ public class BankDemoBootApplicationTests {
 				.andExpect(content().string(containsString("Sender's bill number should be less than 10 digits length")))
 				.andExpect(content().string(containsString("Recepient's bill number should be positive number")))
 				.andExpect(content().string(containsString("Currency code should be 3 capital characters length")))
-				.andExpect(content().string(containsString("Amount of money should be higher than zero")));		
+				.andExpect(content().string(containsString("Amount of money should be higher than zero")));
+			
+			dto = new OperationRequestDTO(null, null, " ", null);
+			mockMVC.perform(patch("/bills/external")
+													.contentType(MediaType.APPLICATION_JSON)
+													.content(mapper.writeValueAsString(dto))
+							)
+				.andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString("Sender must not be null")))
+				.andExpect(content().string(containsString("Recepient must not be null")))
+				.andExpect(content().string(containsString("Currency must not be blank")))
+				.andExpect(content().string(containsString("Amount must not be null")));
 		}
 		
 		@Test

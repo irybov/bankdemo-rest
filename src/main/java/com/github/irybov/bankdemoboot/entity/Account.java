@@ -24,13 +24,6 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Past;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
-
-import org.springframework.format.annotation.DateTimeFormat;
 
 import com.github.irybov.bankdemoboot.security.Role;
 
@@ -55,46 +48,29 @@ public class Account{
 	private Integer id;
 
 //	@EqualsAndHashCode.Exclude
-//	@NotNull
 	@ToString.Exclude
 	@Column(updatable = false)
 	private OffsetDateTime createdAt;
 	
 //	@EqualsAndHashCode.Exclude
-//	@NotNull
 	@ToString.Exclude
 	private OffsetDateTime updatedAt;
 	
-	@NotNull
+	@Column(nullable = false)
 	private boolean isActive;
 	
-	@NotBlank(message = "Name must not be empty")
-	@Size(min=2, max=20, message = "Name should be 2-20 chars length")
-	@Pattern(regexp = "^[A-Z][a-z]{1,19}", message = "Please input name like Xx")
 	@Column(nullable = false, length=20)
 	private String name;
 	
-	@NotBlank(message = "Surname must not be empty")
-	@Size(min=2, max=40, message = "Surname should be 2-40 chars length")
-	@Pattern(regexp = "^[A-Z][a-z]{1,19}([-][A-Z][a-z]{1,19})?",
-			message = "Please input surname like Xx or Xx-Xx")
 	@Column(nullable = false, length=40)
 	private String surname;
 	
-	@NotBlank(message = "Phone number must not be empty")
-	@Size(min=10, max=10, message = "Phone number should be 10 digits length")
-	@Pattern(regexp = "^\\d{10}$", message = "Please input phone like XXXXXXXXXX")
 	@Column(unique=true, nullable = false, length=10)
 	private String phone;
 	
-	@Past(message = "Birthday cant be future time")
-	@NotNull(message = "Please select your date of birth")
 	@Column(columnDefinition = "date")
-	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private LocalDate birthday;
 	
-	@NotBlank(message = "Password must not be empty")
-	@Size(min=10, max=60, message = "Password should be 10-60 symbols length")
 	@Column(nullable = false, length=60)
 	private String password;
 	

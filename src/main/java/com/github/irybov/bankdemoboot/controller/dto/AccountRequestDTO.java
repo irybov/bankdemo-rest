@@ -21,20 +21,20 @@ import lombok.Setter;
 public class AccountRequestDTO {
 
 	@JsonProperty("name")
-	@NotBlank(message = "Name must not be empty")
+	@NotBlank(message = "Name must not be blank")
 	@Size(min=2, max=20, message = "Name should be 2-20 chars length")
 	@Pattern(regexp = "^[A-Z][a-z]{1,19}", message = "Please input name like Xx")
 	private String name;
 
 	@JsonProperty("surname")
-	@NotBlank(message = "Surname must not be empty")
+	@NotBlank(message = "Surname must not be blank")
 	@Size(min=2, max=40, message = "Surname should be 2-40 chars length")
 	@Pattern(regexp = "^[A-Z][a-z]{1,19}([-][A-Z][a-z]{1,19})?",
 			message = "Please input surname like Xx or Xx-Xx")
 	private String surname;
 
 	@JsonProperty("phone")
-	@NotBlank(message = "Phone number must not be empty")
+	@NotBlank(message = "Phone number must not be blank")
 	@Size(min=10, max=10, message = "Phone number should be 10 digits length")
 	@Pattern(regexp = "^\\d{10}$", message = "Please input phone number like a row of 10 digits")
 	private String phone;
@@ -47,7 +47,7 @@ public class AccountRequestDTO {
 	private LocalDate birthday;
 
 	@JsonProperty("password")
-	@NotBlank(message = "Password must not be empty")
+	@NotBlank(message = "Password must not be blank")
 	@Size(min=10, max=60, message = "Password should be 10-60 symbols length")
 	private String password;
 	
