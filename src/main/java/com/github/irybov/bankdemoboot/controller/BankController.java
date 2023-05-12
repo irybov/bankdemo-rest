@@ -66,6 +66,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
 
+@CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 @Slf4j
 //@Validated
 @Controller
@@ -327,7 +328,7 @@ public class BankController extends BaseController {
 		return "redirect:/accounts/show/" + phone;
 	}
 	
-	@CrossOrigin(origins = "*", methods = RequestMethod.PATCH)
+	@CrossOrigin(originPatterns = "*", methods = RequestMethod.PATCH, allowCredentials="false")
 	@PatchMapping("/bills/external")
 	public ResponseEntity<?> outerIncome(@RequestBody OperationRequestDTO dto) {	
 		

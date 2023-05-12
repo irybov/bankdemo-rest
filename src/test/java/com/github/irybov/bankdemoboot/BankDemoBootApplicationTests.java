@@ -9,6 +9,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -751,14 +752,21 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
 		}
 		
+		@WithMockUser
 		@Test
 		void check_cors_protection() throws Exception {
 			
-			mockMVC.perform(get("/bills/notify").header("Origin", "http://evil.com"))
-				.andExpect(status().isForbidden());
+			mockMVC.perform(options("/bills/external").header("Origin", "http://" + uri + ":" + port))
+			.andExpect(status().isOk());
 			
-			mockMVC.perform(get("/bills/notify").header("Origin", "http://" + uri +":" + port))
+			mockMVC.perform(options("/bills/external").header("Origin", "http://evil.com"))
 				.andExpect(status().isOk());
+			
+			mockMVC.perform(patch("/bills/external").header("Origin", "http://" + uri + ":" + port))
+			.andExpect(status().isBadRequest());
+			
+			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com"))
+				.andExpect(status().isBadRequest());
 		}
 		
 	}

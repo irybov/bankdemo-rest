@@ -685,14 +685,21 @@ class BankControllerTest {
 		mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
 	}
 	
+	@WithMockUser
 	@Test
 	void check_cors_protection() throws Exception {
 		
-		mockMVC.perform(get("/bills/notify").header("Origin", "http://evil.com"))
-			.andExpect(status().isForbidden());
+		mockMVC.perform(options("/bills/external").header("Origin", "http://" + uri + ":" + port))
+		.andExpect(status().isOk());
 		
-		mockMVC.perform(options("/bills/notify").header("Origin", "http://" + uri +":" + port))
+		mockMVC.perform(options("/bills/external").header("Origin", "http://evil.com"))
 			.andExpect(status().isOk());
+		
+		mockMVC.perform(patch("/bills/external").header("Origin", "http://" + uri + ":" + port))
+		.andExpect(status().isBadRequest());
+		
+		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com"))
+			.andExpect(status().isBadRequest());
 	}
 	
 	@AfterEach

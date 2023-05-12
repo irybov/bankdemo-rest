@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 //import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+//import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -70,17 +70,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	protected void configure(HttpSecurity http) throws Exception {
 
 		http
-			.cors(Customizer.withDefaults())
+//			.cors(Customizer.withDefaults())
+//			.cors()
 //			.and()
 			.authorizeRequests()
-			.antMatchers("/login", "/register", "/confirm", "/webjars/**", "/css/**", "/js/**")
+			.antMatchers("/login", "/register", "/confirm", "/webjars/**", "/css/**", "/js/**",
+					"/bills/external")
 			.permitAll()
-				.and()	
+				.and()
 			.authorizeRequests()
 			.antMatchers("/bills/**", "/accounts/show", "/accounts/password")
 			.hasAnyRole("ADMIN", "CLIENT")
 			.antMatchers("/accounts/search", "/accounts/status", "/accounts/list/**", "/actuator/**",
-					"/h2-console/**", "/operations/**", "/**/swagger*/**", "/**/api-docs/**")
+				"/control", "/h2-console/**", "/operations/**", "/**/swagger*/**", "/**/api-docs/**")
 			.hasRole("ADMIN")
 			.anyRequest().authenticated()
 				.and()
@@ -105,6 +107,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
             .deleteCookies("JSESSIONID")
 			.logoutSuccessUrl("/home")
 			.permitAll();
+//			.and().cors().configurationSource(corsConfigurationSource());
 //		http.headers().frameOptions().disable();
 	}
 	
@@ -117,15 +120,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
-    	
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(Arrays.asList("http://" + uri +":" + port));
-		configuration.setAllowedMethods(Arrays.asList("*"));
+		configuration.setAllowedMethods(Arrays.asList("GET", "OPTIONS", "PATCH"));
 		configuration.setAllowCredentials(true);
-		configuration.setExposedHeaders(Arrays.asList("X-Get-Header"));
-		configuration.setMaxAge(3600L);
-		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Requestor-Type"));
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		configuration.setExposedHeaders(Arrays.asList("*"));
+//		configuration.setMaxAge(3600L);
+		configuration.setAllowedHeaders(Arrays.asList("*"));
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
     }

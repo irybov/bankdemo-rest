@@ -59,7 +59,7 @@
 <div sec:authorize="hasRole('ADMIN')">
 <form id="search_form">
 	<p th:text="${message}" class="error" id="message"/>
-	<input type="text" th:id="phone" class="form-control" placeholder="Phone"
+	<input type="number" th:id="phone" class="form-control" placeholder="Phone"
 	 required autofocus style="width:auto"/>
 	 <p>
 	<button type="submit" class="btn btn-primary" id="search">Search</button>
