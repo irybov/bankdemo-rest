@@ -48,7 +48,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -58,6 +57,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.OperationRequestDTO;
@@ -105,11 +105,6 @@ class BankControllerTest {
 	private static Operation operation;	
 	private static Operation.OperationBuilder builder;
 	private static Bill bill;
-	
-	@Value("${server.address}")
-	private String uri;
-	@Value("${server.port}")
-	private int port;
 	
 	@BeforeAll
 	static void prepare() {
@@ -382,7 +377,7 @@ class BankControllerTest {
 	@Test
 	void successful_payment() throws Exception {
 		
-		when(builder.build()).thenReturn(operation);		
+		when(builder.build()).thenReturn(operation);
 		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponseDTO(bill));
 		doNothing().when(executorService).execute(
 				(Runnable) org.mockito.ArgumentMatchers.any(Runnable.class));
@@ -426,7 +421,7 @@ class BankControllerTest {
 			.andExpect(redirectedUrl("/accounts/show/" + phone));
 		
 		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "USD", 0.01);
-		mockMVC.perform(patch("/bills/external")
+		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -505,7 +500,7 @@ class BankControllerTest {
 				.andExpect(view().name("/bill/transfer"));
 		
 		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "USD", 0.00);
-		mockMVC.perform(patch("/bills/external")
+		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -599,7 +594,7 @@ class BankControllerTest {
 				.andExpect(view().name("/bill/transfer"));
 		
 		OperationRequestDTO dto = new OperationRequestDTO(777, 777, "USD", 0.01);
-		mockMVC.perform(patch("/bills/external")
+		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -641,7 +636,7 @@ class BankControllerTest {
 				.andExpect(view().name("/bill/transfer"));
 		
 		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "SEA", 0.01);
-		mockMVC.perform(patch("/bills/external")
+		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -658,7 +653,7 @@ class BankControllerTest {
 	void constraint_violation_exception() throws Exception {
 		
 		OperationRequestDTO dto = new OperationRequestDTO(1_000_000_000, -1, "yuan", -0.01);
-		mockMVC.perform(patch("/bills/external")
+		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -669,7 +664,7 @@ class BankControllerTest {
 			.andExpect(content().string(containsString("Amount of money should be higher than zero")));
 		
 		dto = new OperationRequestDTO(null, null, " ", null);
-		mockMVC.perform(patch("/bills/external")
+		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -687,19 +682,41 @@ class BankControllerTest {
 	
 	@WithMockUser
 	@Test
-	void check_cors_protection() throws Exception {
-		
-		mockMVC.perform(options("/bills/external").header("Origin", "http://" + uri + ":" + port))
-		.andExpect(status().isOk());
+	void check_cors_and_xml_support() throws Exception {
 		
 		mockMVC.perform(options("/bills/external").header("Origin", "http://evil.com"))
 			.andExpect(status().isOk());
 		
-		mockMVC.perform(patch("/bills/external").header("Origin", "http://" + uri + ":" + port))
-		.andExpect(status().isBadRequest());
+		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+												.contentType(MediaType.APPLICATION_XML))
+			.andExpect(status().isBadRequest());
+		
+		mockMVC.perform(get("/bills/notify").header("Origin", "http://evil.com"))
+			.andExpect(status().isForbidden());
 		
 		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com"))
-			.andExpect(status().isBadRequest());
+			.andExpect(status().isUnsupportedMediaType());
+		
+		
+		when(builder.build()).thenReturn(operation);
+		doNothing().when(executorService).execute(
+				(Runnable) org.mockito.ArgumentMatchers.any(Runnable.class));
+		doNothing().when(billService).external(operation);
+		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt()))
+		.thenReturn(operation);
+		
+		XmlMapper xmlMapper = new XmlMapper();
+		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "USD", 0.01);
+		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+												.header("Accept", "application/xml")
+												.contentType(MediaType.APPLICATION_XML)
+												.content(xmlMapper.writeValueAsString(dto))
+						)
+			.andExpect(status().isOk())
+			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_XML))
+			.andExpect(content().string(containsString("Successful")));
+		verify(billService).external(operation);
+		verify(operationService).transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt());
 	}
 	
 	@AfterEach

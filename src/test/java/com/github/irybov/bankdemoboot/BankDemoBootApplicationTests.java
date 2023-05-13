@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -44,6 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.OperationRequestDTO;
@@ -394,11 +394,6 @@ public class BankDemoBootApplicationTests {
 		
 		private static final String PHONE = "1111111111";
 		
-		@Value("${server.address}")
-		private String uri;
-		@Value("${server.port}")
-		private int port;
-		
 		@Test
 		void can_get_client_html() throws Exception {
 			
@@ -601,7 +596,7 @@ public class BankDemoBootApplicationTests {
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
 			OperationRequestDTO dto = new OperationRequestDTO(777, 2, "SEA", 0.01);
-			mockMVC.perform(patch("/bills/external")
+			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -641,7 +636,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(view().name("/bill/payment"));
 			
 			OperationRequestDTO dto = new OperationRequestDTO(777, 2, "SEA", 0.00);
-			mockMVC.perform(patch("/bills/external")
+			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -686,7 +681,7 @@ public class BankDemoBootApplicationTests {
 			.andExpect(view().name("/bill/transfer"));
 			
 			OperationRequestDTO dto = new OperationRequestDTO(777, 777, "SEA", 0.01);
-			mockMVC.perform(patch("/bills/external")
+			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -713,7 +708,7 @@ public class BankDemoBootApplicationTests {
 					.andExpect(view().name("/bill/transfer"));
 			
 			OperationRequestDTO dto = new OperationRequestDTO(777, 2, "AUD", 0.01);
-			mockMVC.perform(patch("/bills/external")
+			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -725,7 +720,7 @@ public class BankDemoBootApplicationTests {
 		void constraint_violation_exception() throws Exception {
 			
 			OperationRequestDTO dto = new OperationRequestDTO(1_000_000_000, -1, "yuan", -0.01);
-			mockMVC.perform(patch("/bills/external")
+			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -736,7 +731,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(content().string(containsString("Amount of money should be higher than zero")));
 			
 			dto = new OperationRequestDTO(null, null, " ", null);
-			mockMVC.perform(patch("/bills/external")
+			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -756,17 +751,29 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void check_cors_protection() throws Exception {
 			
-			mockMVC.perform(options("/bills/external").header("Origin", "http://" + uri + ":" + port))
-			.andExpect(status().isOk());
-			
 			mockMVC.perform(options("/bills/external").header("Origin", "http://evil.com"))
 				.andExpect(status().isOk());
 			
-			mockMVC.perform(patch("/bills/external").header("Origin", "http://" + uri + ":" + port))
-			.andExpect(status().isBadRequest());
+			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+													.contentType(MediaType.APPLICATION_XML))
+				.andExpect(status().isBadRequest());
+			
+			mockMVC.perform(get("/bills/notify").header("Origin", "http://evil.com"))
+				.andExpect(status().isForbidden());
 			
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com"))
-				.andExpect(status().isBadRequest());
+				.andExpect(status().isUnsupportedMediaType());
+			
+			XmlMapper xmlMapper = new XmlMapper();
+			OperationRequestDTO dto = new OperationRequestDTO(777, 2, "SEA", 0.01);
+			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+													.header("Accept", "application/xml")
+													.contentType(MediaType.APPLICATION_XML)
+													.content(xmlMapper.writeValueAsString(dto))
+							)
+				.andExpect(status().isOk())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_XML))
+				.andExpect(content().string(containsString("Successful")));
 		}
 		
 	}
