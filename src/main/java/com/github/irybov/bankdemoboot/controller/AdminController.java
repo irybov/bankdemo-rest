@@ -11,17 +11,18 @@ import java.io.ByteArrayOutputStream;
 //import java.io.FileOutputStream;
 //import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 //import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 //import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 //import java.nio.file.FileSystems;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 //import java.util.concurrent.ExecutorService;
 //import java.util.concurrent.Executors;
 import java.util.stream.Stream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceException;
@@ -43,6 +45,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -60,7 +63,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
@@ -123,14 +125,24 @@ public class AdminController extends BaseController {
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search/{phone}")
-//	@ResponseBody
 	public ResponseEntity<?> searchAccount(@PathVariable String phone) {
 		
 		if(phone != null) {
 			if(!phone.matches("^\\d{10}$")) {
 				log.warn("Admin {} types phone {} in a wrong format",
 								  authentication().getName(), phone);
-				throw new InputMismatchException("Phone number should be of 10 digits");
+				String message = new String("Phone number should be of 10 digits");
+				
+				Map<String, String> map = Stream.of(new String[][] {{"report", message},})
+								.collect(Collectors.toMap(data -> data[0], data -> data[1]));
+				String json = null;
+				try {
+					json = mapper.writeValueAsString(map);
+				}
+				catch (JsonProcessingException jpe) {
+					jpe.printStackTrace();
+				}
+				return new ResponseEntity<String>(json, HttpStatus.BAD_REQUEST);
 			}
 		}
 		
@@ -147,12 +159,11 @@ public class AdminController extends BaseController {
 			log.error("Database exception: account with phone {} not found", phone, exc);
 			String message = new String("Account with phone " + phone + " not found");
 			
-			ObjectMapper objectMapper = new ObjectMapper();
 			Map<String, String> map = Stream.of(new String[][] {{"report", message},})
 							.collect(Collectors.toMap(data -> data[0], data -> data[1]));
 			String json = null;
 			try {
-				json = objectMapper.writeValueAsString(map);
+				json = mapper.writeValueAsString(map);
 			}
 			catch (JsonProcessingException jpe) {
 				jpe.printStackTrace();
@@ -169,26 +180,48 @@ public class AdminController extends BaseController {
 //		return target;
 //		return new ResponseEntity<>(target, HttpStatus.OK);
 	}
-	
-/*	@PreAuthorize("hasRole('ADMIN')")
-	@GetMapping("/accounts/list")
-	@ResponseBody
-	public List<AccountResponseDTO> getClients(){
-		return accountService.getAll();
-	}*/
+
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/list")
-	public String getClients(Model model){		
-		List<AccountResponseDTO> clients = accountService.getAll();
-		model.addAttribute("clients", clients);
+	public String getClientsHTML(){
+//	public String getClients(Model model){
+//		List<AccountResponseDTO> clients = accountService.getAll();
+//		model.addAttribute("clients", clients);
 		return "/account/clients";
 	}
-/*	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/list/all")
-	@ResponseBody
-	public List<AccountResponseDTO> getClients(){
-		return accountService.getAll();
-	}*/
+	public ResponseEntity<byte[]> getClientsList(){
+		
+		List<AccountResponseDTO> clients = accountService.getAll();
+		String json = null;
+		try {
+			json = mapper.writeValueAsString(clients);
+		}
+		catch (JsonProcessingException exc) {
+			log.warn(exc.getMessage(), exc);
+		}
+		
+		byte[] data = json.getBytes(StandardCharsets.UTF_8);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try(OutputStream gzip = new GZIPOutputStream(baos);){
+			gzip.write(data);
+			gzip.flush();
+		}
+		catch (IOException exc) {
+			log.warn(exc.getMessage(), exc);
+		}
+		byte[] bytes = baos.toByteArray();
+		try {
+			baos.flush();
+			baos.close();
+		}
+		catch (IOException exc) {
+			log.warn(exc.getMessage(), exc);
+		}
+		
+		return ResponseEntity.ok().header(HttpHeaders.CONTENT_ENCODING, "gzip").body(bytes);
+	}
 	/*	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/list/{pageNumber}")
 	@ResponseBody
@@ -265,7 +298,7 @@ public class AdminController extends BaseController {
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/list/{id}")
 	@ResponseBody
-	public Page<OperationResponseDTO> getPage(@PathVariable int id,
+	public Page<OperationResponseDTO> getOperations(@PathVariable int id,
 			@RequestParam Optional<String> mindate, @RequestParam Optional<String> maxdate,
 			@RequestParam Optional<Double> minval, @RequestParam Optional<Double> maxval,
 			@RequestParam Optional<String> action, Pageable pageable) {

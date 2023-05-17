@@ -14,12 +14,12 @@ public class PasswordRequestDTO {
 
 	@JsonProperty("oldPassword")
 	@NotBlank
-	@Size(min=10, max=50, message = "Old password should be 10-50 symbols length")
+	@Size(min=10, max=60, message = "Old password should be 10-60 symbols length")
 	private String oldPassword;
 	
 	@JsonProperty("newPassword")
 	@NotBlank
-	@Size(min=10, max=50, message = "New password should be 10-50 symbols length")
+	@Size(min=10, max=60, message = "New password should be 10-60 symbols length")
 	private String newPassword;
 	
 }

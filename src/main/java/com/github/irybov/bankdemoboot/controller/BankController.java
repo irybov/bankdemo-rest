@@ -49,7 +49,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 //import com.github.irybov.bankdemoboot.Currency;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
@@ -86,11 +85,9 @@ public class BankController extends BaseController {
 		this.executorService = executorService;
 	}
 
-	@Autowired
-	private ObjectMapper mapper;
 	private Map<String, ResponseBodyEmitter> emitters = new ConcurrentHashMap<>();
 	
-	private final Set<Currency> currencies = new HashSet<>();
+	private Set<Currency> currencies = new HashSet<>();
 	@PostConstruct
 	private void init() {
 		
@@ -207,7 +204,7 @@ public class BankController extends BaseController {
 	
 	@PreAuthorize("hasRole('CLIENT')")
 	@DeleteMapping("/bills/delete/{id}")
-	@ResponseBody
+//	@ResponseBody
 	public void deleteBill(@PathVariable int id) {
 		log.info("Client {} deletes bill with id {}", authentication().getName(), id);
 		billService.deleteBill(id);

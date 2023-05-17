@@ -295,14 +295,20 @@ public class BankDemoBootApplicationTests {
 		}
 		
 		@Test
-		void can_get_clients_list() throws Exception {
+		void can_get_clients_html() throws Exception {
 			
 			mockMVC.perform(get("/accounts/list"))
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString("Clients list")))
-				.andExpect(model().size(1))
-		        .andExpect(model().attribute("clients", any(List.class)))
 		        .andExpect(view().name("/account/clients"));
+		}
+		
+		@Test
+		void can_get_clients_list() throws Exception {
+			
+			mockMVC.perform(get("/accounts/list/all"))
+				.andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE));
 		}
 	    
 		@Test

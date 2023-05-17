@@ -1,6 +1,6 @@
 $(document).ready(function(){
 	
-	$('#bill_table tbody').empty();
+	$('#bills_table tbody').empty();
 //    var data = [[${account.bills}]];
     var token = $("meta[name='_csrf']").attr("content");
     var header = $("meta[name='_csrf_header']").attr("content");
@@ -20,7 +20,7 @@ $(document).ready(function(){
 			+ '</div></td>'
 			+ '<td><button class="btn btn-danger" id="erase'+rowID+'">Erase</button></td>'
 			+ '</tr>';
-    	$(dataRow).appendTo('#bill_table tbody');
+    	$(dataRow).appendTo('#bills_table tbody');
 	 	
 	 	$('.btn-group .btn').click(function() {
 	 		var action = $(this).val();
@@ -81,7 +81,7 @@ $(document).ready(function(){
 		connect();
 		
 	});
-	$('#bill_table tbody').hide().fadeIn('slow');
+	$('#bills_table tbody').hide().fadeIn('slow');
 	
 });
 
@@ -117,7 +117,7 @@ $(document).ready(function(){
    					+ '</div></td>'
  					+ '<td><button class="btn btn-danger" id="erase'+rowID+'">Erase</button>'
  					+'</td></tr>';
-    		 	$(info).appendTo('#bill_table tbody');
+    		 	$(info).appendTo('#bills_table tbody');
     		 	
     		 	$('.btn-group .btn').click(function() {
     		 		var action = $(this).val();

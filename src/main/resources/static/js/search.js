@@ -3,7 +3,7 @@ $(document).ready(function(){
     $('#search_form').submit(function (ev) {
         ev.preventDefault();
 		$('#client_table tbody').empty();
-		$('#bill_table tbody').empty();
+		$('#bills_table tbody').empty();
  		$.getJSON('/bankdemo/accounts/search/'+$('#phone').val(),
  			function(data){
 	 		var account = '<tr>'
@@ -46,7 +46,7 @@ $(document).ready(function(){
  					+ '</button>'
  					+ '<button class="btn btn-success" id="export_csv'+rowID+'">Export<br/>to CSV'
  					+ '</button></td></tr>';
-				$(info).appendTo('#bill_table tbody');
+				$(info).appendTo('#bills_table tbody');
 				
 				var statusBTN = '#bill_status'+rowID;
 	 			$(statusBTN).click(function(){
@@ -280,7 +280,7 @@ $(document).ready(function(){
 	    .done(function() { $('#message').empty(); })
 	    .fail(function() { $('#message').html("Phone number not found"); });
 		$('#client_table tbody').hide().fadeIn('fast');
-		$('#bill_table tbody').hide().fadeIn('slow');
+		$('#bills_table tbody').hide().fadeIn('slow');
     });
     
 });

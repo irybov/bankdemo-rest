@@ -6,11 +6,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 abstract class BaseController {
 	
     @Autowired
     ApplicationContext context;
+    
+	@Autowired
+	ObjectMapper mapper;
 
 	Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();

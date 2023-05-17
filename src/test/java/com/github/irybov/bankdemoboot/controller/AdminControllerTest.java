@@ -18,9 +18,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -28,6 +30,7 @@ import java.util.InputMismatchException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.zip.GZIPOutputStream;
 
 import javax.persistence.PersistenceException;
 
@@ -50,9 +53,12 @@ import org.springframework.http.MediaType;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
@@ -82,6 +88,8 @@ class AdminControllerTest {
 	private AccountDetailsService accountDetailsService;
 	@Autowired
 	private MockMvc mockMVC;
+	@Autowired
+	private ObjectMapper mapper;
 	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
@@ -148,19 +156,61 @@ class AdminControllerTest {
 	}
 	
 	@Test
-	void can_get_clients_list() throws Exception {
-		
-		List<AccountResponseDTO> clients = new ArrayList<>();
-		when(accountService.getAll()).thenReturn(clients);
+	void can_get_clients_html() throws Exception {
 		
 		mockMVC.perform(get("/accounts/list"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("Clients list")))
-			.andExpect(model().size(1))
-	        .andExpect(model().attribute("clients", clients))
 	        .andExpect(view().name("/account/clients"));
+	}
+	
+	@Test
+	void can_get_clients_list() throws Exception {
+		
+		List<AccountResponseDTO> clients = new ArrayList<>();
+		Account entity = new Account("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
+				 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
+		clients.add(new AccountResponseDTO(entity));
+		when(accountService.getAll()).thenReturn(clients);
+		
+		byte[] output = data_2_gzip_converter(clients);
+		
+		mockMVC.perform(get("/accounts/list/all"))
+			.andExpect(status().isOk())
+			.andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+			.andExpect(content().bytes(output));
 		
 	    verify(accountService).getAll();
+	}
+	private byte[] data_2_gzip_converter(List<AccountResponseDTO> clients) {
+		
+		String json = null;
+		try {
+			json = mapper.writeValueAsString(clients);
+		}
+		catch (JsonProcessingException exc) {
+//			log.warn(exc.getMessage(), exc);
+		}
+		
+		byte[] data = json.getBytes(StandardCharsets.UTF_8);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try(OutputStream gzip = new GZIPOutputStream(baos);){
+			gzip.write(data);
+			gzip.flush();
+		}
+		catch (IOException exc) {
+//			log.warn(exc.getMessage(), exc);
+		}
+		byte[] bytes = baos.toByteArray();
+		try {
+			baos.flush();
+			baos.close();
+		}
+		catch (IOException exc) {
+//			log.warn(exc.getMessage(), exc);
+		}
+		
+		return bytes;
 	}
 	
 	@Test
@@ -301,8 +351,7 @@ class AdminControllerTest {
 		
 		verify(operationService).getAll(anyInt());
 		verify(billService).getBillDTO(anyInt());
-	}
-	
+	}	
 	private byte[] data_2_csv_converter(Account account, Bill bill, List<OperationResponseDTO> operations) {
 
 		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};		

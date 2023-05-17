@@ -6,14 +6,14 @@
 <title>Clients list</title>
 	<link th:rel="stylesheet" th:href="@{/webjars/bootstrap/5.1.3/css/bootstrap.min.css}"/>
 	<script th:src="@{/webjars/bootstrap/5.1.3/js/bootstrap.min.js}"></script>
-<!-- 	<script th:src="@{/webjars/jquery/3.6.0/jquery.min.js}"></script>
+	<script th:src="@{/webjars/jquery/3.6.0/jquery.min.js}"></script>
 	<script th:src="@{/webjars/popper.js/2.9.3/umd/popper.min.js}"></script>	
-	<script th:src="@{/js/clients.js}"></script> -->
+	<script th:src="@{/js/clients.js}"></script>
 </head>
 <body>
 
 <div class="container pt-5" sec:authorize="hasRole('ADMIN')">
-<table class="table table-hover table-sm" id="client_table">
+<table class="table table-hover table-sm" id="clients_table">
 	<thead>
 		<tr>
 			<th style="text-align: center;">Id</th>
@@ -26,7 +26,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		<tr th:each="target: ${clients}">
+<!-- 		<tr th:each="target: ${clients}">
 			<td class="align-middle" align="center" th:text="${target.id}"></td>
 		    <td class="align-middle" align="center" th:text="${target.name}"></td>
 		    <td class="align-middle" align="center" th:text="${target.surname}"></td>
@@ -35,7 +35,7 @@
 		    <td class="align-middle" align="center"
 		     th:text="${#temporals.format(target.birthday, 'yyyy-MM-dd')}"></td>
 		    <td class="align-middle" align="center" th:text="${target.active}"></td>
-		</tr>	
+		</tr> -->	
 	</tbody>
 </table>
 </div>

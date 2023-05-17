@@ -1,6 +1,33 @@
 $(document).ready(function(){
+
+	$('#clients_table tbody').empty();
+	$.ajax({
+		type: 'GET',
+		url: '/bankdemo/accounts/list/all',
+/*	    beforeSend: function (jqXHR) {
+	        jqXHR.setRequestHeader('Accept-Encoding', 'gzip');
+	    },*/
+//		headers: {'Accept-Encoding' : 'gzip'},
+//		dataType: "binary",
+    	success: function(response) {
+    		const json = JSON.parse(response);
+    		$.each(json, function(key, value){	
+    	 		let account = '<tr>'
+    				+ '<td class=align-middle align=center>'+value.id+'</td>'
+    				+ '<td class=align-middle align=center>'+value.name+'</td>'
+    				+ '<td class=align-middle align=center>'+value.surname+'</td>'
+    				+ '<td class=align-middle align=center>'+value.phone+'</td>'
+    				+ '<td></td>'
+    			    + '<td class=align-middle align=center>'+value.birthday+'</td>'
+    			    + '<td class=align-middle align=center>'+value.active+'</td>'
+    				+ '</tr>';
+    		 	$(account).appendTo('#clients_table tbody');
+    		});
+    	}
+	});
+	$('#clients_table tbody').hide().fadeIn('fast');
 	
-	$('#client_table tbody').empty();
+/*	$('#clients_table tbody').empty();
 	$.getJSON('/bankdemo/accounts/list/0',
 		$.each(data.content, function(key, value){
 	 		var account = '<tr>'
@@ -12,15 +39,15 @@ $(document).ready(function(){
 			    + '<td class=align-middle align=center>'+value.birthday+'</td>'
 			    + '<td class=align-middle align=center>'+value.active+'</td>'
 				+ '</tr>';
-		 	$(account).appendTo('#client_table tbody');
+		 	$(account).appendTo('#clients_table tbody');
 		});
 		$('ul.pagination').empty();
 		buildPagination(data);
 	)
-	$('#client_table tbody').hide().fadeIn('fast');
+	$('#clients_table tbody').hide().fadeIn('fast');
 	
 	function fetchNotes(startPage) {
-		$('#client_table tbody').empty();
+		$('#clients_table tbody').empty();
 		$.getJSON('/bankdemo/operations/list/'+startPage,
  			$.each(response.content, function(key, value){
  		 		var account = '<tr>'
@@ -32,13 +59,13 @@ $(document).ready(function(){
  				    + '<td class=align-middle align=center>'+value.birthday+'</td>'
  				    + '<td class=align-middle align=center>'+value.active+'</td>'
  					+ '</tr>';
- 			 	$(account).appendTo('#client_table tbody');
+ 			 	$(account).appendTo('#clients_table tbody');
  			});
  			$('ul.pagination').empty();
  			buildPagination(response);
  		)
 	}	 	 		    
-	$('#client_table tbody').hide().fadeIn('fast'); 			
+	$('#clients_table tbody').hide().fadeIn('fast'); 			
 	
     function buildPagination(response) {
     	totalPages = response.totalPages;
@@ -134,6 +161,6 @@ $(document).ready(function(){
       		$(this).parent().addClass("active");
     		//$(this).addClass("active");
       	}
-    });
+    });*/
 	
 });
