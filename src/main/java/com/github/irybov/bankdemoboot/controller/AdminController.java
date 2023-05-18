@@ -71,8 +71,11 @@ import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
 import com.opencsv.CSVWriter;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
+@Api(description = "Controller for admin's actions ")
 @CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 @Slf4j
 //@Validated
@@ -94,6 +97,7 @@ public class AdminController extends BaseController {
 		this.executorService = executorService;
 	}
 	
+	@ApiOperation("Returns admin's working html-page")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search")
 	public String searchAccount(@RequestParam(required = false) String phone, Model model) {
@@ -123,6 +127,7 @@ public class AdminController extends BaseController {
 		return "/account/search";
 	}
 	
+	@ApiOperation("Returns information about client")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search/{phone}")
 	public ResponseEntity<?> searchAccount(@PathVariable String phone) {
@@ -181,6 +186,7 @@ public class AdminController extends BaseController {
 //		return new ResponseEntity<>(target, HttpStatus.OK);
 	}
 
+	@ApiOperation("Returns clients html-page")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/list")
 	public String getClientsHTML(){
@@ -189,6 +195,7 @@ public class AdminController extends BaseController {
 //		model.addAttribute("clients", clients);
 		return "/account/clients";
 	}
+	@ApiOperation("Returns lsit of all clients")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/list/all")
 	public ResponseEntity<byte[]> getClientsList(){
@@ -235,7 +242,8 @@ public class AdminController extends BaseController {
 		
 		accountService.changeStatus(phone);
 		return searchAccount(phone, modelMap);
-	}*/	
+	}*/
+	@ApiOperation("Changes client status")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/status/{id}")
 	@ResponseBody
@@ -259,6 +267,7 @@ public class AdminController extends BaseController {
 		}
 		return searchAccount(phone, modelMap);
 	}*/	
+	@ApiOperation("Changes bill status")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/bills/status/{id}")
 	@ResponseBody
@@ -289,12 +298,13 @@ public class AdminController extends BaseController {
 		return operations;
 	}*/
 	
+	@ApiOperation("Returns bill's operations history html-page")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/list")
 	public String getOperations() {
 		return "/account/history";
 	}
-	
+	@ApiOperation("Returns filtered pageable list of bill's operations")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/list/{id}")
 	@ResponseBody
@@ -322,6 +332,7 @@ public class AdminController extends BaseController {
 				minval.orElse(0.01), maxval.orElse(10000.00), dateFrom, dateTo, pageable);
 	}
 	
+	@ApiOperation("Exports bill's operations list to CSV file")
 	@PreAuthorize("hasRole('ADMIN')")
 //	@GetMapping("/operations/print/{id}")
 	@GetMapping(value = "/operations/print/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)

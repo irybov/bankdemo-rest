@@ -13,8 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
+@Api(description = "Special controller for runtime switch of model layer type")
 @CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 @Slf4j
 @RestController
@@ -37,6 +40,7 @@ public class MegaController {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
 	
+	@ApiOperation("Switchs model layer type wired to defined controllers")
 	@PreAuthorize("hasRole('ADMIN')")
 	@PutMapping("/control")
 	public String changeServiceImpl(@RequestParam String impl, HttpServletResponse response) {

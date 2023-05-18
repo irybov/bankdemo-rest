@@ -23,8 +23,12 @@ import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.AccountServiceDAO;
 import com.github.irybov.bankdemoboot.service.AccountServiceJPA;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import springfox.documentation.annotations.ApiIgnore;
 
+@Api(description = "Controller for users authorization and registration")
 @CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 @Slf4j
 //@Validated
@@ -41,22 +45,26 @@ public class AuthController extends BaseController {
 		this.accountValidator = accountValidator;
 	}
 
+	@ApiOperation("Returns apllication's start html-page")
 	@GetMapping("/home")
 	public String startPage() {
 		return "/auth/home";
 	}
-		
+	
+	@ApiOperation("Returns registration html-page")
 	@GetMapping("/register")
 	public String createAccount(Model model) {
 		model.addAttribute("account", new AccountRequestDTO());
 		return "/auth/register";
 	}
 	
+	@ApiOperation("Returns login form html-page")
 	@GetMapping("/login")
 	public String loginForm() {
 		return "/auth/login";
 	}
 	
+	@ApiOperation("Returns welcome html-page")
 	@GetMapping("/success")
 	public String signUp(Model model) {
 		
@@ -73,6 +81,7 @@ public class AuthController extends BaseController {
 		}
 	}
 	
+	@ApiIgnore
 	@PostMapping("/confirm")
 	public String signIn(@ModelAttribute("account") AccountRequestDTO accountRequestDTO,
 			BindingResult result, Model model, HttpServletResponse response) {

@@ -59,11 +59,15 @@ import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.model.PayLoad;
 import com.github.irybov.bankdemoboot.service.OperationService;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import springfox.documentation.annotations.ApiIgnore;
 
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
 
+@Api(description = "Controller for client's actions")
 @CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 @Slf4j
 //@Validated
@@ -124,6 +128,7 @@ public class BankController extends BaseController {
 		}
 	}
 	
+	@ApiOperation("Returns client's private html-page")
 	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping("/accounts/show/{phone}")
 	public String getAccount(@PathVariable String phone, ModelMap modelMap,
@@ -175,6 +180,7 @@ public class BankController extends BaseController {
 		accountService.addBill(phone, currency);
 		return "redirect:/accounts/show/{phone}";
 	}*/
+	@ApiOperation("Creates a new bill in database")
 	@PreAuthorize("hasRole('CLIENT')")
 	@PostMapping("/bills/add")
 	@ResponseBody
@@ -202,6 +208,7 @@ public class BankController extends BaseController {
 		return "forward:/accounts/show/{phone}";
 	}*/
 	
+	@ApiOperation("Deletes the existing bill from database")
 	@PreAuthorize("hasRole('CLIENT')")
 	@DeleteMapping("/bills/delete/{id}")
 //	@ResponseBody
@@ -210,6 +217,7 @@ public class BankController extends BaseController {
 		billService.deleteBill(id);
 	}
 	
+	@ApiOperation("Returns specified operation's html-page")
 	@PreAuthorize("hasRole('CLIENT')")
 	@PostMapping("/bills/operate")
 	public String operateBill(@RequestParam Map<String, String> params, ModelMap modelMap) {
@@ -223,6 +231,7 @@ public class BankController extends BaseController {
 		return "/bill/payment";
 	}
 	
+	@ApiOperation("Checks recipient's name and surename")
 	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping(value = "/bills/validate/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
 	@ResponseBody
@@ -240,6 +249,7 @@ public class BankController extends BaseController {
 		return bill.getOwner().getName() + " " + bill.getOwner().getSurname();
 	}
 	
+	@ApiOperation("Operates money by specified action's type")
 	@PreAuthorize("hasRole('CLIENT')")
 	@PatchMapping("/bills/launch/{id}")
 	public String driveMoney(@PathVariable int id, @RequestParam(required=false) String recipient,
@@ -324,6 +334,7 @@ public class BankController extends BaseController {
 		return "redirect:/accounts/show/" + phone;
 	}
 	
+	@ApiOperation("Recieves incoming payment from external systems")
 	@CrossOrigin(originPatterns = "*")
 	@PatchMapping(path = "/bills/external",
 					consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
@@ -359,6 +370,7 @@ public class BankController extends BaseController {
 		return new ResponseEntity<String>("Successful", HttpStatus.OK);
 	}
 	
+	@ApiIgnore
 	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping(path = "/bills/notify")
 	public ResponseBodyEmitter registerEmitter() {
@@ -391,6 +403,7 @@ public class BankController extends BaseController {
 		}
 	}
 	
+	@ApiOperation("Returns password's change html-page")
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
 	@GetMapping("/accounts/password/{phone}")
 	public String changePassword(@PathVariable String phone, Model model) {
@@ -398,6 +411,7 @@ public class BankController extends BaseController {
 		return "/account/password";
 	}
 	
+	@ApiOperation("Confirms password's change action")
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
 	@PatchMapping("/accounts/password/{phone}")
 	public String changePassword(@PathVariable String phone,

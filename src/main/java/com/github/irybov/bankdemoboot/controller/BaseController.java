@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.swagger.annotations.Api;
+
+@Api(description = "Abstcrat controller, parent for all controllers except Mega")
 @CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 abstract class BaseController {
 	

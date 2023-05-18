@@ -75,14 +75,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 //			.and()
 			.authorizeRequests()
 			.antMatchers("/login", "/register", "/confirm", "/webjars/**", "/css/**", "/js/**",
-					"/bills/external")
+					"/bills/external", "/**/swagger*/**", "/**/api-docs/**")
 			.permitAll()
 				.and()
 			.authorizeRequests()
 			.antMatchers("/bills/**", "/accounts/show", "/accounts/password")
 			.hasAnyRole("ADMIN", "CLIENT")
 			.antMatchers("/accounts/search", "/accounts/status", "/accounts/list/**", "/actuator/**",
-				"/control", "/h2-console/**", "/operations/**", "/**/swagger*/**", "/**/api-docs/**")
+				"/control", "/h2-console/**", "/operations/**")
 			.hasRole("ADMIN")
 			.anyRequest().authenticated()
 				.and()
