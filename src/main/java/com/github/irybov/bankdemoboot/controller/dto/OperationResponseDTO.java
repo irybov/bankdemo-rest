@@ -4,8 +4,10 @@ import java.time.OffsetDateTime;
 
 import com.github.irybov.bankdemoboot.entity.Operation;
 
+import io.swagger.annotations.ApiModel;
 import lombok.Getter;
 
+@ApiModel
 @Getter
 public class OperationResponseDTO {
 

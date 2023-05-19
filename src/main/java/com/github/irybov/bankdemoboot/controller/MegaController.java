@@ -17,7 +17,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
-@Api(description = "Special controller for runtime switch of model layer type")
+@Api(description = "Special controller for runtime switch of model's layer type")
 @CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 @Slf4j
 @RestController
@@ -40,7 +40,7 @@ public class MegaController {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
 	
-	@ApiOperation("Switchs model layer type wired to defined controllers")
+	@ApiOperation("Switchs model's layer type wired to defined controllers")
 	@PreAuthorize("hasRole('ADMIN')")
 	@PutMapping("/control")
 	public String changeServiceImpl(@RequestParam String impl, HttpServletResponse response) {
@@ -54,7 +54,7 @@ public class MegaController {
 			return "Services impementation has been switched to " + bean;
 		}
 		else {response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			return "Wrong implementation type, retry";
+			return "Wrong implementation type specified, retry";
 		}
 	}
 	

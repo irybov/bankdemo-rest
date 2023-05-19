@@ -34,6 +34,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	private String uri;
 	@Value("${server.port}")
 	private int port;
+//	@Value("${management.server.port}")
+//	private int m_port;
 	
 //	@Autowired
 //	private DataSource dataSource;
@@ -124,6 +126,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(Arrays.asList("http://" + uri +":" + port));
+//				("http://" + uri +":" + port, "http://" + uri +":" + m_port));
 		configuration.setAllowedMethods(Arrays.asList("GET", "OPTIONS", "PATCH"));
 		configuration.setAllowCredentials(true);
 		configuration.setExposedHeaders(Arrays.asList("*"));

@@ -21,8 +21,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
+import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 
@@ -33,10 +36,21 @@ public class SwaggerConfig {
     public Docket api() { 
         return new Docket(DocumentationType.SWAGGER_2)
           .select() 
-          .apis(RequestHandlerSelectors.basePackage("com.github.irybov.bankdemoboot.controller")) 
+          .apis(RequestHandlerSelectors.basePackage("com.github.irybov.bankdemoboot.controller"))
           .paths(PathSelectors.any())
-          .build();
+          .build().apiInfo(metaData());
     }
+    private ApiInfo metaData() {
+        return new ApiInfoBuilder()
+                .title("Spring Boot (Bank Demo)")
+                .description("Swagger configuration for application")
+                .version("0.0.1")
+                .license("Apache 2.0")
+                .licenseUrl("https://www.apache.org/licenses/LICENSE-2.0")
+                .contact(new Contact("Ivan Ryabov", "https://github.com/irybov", "v_cho@list.ru"))
+                .build();
+    }
+    
     @Bean
     public WebMvcEndpointHandlerMapping webEndpointServletHandlerMapping(WebEndpointsSupplier webEndpointsSupplier, ServletEndpointsSupplier servletEndpointsSupplier, ControllerEndpointsSupplier controllerEndpointsSupplier, EndpointMediaTypes endpointMediaTypes, CorsEndpointProperties corsProperties, WebEndpointProperties webEndpointProperties, Environment environment) {
             List<ExposableEndpoint<?>> allEndpoints = new ArrayList<>();

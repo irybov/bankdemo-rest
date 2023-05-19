@@ -100,7 +100,7 @@ public class AdminController extends BaseController {
 	@ApiOperation("Returns admin's working html-page")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search")
-	public String searchAccount(@RequestParam(required = false) String phone, Model model) {
+	public String getAdminPage(@RequestParam(required = false) String phone, Model model) {
 		
 		AccountResponseDTO admin;
 		try {
@@ -189,13 +189,13 @@ public class AdminController extends BaseController {
 	@ApiOperation("Returns clients html-page")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/list")
-	public String getClientsHTML(){
+	public String getClientsPage(){
 //	public String getClients(Model model){
 //		List<AccountResponseDTO> clients = accountService.getAll();
 //		model.addAttribute("clients", clients);
 		return "/account/clients";
 	}
-	@ApiOperation("Returns lsit of all clients")
+	@ApiOperation("Returns list of all clients")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/list/all")
 	public ResponseEntity<byte[]> getClientsList(){
@@ -301,14 +301,14 @@ public class AdminController extends BaseController {
 	@ApiOperation("Returns bill's operations history html-page")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/list")
-	public String getOperations() {
+	public String getOperationsPage() {
 		return "/account/history";
 	}
 	@ApiOperation("Returns filtered pageable list of bill's operations")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/list/{id}")
 	@ResponseBody
-	public Page<OperationResponseDTO> getOperations(@PathVariable int id,
+	public Page<OperationResponseDTO> getOperationsList(@PathVariable int id,
 			@RequestParam Optional<String> mindate, @RequestParam Optional<String> maxdate,
 			@RequestParam Optional<Double> minval, @RequestParam Optional<Double> maxval,
 			@RequestParam Optional<String> action, Pageable pageable) {

@@ -26,7 +26,6 @@ import com.github.irybov.bankdemoboot.service.AccountServiceJPA;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import springfox.documentation.annotations.ApiIgnore;
 
 @Api(description = "Controller for users authorization and registration")
 @CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
@@ -47,7 +46,7 @@ public class AuthController extends BaseController {
 
 	@ApiOperation("Returns apllication's start html-page")
 	@GetMapping("/home")
-	public String startPage() {
+	public String getStartPage() {
 		return "/auth/home";
 	}
 	
@@ -60,13 +59,13 @@ public class AuthController extends BaseController {
 	
 	@ApiOperation("Returns login form html-page")
 	@GetMapping("/login")
-	public String loginForm() {
+	public String getLoginForm() {
 		return "/auth/login";
 	}
 	
 	@ApiOperation("Returns welcome html-page")
 	@GetMapping("/success")
-	public String signUp(Model model) {
+	public String getRegistrationForm(Model model) {
 		
 		AccountResponseDTO account;
 		try {
@@ -81,9 +80,9 @@ public class AuthController extends BaseController {
 		}
 	}
 	
-	@ApiIgnore
+	@ApiOperation("Confirms registration web-form")
 	@PostMapping("/confirm")
-	public String signIn(@ModelAttribute("account") AccountRequestDTO accountRequestDTO,
+	public String confirmRegistration(@ModelAttribute("account") AccountRequestDTO accountRequestDTO,
 			BindingResult result, Model model, HttpServletResponse response) {
 		
 		accountValidator.validate(accountRequestDTO, result);

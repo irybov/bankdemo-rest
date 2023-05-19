@@ -61,6 +61,8 @@ import com.github.irybov.bankdemoboot.service.OperationService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -131,7 +133,7 @@ public class BankController extends BaseController {
 	@ApiOperation("Returns client's private html-page")
 	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping("/accounts/show/{phone}")
-	public String getAccount(@PathVariable String phone, ModelMap modelMap,
+	public String getClientPage(@PathVariable String phone, ModelMap modelMap,
 			HttpServletResponse response) {
 
 		String current = authentication().getName();
@@ -334,7 +336,11 @@ public class BankController extends BaseController {
 		return "redirect:/accounts/show/" + phone;
 	}
 	
-	@ApiOperation("Recieves incoming payment from external systems")
+	@ApiOperation(value = "Recieves incoming payment from external systems")
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully recieved", 
+							response = String.class), 
+		@ApiResponse(code = 404, message = "", responseContainer = "List", response = String.class), 
+		@ApiResponse(code = 500, message = "", response = String.class)})
 	@CrossOrigin(originPatterns = "*")
 	@PatchMapping(path = "/bills/external",
 					consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
@@ -367,7 +373,8 @@ public class BankController extends BaseController {
 			activateEmitter(dto.getRecipient(), dto.getAmount());
 		});
 		
-		return new ResponseEntity<String>("Successful", HttpStatus.OK);
+//		return new ResponseEntity<String>("Successfully recieved", HttpStatus.OK);
+		return ResponseEntity.ok().body(new String("Successfully recieved"));
 	}
 	
 	@ApiIgnore
@@ -406,15 +413,15 @@ public class BankController extends BaseController {
 	@ApiOperation("Returns password's change html-page")
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
 	@GetMapping("/accounts/password/{phone}")
-	public String changePassword(@PathVariable String phone, Model model) {
+	public String getPasswordForm(@PathVariable String phone, Model model) {
 		model.addAttribute("password", new PasswordRequestDTO());
 		return "/account/password";
 	}
 	
-	@ApiOperation("Confirms password's change action")
+	@ApiOperation("Confirms password's change web-form")
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
 	@PatchMapping("/accounts/password/{phone}")
-	public String changePassword(@PathVariable String phone,
+	public String submitPassword(@PathVariable String phone,
 			@ModelAttribute("password") @Valid PasswordRequestDTO passwordRequestDTO,
 			BindingResult result, Model model, HttpServletResponse response) {
 

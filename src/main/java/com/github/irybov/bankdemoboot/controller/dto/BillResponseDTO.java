@@ -6,8 +6,10 @@ import java.time.OffsetDateTime;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.github.irybov.bankdemoboot.entity.Bill;
 
+import io.swagger.annotations.ApiModel;
 import lombok.Getter;
 
+@ApiModel
 @Getter
 public class BillResponseDTO {
 

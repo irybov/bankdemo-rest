@@ -15,8 +15,10 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.github.irybov.bankdemoboot.entity.Account;
 //import com.github.irybov.bankdemoboot.entity.Bill;
 
+import io.swagger.annotations.ApiModel;
 import lombok.Getter;
 
+@ApiModel
 @Getter
 public class AccountResponseDTO {
 	
