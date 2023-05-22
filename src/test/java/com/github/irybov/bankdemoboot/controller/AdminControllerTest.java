@@ -59,9 +59,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
+import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.entity.Operation;
@@ -133,7 +133,7 @@ class AdminControllerTest {
     @Test
 	void can_get_admin_html() throws Exception {
 
-		AccountResponseDTO admin = new AccountResponseDTO(new Account());		
+		AccountResponse admin = new AccountResponse(new Account());		
 		when(accountService.getAccountDTO(anyString())).thenReturn(admin);
 		
 		mockMVC.perform(get("/accounts/search"))
@@ -167,10 +167,10 @@ class AdminControllerTest {
 	@Test
 	void can_get_clients_list() throws Exception {
 		
-		List<AccountResponseDTO> clients = new ArrayList<>();
+		List<AccountResponse> clients = new ArrayList<>();
 		Account entity = new Account("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
 				 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
-		clients.add(new AccountResponseDTO(entity));
+		clients.add(new AccountResponse(entity));
 		when(accountService.getAll()).thenReturn(clients);
 		
 		byte[] output = data_2_gzip_converter(clients);
@@ -182,7 +182,7 @@ class AdminControllerTest {
 		
 	    verify(accountService).getAll();
 	}
-	private byte[] data_2_gzip_converter(List<AccountResponseDTO> clients) {
+	private byte[] data_2_gzip_converter(List<AccountResponse> clients) {
 		
 		String json = null;
 		try {
@@ -240,9 +240,13 @@ class AdminControllerTest {
 	@Test
 	void input_mismatch_exception() throws Exception {
 		
-		assertThatThrownBy(() -> mockMVC.perform(get("/accounts/search/{phone}", "XXL"))
+/*		assertThatThrownBy(() -> mockMVC.perform(get("/accounts/search/{phone}", "XXL"))
 				.andExpect(status().isInternalServerError()))
-				.hasCause(new InputMismatchException("Phone number should be of 10 digits"));
+				.hasCause(new InputMismatchException("Phone number should be of 10 digits"));*/
+		
+		mockMVC.perform(get("/accounts/search/{phone}", "XXL"))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.report").value("Phone number should be of 10 digits"));
 	}
 	
 	@Test
@@ -264,11 +268,11 @@ class AdminControllerTest {
 	@Test
 	void can_get_account_info() throws Exception {
 		
-		AccountResponseDTO account = new AccountResponseDTO(entity);
-		List<BillResponseDTO> bills = new ArrayList<>();
+		AccountResponse account = new AccountResponse(entity);
+		List<BillResponse> bills = new ArrayList<>();
 		Bill bill = new Bill();
 		bill.setOwner(entity);
-		bills.add(new BillResponseDTO(bill));
+		bills.add(new BillResponse(bill));
 		account.setBills(bills);
 //		when(accountService.getAccountDTO(phone)).thenReturn(account);
 		when(accountService.getFullDTO(phone)).thenReturn(account);
@@ -296,12 +300,12 @@ class AdminControllerTest {
 	@Test
 	void can_get_operations_page() throws Exception {
 		
-		List<OperationResponseDTO> operations = new ArrayList<>();
-		operations.add(new OperationResponseDTO(new Operation()));
+		List<OperationResponse> operations = new ArrayList<>();
+		operations.add(new OperationResponse(new Operation()));
 //		OperationPage page = new OperationPage();
 //		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
 //										   page.getSortDirection(), page.getSortBy());
-		Page<OperationResponseDTO> operationPage = new PageImpl<>(operations);
+		Page<OperationResponse> operationPage = new PageImpl<>(operations);
 		
 		when(operationService.getPage(anyInt(), anyString(), anyDouble(), anyDouble(),
 				any(OffsetDateTime.class), any(OffsetDateTime.class), any(Pageable.class)))
@@ -321,7 +325,7 @@ class AdminControllerTest {
 	@Test
 	void can_export_data_2_csv_file() throws Exception {
 		
-		List<OperationResponseDTO> operations = new ArrayList<>();
+		List<OperationResponse> operations = new ArrayList<>();
 		Operation operation = Operation.builder()
 				.amount(0.00)
 				.action("infernal")
@@ -329,17 +333,17 @@ class AdminControllerTest {
 				.recipient(0)
 				.createdAt(OffsetDateTime.now())
 				.build();
-		operations.add(new OperationResponseDTO(operation));
+		operations.add(new OperationResponse(operation));
 
 		Bill bill = new Bill("SEA", true, entity);
 		bill.setBalance(BigDecimal.valueOf(9.99));
 		bill.setCreatedAt(OffsetDateTime.now());
-		BillResponseDTO fake = new BillResponseDTO(bill);
+		BillResponse fake = new BillResponse(bill);
 		
-		CompletableFuture<List<OperationResponseDTO>> futureOperations =
+		CompletableFuture<List<OperationResponse>> futureOperations =
 				CompletableFuture.completedFuture(operations);
 		when(operationService.getAll(anyInt())).thenReturn(futureOperations.join());
-		CompletableFuture<BillResponseDTO> futureBill = CompletableFuture.completedFuture(fake);
+		CompletableFuture<BillResponse> futureBill = CompletableFuture.completedFuture(fake);
 		when(billService.getBillDTO(anyInt())).thenReturn(futureBill.join());
 		
 		byte[] output = data_2_csv_converter(entity, bill, operations);
@@ -352,7 +356,7 @@ class AdminControllerTest {
 		verify(operationService).getAll(anyInt());
 		verify(billService).getBillDTO(anyInt());
 	}	
-	private byte[] data_2_csv_converter(Account account, Bill bill, List<OperationResponseDTO> operations) {
+	private byte[] data_2_csv_converter(Account account, Bill bill, List<OperationResponse> operations) {
 
 		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};		
 		List<String[]> data = new ArrayList<>();
@@ -368,7 +372,7 @@ class AdminControllerTest {
 		data.add(header);
 		data.add(new String[0]);		
 		
-		for(OperationResponseDTO operation : operations) {
+		for(OperationResponse operation : operations) {
 			String[] row = {operation.getAction(),
 							String.valueOf(operation.getAmount()),
 							operation.getCreatedAt().toString(),

@@ -34,7 +34,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
 import com.github.irybov.bankdemoboot.dao.OperationDAO;
 import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.model.OperationPage;
@@ -96,9 +96,9 @@ class OperationServiceDAOTest {
 		
 		when(operationDAO.getAll(anyInt())).thenReturn(operations);
 		
-		List<OperationResponseDTO> dtos = operationService.getAll(anyInt());
+		List<OperationResponse> dtos = operationService.getAll(anyInt());
 		assertAll(
-				() -> assertThat(dtos).hasSameClassAs(new ArrayList<OperationResponseDTO>()),
+				() -> assertThat(dtos).hasSameClassAs(new ArrayList<OperationResponse>()),
 				() -> assertThat(dtos.size()).isEqualTo(operations.size()));
 		verify(operationDAO).getAll(anyInt());
 	}
@@ -122,10 +122,10 @@ class OperationServiceDAOTest {
 				   page.getSortDirection(), page.getSortBy());
 		OffsetDateTime date = OffsetDateTime.now();
 		
-		Page<OperationResponseDTO> dtos = operationService.getPage(id, "^[a-z]{7,8}",
+		Page<OperationResponse> dtos = operationService.getPage(id, "^[a-z]{7,8}",
 				value, value, date, date, pageable);
 		assertThat(dtos)
-			.hasSameClassAs(new PageImpl<OperationResponseDTO>(new ArrayList<OperationResponseDTO>()));
+			.hasSameClassAs(new PageImpl<OperationResponse>(new ArrayList<OperationResponse>()));
 		assertThat(dtos.getContent().size()).isEqualTo(size);
 		verify(operationDAO).getPage(anyInt(), anyString(), anyDouble(),  anyDouble(),
 				any(OffsetDateTime.class), any(OffsetDateTime.class), any(Pageable.class));

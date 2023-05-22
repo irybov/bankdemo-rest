@@ -17,9 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
-import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountRequest;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.exception.RegistrationException;
 import com.github.irybov.bankdemoboot.repository.AccountRepository;
@@ -43,7 +43,7 @@ public class AccountServiceJPA implements AccountService {
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
 	
-	public void saveAccount(AccountRequestDTO accountRequestDTO) throws Exception {
+	public void saveAccount(AccountRequest accountRequestDTO) throws Exception {
 		
 //		LocalDate birthday = LocalDate.parse(accountRequestDTO.getBirthday());
 		if (accountRequestDTO.getBirthday().until(LocalDate.now(), ChronoUnit.YEARS) < 18) {
@@ -63,18 +63,18 @@ public class AccountServiceJPA implements AccountService {
 	}
 	
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
-	public AccountResponseDTO getFullDTO(String phone) throws EntityNotFoundException {
+	public AccountResponse getFullDTO(String phone) throws EntityNotFoundException {
 		Account account = accountRepository.getWithBills(phone);
 		if(account == null) {
 			throw new EntityNotFoundException("Account with phone " + phone + " not found");
 		}
-		AccountResponseDTO dto = new AccountResponseDTO(account);
-		dto.setBills(account.getBills().stream().map(BillResponseDTO::new).collect(Collectors.toList()));
+		AccountResponse dto = new AccountResponse(account);
+		dto.setBills(account.getBills().stream().map(BillResponse::new).collect(Collectors.toList()));
 		return dto;
 	}	
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
-	public AccountResponseDTO getAccountDTO(String phone) throws EntityNotFoundException {
-		return new AccountResponseDTO(getAccount(phone));
+	public AccountResponse getAccountDTO(String phone) throws EntityNotFoundException {
+		return new AccountResponse(getAccount(phone));
 	}
 	@Transactional(propagation = Propagation.MANDATORY, readOnly = true)
 	Account getAccount(String phone) throws EntityNotFoundException {
@@ -109,20 +109,20 @@ public class AccountServiceJPA implements AccountService {
 		return accountRepository.getPhone(phone);
 	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
-	public List<BillResponseDTO> getBills(int id){
+	public List<BillResponse> getBills(int id){
 //		List<Bill> bills = accountRepository.getById(id).getBills();
 //		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());		
 		return billService.getAll(id);
 		
 	}
 	
-	public BillResponseDTO addBill(String phone, String currency) throws Exception {
+	public BillResponse addBill(String phone, String currency) throws Exception {
 		Account account = getAccount(phone);
 		Bill bill = new Bill(currency, true, account);
 		billService.saveBill(bill);
 		account.addBill(bill);
 		updateAccount(account);
-		return new BillResponseDTO(bill);
+		return new BillResponse(bill);
 	}
 	
 /*	public void changeStatus(String phone) throws Exception {
@@ -163,11 +163,11 @@ public class AccountServiceJPA implements AccountService {
 	}
 
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
-	public List<AccountResponseDTO> getAll() {		
+	public List<AccountResponse> getAll() {		
 		return accountRepository.getAll()
 				.stream()
 				.sorted((a1, a2) -> a1.getId() - a2.getId())
-				.map(AccountResponseDTO::new)
+				.map(AccountResponse::new)
 				.collect(Collectors.toList());
 	}
 	

@@ -13,29 +13,27 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
 import com.github.irybov.bankdemoboot.entity.Operation;
 //import com.github.irybov.bankdemoboot.model.OperationPage;
 import com.github.irybov.bankdemoboot.model.OperationSpecs;
 import com.github.irybov.bankdemoboot.repository.OperationRepository;
 
 @Service
-//@Transactional
+@Transactional(readOnly = true, noRollbackFor = Exception.class)
 public class OperationServiceJPA implements OperationService {
 
 	@Autowired
 	private OperationRepository operationRepository;
 	
-	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public Operation getOne(long id) {
 		return operationRepository.getById(id);
 	}
-	@Transactional(readOnly = true, noRollbackFor = Exception.class)
-	public List<OperationResponseDTO> getAll(int id) {
+	public List<OperationResponse> getAll(int id) {
 
 		return operationRepository.findBySenderOrRecipientOrderByIdDesc(id, id)
 				.stream()
-				.map(OperationResponseDTO::new)
+				.map(OperationResponse::new)
 				.collect(Collectors.toList());
 	}
 /*	@Transactional(readOnly = true, noRollbackFor = Exception.class)
@@ -46,8 +44,7 @@ public class OperationServiceJPA implements OperationService {
 		return operationRepository.findBySenderOrRecipient(id, id, pageable)
 				.map(OperationResponseDTO::new);
 	}*/
-	@Transactional(readOnly = true, noRollbackFor = Exception.class)
-	public Page<OperationResponseDTO> getPage(int id, String action, double minval, double maxval,
+	public Page<OperationResponse> getPage(int id, String action, double minval, double maxval,
 			OffsetDateTime mindate, OffsetDateTime maxdate, Pageable pageable){
 		
 //		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
@@ -56,7 +53,7 @@ public class OperationServiceJPA implements OperationService {
 		return operationRepository.findAll(Specification.where(OperationSpecs.hasAction(action)
 				.and(OperationSpecs.hasOwner(id)).and(OperationSpecs.amountBetween(minval, maxval))
 				.and(OperationSpecs.dateBetween(mindate, maxdate))), pageable)
-				.map(OperationResponseDTO::new);
+				.map(OperationResponse::new);
 	}
 	
 }

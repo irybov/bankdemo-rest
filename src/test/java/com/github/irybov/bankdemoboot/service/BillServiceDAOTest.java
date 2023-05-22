@@ -29,7 +29,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
 import com.github.irybov.bankdemoboot.dao.BillDAO;
 import com.github.irybov.bankdemoboot.dao.OperationDAO;
 import com.github.irybov.bankdemoboot.entity.Account;
@@ -110,7 +110,7 @@ class BillServiceDAOTest {
 		when(billDAO.getBill(anyInt())).thenReturn(bill);
 		try {
 			assertThat(billService.getBillDTO(anyInt()))
-			.isExactlyInstanceOf(BillResponseDTO.class);
+			.isExactlyInstanceOf(BillResponse.class);
 		}
 		catch (Exception exc) {
 			exc.printStackTrace();

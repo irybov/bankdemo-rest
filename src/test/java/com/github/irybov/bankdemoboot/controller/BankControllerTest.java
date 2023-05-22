@@ -58,10 +58,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.OperationRequestDTO;
-import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
+import com.github.irybov.bankdemoboot.controller.dto.OperationRequest;
+import com.github.irybov.bankdemoboot.controller.dto.PasswordRequest;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.entity.Operation;
@@ -100,7 +100,7 @@ class BankControllerTest {
 	
 //	private static Set<Currency> currencies;
 	private static Account entity;
-	private static PasswordRequestDTO pwDTO;
+	private static PasswordRequest pwDTO;
 	
 	private static Operation operation;	
 	private static Operation.OperationBuilder builder;
@@ -124,7 +124,7 @@ class BankControllerTest {
 		entity.setCreatedAt(OffsetDateTime.now());
 		entity.setUpdatedAt(OffsetDateTime.now());
 		
-		pwDTO = new PasswordRequestDTO();
+		pwDTO = new PasswordRequest();
 		
 		operation = new Operation();
 		builder = mock(Operation.OperationBuilder.class, Mockito.RETURNS_SELF);
@@ -139,7 +139,7 @@ class BankControllerTest {
 	@Test
 	void can_get_client_html() throws Exception {
 
-		AccountResponseDTO account = new AccountResponseDTO(entity);		
+		AccountResponse account = new AccountResponse(entity);		
 //		List<BillResponseDTO> bills = new ArrayList<>();
 		
 //		when(accountService.getAccountDTO(phone)).thenReturn(account);
@@ -179,7 +179,7 @@ class BankControllerTest {
 		bill.setCreatedAt(OffsetDateTime.now());
 		bill.setUpdatedAt(OffsetDateTime.now());
 		bill.setId(0);
-		when(accountService.addBill(anyString(), anyString())).thenReturn(new BillResponseDTO(bill));
+		when(accountService.addBill(anyString(), anyString())).thenReturn(new BillResponse(bill));
 		
 		mockMVC.perform(post("/bills/add").with(csrf())
 									   .param("phone", anyString())
@@ -258,7 +258,7 @@ class BankControllerTest {
 		Bill bill = new Bill();
 		bill.setOwner(entity);
 		
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponseDTO(bill));
+		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
 		
 		mockMVC.perform(get("/bills/validate/{id}", "4"))
 			.andExpect(status().isOk())
@@ -293,7 +293,7 @@ class BankControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(model().size(1))
 			.andExpect(model().attributeExists("password"))
-			.andExpect(model().attribute("password", org.hamcrest.CoreMatchers.any(PasswordRequestDTO.class)))
+			.andExpect(model().attribute("password", org.hamcrest.CoreMatchers.any(PasswordRequest.class)))
 			.andExpect(view().name("/account/password"));
 	}
 	
@@ -378,7 +378,7 @@ class BankControllerTest {
 	void successful_payment() throws Exception {
 		
 		when(builder.build()).thenReturn(operation);
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponseDTO(bill));
+		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
 		doNothing().when(executorService).execute(
 				(Runnable) org.mockito.ArgumentMatchers.any(Runnable.class));
 		
@@ -420,7 +420,7 @@ class BankControllerTest {
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/accounts/show/" + phone));
 		
-		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "USD", 0.01);
+		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01);
 		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
@@ -442,7 +442,7 @@ class BankControllerTest {
 	void zero_amount_exception() throws Exception {
 		
 		when(builder.build()).thenReturn(operation);
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponseDTO(bill));
+		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
 		
 		when(operationService.deposit(anyDouble(), anyString(), anyString(), anyInt()))
 			.thenReturn(operation);
@@ -499,7 +499,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
 				.andExpect(view().name("/bill/transfer"));
 		
-		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "USD", 0.00);
+		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.00);
 		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
@@ -520,7 +520,7 @@ class BankControllerTest {
 	void negative_balance_exception() throws Exception {
 		
 		when(builder.build()).thenReturn(operation);
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponseDTO(bill));
+		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
 		
 		when(operationService.withdraw(anyDouble(), anyString(), anyString(), anyInt()))
 			.thenReturn(operation);
@@ -570,7 +570,7 @@ class BankControllerTest {
 	void bills_id_match_exception() throws Exception {
 		
 		when(builder.build()).thenReturn(operation);
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponseDTO(bill));
+		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
 
 		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt()))
 			.thenReturn(operation);
@@ -593,7 +593,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("message", "Source and target bills should not be the same"))
 				.andExpect(view().name("/bill/transfer"));
 		
-		OperationRequestDTO dto = new OperationRequestDTO(777, 777, "USD", 0.01);
+		OperationRequest dto = new OperationRequest(777, 777, "USD", 0.01);
 		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
@@ -611,7 +611,7 @@ class BankControllerTest {
 	void currency_mismatch_exception() throws Exception {
 		
 		when(builder.build()).thenReturn(operation);
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponseDTO(bill));
+		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
 
 		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt()))
 			.thenReturn(operation);
@@ -635,7 +635,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
 				.andExpect(view().name("/bill/transfer"));
 		
-		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "SEA", 0.01);
+		OperationRequest dto = new OperationRequest(777, 3, "SEA", 0.01);
 		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
@@ -652,7 +652,7 @@ class BankControllerTest {
 	@Test
 	void constraint_violation_exception() throws Exception {
 		
-		OperationRequestDTO dto = new OperationRequestDTO(1_000_000_000, -1, "yuan", -0.01);
+		OperationRequest dto = new OperationRequest(1_000_000_000, -1, "yuan", -0.01);
 		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
@@ -663,7 +663,7 @@ class BankControllerTest {
 			.andExpect(content().string(containsString("Currency code should be 3 capital characters length")))
 			.andExpect(content().string(containsString("Amount of money should be higher than zero")));
 		
-		dto = new OperationRequestDTO(null, null, " ", null);
+		dto = new OperationRequest(null, null, " ", null);
 		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
@@ -706,7 +706,7 @@ class BankControllerTest {
 		.thenReturn(operation);
 		
 		XmlMapper xmlMapper = new XmlMapper();
-		OperationRequestDTO dto = new OperationRequestDTO(777, 3, "USD", 0.01);
+		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01);
 		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 												.header("Accept", "application/xml")
 												.contentType(MediaType.APPLICATION_XML)

@@ -45,16 +45,17 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
 //import com.github.irybov.bankdemoboot.Currency;
-import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.OperationRequestDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
+import com.github.irybov.bankdemoboot.controller.dto.OperationRequest;
 //import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
+import com.github.irybov.bankdemoboot.controller.dto.PasswordRequest;
 import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.model.PayLoad;
 import com.github.irybov.bankdemoboot.service.OperationService;
@@ -154,7 +155,7 @@ public class BankController extends BaseController {
 			log.error(exc.getMessage(), exc);
 		}*/
 		
-		AccountResponseDTO account = null;
+		AccountResponse account = null;
 		try {
 //			account = accountService.getAccountDTO(current);
 			account = accountService.getFullDTO(current);
@@ -186,13 +187,13 @@ public class BankController extends BaseController {
 	@PreAuthorize("hasRole('CLIENT')")
 	@PostMapping("/bills/add")
 	@ResponseBody
-	public BillResponseDTO createBill(@RequestParam Map<String, String> params,
+	public BillResponse createBill(@RequestParam Map<String, String> params,
 			HttpServletResponse response) {
 
 		log.info("Client {} creates new {} bill", params.get("phone"), params.get("currency"));
 //		if(params.get("currency").isEmpty()) return "Please choose currency type";
 //		if(params.get("phone").isEmpty()) phone = authentication().getName();		
-		BillResponseDTO bill = null;
+		BillResponse bill = null;
 		try {
 			bill = accountService.addBill(params.get("phone"), params.get("currency"));
 		}
@@ -213,7 +214,7 @@ public class BankController extends BaseController {
 	@ApiOperation("Deletes the existing bill from database")
 	@PreAuthorize("hasRole('CLIENT')")
 	@DeleteMapping("/bills/delete/{id}")
-//	@ResponseBody
+	@ResponseBody
 	public void deleteBill(@PathVariable int id) {
 		log.info("Client {} deletes bill with id {}", authentication().getName(), id);
 		billService.deleteBill(id);
@@ -239,7 +240,7 @@ public class BankController extends BaseController {
 	@ResponseBody
 	public String checkOwner(@PathVariable int id, HttpServletResponse response) {
 		
-		BillResponseDTO bill = null;
+		BillResponse bill = null;
 		try {
 			bill = billService.getBillDTO(id);
 		}
@@ -341,18 +342,18 @@ public class BankController extends BaseController {
 							response = String.class), 
 		@ApiResponse(code = 404, message = "", responseContainer = "List", response = String.class), 
 		@ApiResponse(code = 500, message = "", response = String.class)})
-	@CrossOrigin(originPatterns = "*")
+	@CrossOrigin(originPatterns = "*", methods = {RequestMethod.OPTIONS, RequestMethod.PATCH})
 	@PatchMapping(path = "/bills/external",
 					consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
 					produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-	public ResponseEntity<?> outerIncome(@RequestBody OperationRequestDTO dto) {	
+	public ResponseEntity<?> outerIncome(@RequestBody OperationRequest dto) {	
 		
 		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 		Validator validator = factory.getValidator();
-		Set<ConstraintViolation<OperationRequestDTO>> violations = validator.validate(dto);		
+		Set<ConstraintViolation<OperationRequest>> violations = validator.validate(dto);		
 		if(!violations.isEmpty()) {
 			List<String> messages = new ArrayList<>();
-			for (ConstraintViolation<OperationRequestDTO> violation : violations) {
+			for (ConstraintViolation<OperationRequest> violation : violations) {
 				messages.add(violation.getMessage());
 			}			
 			return new ResponseEntity<List<String>>(messages, HttpStatus.BAD_REQUEST);
@@ -393,7 +394,7 @@ public class BankController extends BaseController {
 	}
 	private void activateEmitter(int id, double amount) {
 
-		BillResponseDTO bill = billService.getBillDTO(id);
+		BillResponse bill = billService.getBillDTO(id);
 		String phone = bill.getOwner().getPhone();
 		
 		if(emitters.containsKey(phone)) {
@@ -414,7 +415,7 @@ public class BankController extends BaseController {
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
 	@GetMapping("/accounts/password/{phone}")
 	public String getPasswordForm(@PathVariable String phone, Model model) {
-		model.addAttribute("password", new PasswordRequestDTO());
+		model.addAttribute("password", new PasswordRequest());
 		return "/account/password";
 	}
 	
@@ -422,7 +423,7 @@ public class BankController extends BaseController {
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
 	@PatchMapping("/accounts/password/{phone}")
 	public String submitPassword(@PathVariable String phone,
-			@ModelAttribute("password") @Valid PasswordRequestDTO passwordRequestDTO,
+			@ModelAttribute("password") @Valid PasswordRequest passwordRequestDTO,
 			BindingResult result, Model model, HttpServletResponse response) {
 
 		if(result.hasErrors()) {

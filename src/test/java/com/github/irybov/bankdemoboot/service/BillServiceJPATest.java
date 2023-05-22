@@ -30,7 +30,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.entity.Operation;
@@ -112,7 +112,7 @@ class BillServiceJPATest {
 		when(billRepository.findById(anyInt())).thenReturn(Optional.of(bill));
 		try {
 			assertThat(billService.getBillDTO(anyInt()))
-			.isExactlyInstanceOf(BillResponseDTO.class);
+			.isExactlyInstanceOf(BillResponse.class);
 		}
 		catch (Exception exc) {
 			exc.printStackTrace();

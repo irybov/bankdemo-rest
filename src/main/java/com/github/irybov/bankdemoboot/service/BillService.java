@@ -4,7 +4,7 @@ import java.util.List;
 
 import javax.persistence.EntityNotFoundException;
 
-import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.entity.Operation;
 
@@ -18,6 +18,6 @@ public interface BillService {
 	public void transfer(Operation operation) throws Exception;
 	public void external(Operation operation) throws Exception;
 	public boolean changeStatus(int id);
-	public BillResponseDTO getBillDTO(int id) throws EntityNotFoundException;
-	public List<BillResponseDTO> getAll(int id);
+	public BillResponse getBillDTO(int id) throws EntityNotFoundException;
+	public List<BillResponse> getAll(int id);
 }

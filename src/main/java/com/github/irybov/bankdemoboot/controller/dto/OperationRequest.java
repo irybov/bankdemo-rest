@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class OperationRequestDTO {
+public class OperationRequest {
 
 	@ApiModelProperty(value = "Sender's bill number", required = true, example = "999_999_999")
 	@JsonProperty("sender")

@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @ApiModel
 @Getter
-public class OperationResponseDTO {
+public class OperationResponse {
 
 //	private Long id;
 	private OffsetDateTime createdAt;
@@ -19,7 +19,7 @@ public class OperationResponseDTO {
 	private Integer sender;		
 	private Integer recipient;
 	
-	public OperationResponseDTO(Operation operation) {
+	public OperationResponse(Operation operation) {
 		
 //		this.id = operation.getId();
 		this.createdAt = operation.getCreatedAt();

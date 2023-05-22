@@ -12,7 +12,7 @@ import lombok.Setter;
 @ApiModel
 @Getter
 @Setter
-public class PasswordRequestDTO {
+public class PasswordRequest {
 
 	@JsonProperty("oldPassword")
 	@NotBlank

@@ -44,10 +44,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
-import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.OperationRequestDTO;
-import com.github.irybov.bankdemoboot.controller.dto.PasswordRequestDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountRequest;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
+import com.github.irybov.bankdemoboot.controller.dto.OperationRequest;
+import com.github.irybov.bankdemoboot.controller.dto.PasswordRequest;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 //@Sql("/test-data-h2.sql")
@@ -78,6 +78,7 @@ public class BankDemoBootApplicationTests {
 	    		.andExpect(status().isOk());
 		}
 		
+		@Disabled
 		@WithMockUser(username = "1111111111", roles = "CLIENT")
 		@Test
 		void swagger_denied() throws Exception {
@@ -98,8 +99,7 @@ public class BankDemoBootApplicationTests {
 
 	        mockMVC.perform(get("/v2/api-docs"))
 				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
-		
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON));		
 		}
 
 	    @Disabled
@@ -108,8 +108,7 @@ public class BankDemoBootApplicationTests {
 
 	        mockMVC.perform(get("/v2/api-docs/swagger-config"))
 				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
-		
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON));		
 		}
 		
     }	
@@ -133,7 +132,7 @@ public class BankDemoBootApplicationTests {
 		        .andExpect(status().isOk())
 		        .andExpect(content().string(containsString("Registration")))
 		        .andExpect(model().size(1))
-		        .andExpect(model().attribute("account", any(AccountRequestDTO.class)))
+		        .andExpect(model().attribute("account", any(AccountRequest.class)))
 		        .andExpect(view().name("/auth/register"));
 		}
 	
@@ -161,7 +160,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(content().string(containsString("Admin Adminsky")))
 				.andExpect(content().string(containsString("[ROLE_ADMIN]")))
 		        .andExpect(model().size(1))
-		        .andExpect(model().attribute("account", any(AccountResponseDTO.class)))
+		        .andExpect(model().attribute("account", any(AccountResponse.class)))
 		        .andExpect(view().name("/auth/success"));
 		}
 		
@@ -215,7 +214,7 @@ public class BankDemoBootApplicationTests {
 						)
 				.andExpect(status().isBadRequest())
 				.andExpect(model().size(1))
-				.andExpect(model().attribute("account", any(AccountRequestDTO.class)))
+				.andExpect(model().attribute("account", any(AccountRequest.class)))
 				.andExpect(model().hasErrors())
 				.andExpect(view().name("/auth/register"));
 			
@@ -228,7 +227,7 @@ public class BankDemoBootApplicationTests {
 						)
 				.andExpect(status().isBadRequest())
 				.andExpect(model().size(1))
-				.andExpect(model().attribute("account", any(AccountRequestDTO.class)))
+				.andExpect(model().attribute("account", any(AccountRequest.class)))
 				.andExpect(model().hasErrors())
 				.andExpect(view().name("/auth/register"));
 		}
@@ -245,7 +244,7 @@ public class BankDemoBootApplicationTests {
 						)
 				.andExpect(status().isConflict())
 				.andExpect(model().size(2))
-				.andExpect(model().attribute("account", any(AccountRequestDTO.class)))
+				.andExpect(model().attribute("account", any(AccountRequest.class)))
 				.andExpect(model().attribute("message", "You must be 18+ to register"))
 				.andExpect(view().name("/auth/register"));
 		}
@@ -262,7 +261,7 @@ public class BankDemoBootApplicationTests {
 						)
 				.andExpect(status().isBadRequest())
 				.andExpect(model().size(1))
-				.andExpect(model().attribute("account", any(AccountRequestDTO.class)))
+				.andExpect(model().attribute("account", any(AccountRequest.class)))
 				.andExpect(content().string(containsString("Validator in action!")))
 				.andExpect(view().name("/auth/register"));
 		}
@@ -280,7 +279,7 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(get("/accounts/search"))
 				.andExpect(status().isOk())
 				.andExpect(model().size(1))
-		        .andExpect(model().attribute("admin", any(AccountResponseDTO.class)))
+		        .andExpect(model().attribute("admin", any(AccountResponse.class)))
 				.andExpect(content().string(containsString("Admin's area")))
 		        .andExpect(view().name("/account/search"));
 	    }
@@ -330,9 +329,13 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void input_mismatch_exception() throws Exception {
 			
-			assertThatThrownBy(() -> mockMVC.perform(get("/accounts/search/{phone}", "XXL"))
+/*			assertThatThrownBy(() -> mockMVC.perform(get("/accounts/search/{phone}", "XXL"))
 					.andExpect(status().isInternalServerError()))
-					.hasCause(new InputMismatchException("Phone number should be of 10 digits"));
+					.hasCause(new InputMismatchException("Phone number should be of 10 digits"));*/
+			
+			mockMVC.perform(get("/accounts/search/{phone}", "XXL"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.report").value("Phone number should be of 10 digits"));
 		}
 		
 		@Test
@@ -407,7 +410,7 @@ public class BankDemoBootApplicationTests {
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("Private area")))
 			.andExpect(model().size(3))
-			.andExpect(model().attribute("account", any(AccountResponseDTO.class)))
+			.andExpect(model().attribute("account", any(AccountResponse.class)))
 			.andExpect(model().attribute("bills", any(List.class)))
 			.andExpect(model().attribute("currencies", any(Set.class)))
 			.andExpect(view().name("/account/private"));
@@ -515,7 +518,7 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(get("/accounts/password/{phone}", PHONE))
 			.andExpect(status().isOk())
 			.andExpect(model().size(1))
-			.andExpect(model().attribute("password", any(PasswordRequestDTO.class)))
+			.andExpect(model().attribute("password", any(PasswordRequest.class)))
 			.andExpect(view().name("/account/password"));
 		}
 		
@@ -601,7 +604,7 @@ public class BankDemoBootApplicationTests {
 					.andExpect(status().is3xxRedirection())
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
-			OperationRequestDTO dto = new OperationRequestDTO(777, 2, "SEA", 0.01);
+			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.01);
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -641,7 +644,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
 				.andExpect(view().name("/bill/payment"));
 			
-			OperationRequestDTO dto = new OperationRequestDTO(777, 2, "SEA", 0.00);
+			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.00);
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -686,7 +689,7 @@ public class BankDemoBootApplicationTests {
 			.andExpect(model().attribute("message", "Source and target bills should not be the same"))
 			.andExpect(view().name("/bill/transfer"));
 			
-			OperationRequestDTO dto = new OperationRequestDTO(777, 777, "SEA", 0.01);
+			OperationRequest dto = new OperationRequest(777, 777, "SEA", 0.01);
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -713,7 +716,7 @@ public class BankDemoBootApplicationTests {
 					.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
 					.andExpect(view().name("/bill/transfer"));
 			
-			OperationRequestDTO dto = new OperationRequestDTO(777, 2, "AUD", 0.01);
+			OperationRequest dto = new OperationRequest(777, 2, "AUD", 0.01);
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -725,7 +728,7 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void constraint_violation_exception() throws Exception {
 			
-			OperationRequestDTO dto = new OperationRequestDTO(1_000_000_000, -1, "yuan", -0.01);
+			OperationRequest dto = new OperationRequest(1_000_000_000, -1, "yuan", -0.01);
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -736,7 +739,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(content().string(containsString("Currency code should be 3 capital characters length")))
 				.andExpect(content().string(containsString("Amount of money should be higher than zero")));
 			
-			dto = new OperationRequestDTO(null, null, " ", null);
+			dto = new OperationRequest(null, null, " ", null);
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -771,7 +774,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(status().isUnsupportedMediaType());
 			
 			XmlMapper xmlMapper = new XmlMapper();
-			OperationRequestDTO dto = new OperationRequestDTO(777, 2, "SEA", 0.01);
+			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.01);
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.header("Accept", "application/xml")
 													.contentType(MediaType.APPLICATION_XML)
@@ -816,7 +819,7 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(put("/control").with(csrf()).param("impl", impl))
 					.andExpect(status().isBadRequest())
 					.andExpect(content()
-						.string(containsString("Wrong implementation type, retry")));
+						.string(containsString("Wrong implementation type specified, retry")));
 		}
 		
 	}

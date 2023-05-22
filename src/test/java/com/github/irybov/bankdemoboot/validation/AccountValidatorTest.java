@@ -23,7 +23,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 
-import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountRequest;
 import com.github.irybov.bankdemoboot.service.AccountService;
 
 class AccountValidatorTest {
@@ -56,14 +56,14 @@ class AccountValidatorTest {
 
 	@Test
 	void check_supported_clazz() {
-		assertTrue(accountValidator.supports(AccountRequestDTO.class));
+		assertTrue(accountValidator.supports(AccountRequest.class));
 		assertFalse(accountValidator.supports(Object.class));
 	}
 	
 	@Test
 	void check_dto_validation() {
 		
-		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
+		AccountRequest accountRequestDTO = new AccountRequest();
 //		accountRequestDTO.setBirthday("2001-01-01");
 		accountRequestDTO.setBirthday(LocalDate.of(2001, 01, 01));
 		accountRequestDTO.setName("Admin");

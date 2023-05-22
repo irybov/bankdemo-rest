@@ -20,7 +20,7 @@ import lombok.Getter;
 
 @ApiModel
 @Getter
-public class AccountResponseDTO {
+public class AccountResponse {
 	
 	private Integer id;
 	private OffsetDateTime createdAt;
@@ -34,10 +34,10 @@ public class AccountResponseDTO {
 	private LocalDate birthday;
 //	private String password;
 	@JsonManagedReference
-	private List<BillResponseDTO> bills;
+	private List<BillResponse> bills;
 //	private Set<Role> roles;
 
-	public AccountResponseDTO(Account account) {
+	public AccountResponse(Account account) {
 		
 		this.id = account.getId();
 		this.createdAt = account.getCreatedAt();
@@ -55,7 +55,7 @@ public class AccountResponseDTO {
 				.collect(Collectors.toList());*/
 //		this.roles = account.getRoles();
 	}	
-	public void setBills(List<BillResponseDTO> bills) {
+	public void setBills(List<BillResponse> bills) {
 		this.bills = bills;
 	}
 	

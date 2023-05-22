@@ -21,7 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.jdbc.Sql;
 
-import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
 import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.model.OperationPage;
 import com.github.irybov.bankdemoboot.model.OperationSpecs;
@@ -57,12 +57,12 @@ class OperationRepositoryTest {
 		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
 				page.getSortDirection(), page.getSortBy());
 		
-		Page<OperationResponseDTO> resultPage = operationRepository.findAll
+		Page<OperationResponse> resultPage = operationRepository.findAll
 				(Specification.where(OperationSpecs.hasAction(action)
 				.and(OperationSpecs.hasOwner(id))
 				.and(OperationSpecs.amountBetween(minval, maxval))
 				.and(OperationSpecs.dateBetween(mindate, maxdate))), pageable)
-				.map(OperationResponseDTO::new);
+				.map(OperationResponse::new);
 		
 		assertThat(resultPage.getContent().size()).isEqualTo(quantity);
 	}

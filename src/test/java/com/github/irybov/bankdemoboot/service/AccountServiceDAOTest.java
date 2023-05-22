@@ -39,9 +39,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 //import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
-import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountRequest;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
 import com.github.irybov.bankdemoboot.dao.AccountDAO;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.entity.Bill;
@@ -104,7 +104,7 @@ class AccountServiceDAOTest {
     	
     	try {
     		org.assertj.core.api.BDDAssertions.then(accountService.addBill(phone, currency))
-												.isExactlyInstanceOf(BillResponseDTO.class);
+												.isExactlyInstanceOf(BillResponse.class);
 		}
     	catch (Exception exc) {
 			exc.printStackTrace();
@@ -113,7 +113,7 @@ class AccountServiceDAOTest {
     	
 //    	given(accountDAO.getById(anyInt())).willReturn(adminEntity);
     	given(billService.getAll(anyInt())).willReturn(adminEntity.getBills().stream()
-				.map(BillResponseDTO::new).collect(Collectors.toList()));    	
+				.map(BillResponse::new).collect(Collectors.toList()));    	
     	then(accountService.getBills(anyInt())).hasSize(3);
 //    	verify(accountDAO).getById(anyInt());
     	verify(billService).getAll(anyInt());    	
@@ -178,7 +178,7 @@ class AccountServiceDAOTest {
     	given(accountDAO.getAll()).willReturn(clients);
     	then(accountService.getAll()).hasSameSizeAs(clients)
 		 							 .isSortedAccordingTo((a1, a2) -> a1.getId() - a2.getId())
-		 							 .containsAll(new ArrayList<AccountResponseDTO>());
+		 							 .containsAll(new ArrayList<AccountResponse>());
     	org.mockito.BDDMockito.then(accountDAO).should().getAll();
     }
     
@@ -230,7 +230,7 @@ class AccountServiceDAOTest {
 	@Test
 	void save_and_verify_identity() {
 
-		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
+		AccountRequest accountRequestDTO = new AccountRequest();
 //		accountRequestDTO.setBirthday("2001-01-01");
 		accountRequestDTO.setBirthday(LocalDate.of(2001, 01, 01));
 		accountRequestDTO.setName("Admin");
@@ -259,7 +259,7 @@ class AccountServiceDAOTest {
 	@Test
 	void save_and_catch_exceptions() {
 		
-		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
+		AccountRequest accountRequestDTO = new AccountRequest();
 		accountRequestDTO.setBirthday(LocalDate.now().minusYears(10L));
 		accountRequestDTO.setName("Admin");
 		accountRequestDTO.setPassword("superadmin");

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
 import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.exception.PaymentException;
@@ -49,8 +49,8 @@ public class BillServiceJPA implements BillService {
 				(()-> new EntityNotFoundException("Target bill with id: " + id + " not found"));
 	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
-	public BillResponseDTO getBillDTO(int id) throws EntityNotFoundException {
-		return new BillResponseDTO(getBill(id));
+	public BillResponse getBillDTO(int id) throws EntityNotFoundException {
+		return new BillResponse(getBill(id));
 	}
 	
 	public void deposit(Operation operation) throws Exception {
@@ -140,10 +140,10 @@ public class BillServiceJPA implements BillService {
 	}
 	
 	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
-	public List<BillResponseDTO> getAll(int id) {		
+	public List<BillResponse> getAll(int id) {		
 //		List<Bill> bills = billRepository.getAll(id);
 		List<Bill> bills = billRepository.findByOwnerId(id);
-		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());		
+		return bills.stream().map(BillResponse::new).collect(Collectors.toList());		
 	}
 	
 }

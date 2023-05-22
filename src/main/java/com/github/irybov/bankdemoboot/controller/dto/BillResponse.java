@@ -11,7 +11,7 @@ import lombok.Getter;
 
 @ApiModel
 @Getter
-public class BillResponseDTO {
+public class BillResponse {
 
 	private Integer id;
 	private OffsetDateTime createdAt;
@@ -20,9 +20,9 @@ public class BillResponseDTO {
 	private BigDecimal balance;
 	private String currency;
 	@JsonBackReference
-	private AccountResponseDTO owner;
+	private AccountResponse owner;
 	
-	public BillResponseDTO(Bill bill) {
+	public BillResponse(Bill bill) {
 		
 		this.id = bill.getId();
 		this.createdAt = bill.getCreatedAt();
@@ -30,7 +30,7 @@ public class BillResponseDTO {
 		this.active = bill.isActive();
 		this.balance = bill.getBalance();
 		this.currency = bill.getCurrency();
-		this.owner = new AccountResponseDTO(bill.getOwner());
+		this.owner = new AccountResponse(bill.getOwner());
 	}
 		
 }

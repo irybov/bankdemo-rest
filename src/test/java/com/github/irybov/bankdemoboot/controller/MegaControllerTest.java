@@ -62,7 +62,7 @@ class MegaControllerTest {
 		mockMVC.perform(put("/control").with(csrf()).param("impl", impl))
 				.andExpect(status().isBadRequest())
 				.andExpect(content()
-					.string(containsString("Wrong implementation type, retry")));
+					.string(containsString("Wrong implementation type specified, retry")));
 	}
 
 }

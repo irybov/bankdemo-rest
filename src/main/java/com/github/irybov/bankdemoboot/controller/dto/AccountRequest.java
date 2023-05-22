@@ -20,7 +20,7 @@ import lombok.Setter;
 @ApiModel
 @Getter
 @Setter
-public class AccountRequestDTO {
+public class AccountRequest {
 
 	@JsonProperty("name")
 	@NotBlank(message = "Name must not be blank")

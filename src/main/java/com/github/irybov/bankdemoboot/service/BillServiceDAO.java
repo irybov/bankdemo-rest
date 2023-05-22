@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
 import com.github.irybov.bankdemoboot.dao.BillDAO;
 import com.github.irybov.bankdemoboot.dao.OperationDAO;
 import com.github.irybov.bankdemoboot.entity.Bill;
@@ -52,8 +52,8 @@ public class BillServiceDAO implements BillService {
 		return bill;
 	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
-	public BillResponseDTO getBillDTO(int id) throws EntityNotFoundException {
-		return new BillResponseDTO(getBill(id));
+	public BillResponse getBillDTO(int id) throws EntityNotFoundException {
+		return new BillResponse(getBill(id));
 	}
 	
 	public void deposit(Operation operation) throws Exception {
@@ -149,9 +149,9 @@ public class BillServiceDAO implements BillService {
 	}
 
 	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
-	public List<BillResponseDTO> getAll(int id) {
+	public List<BillResponse> getAll(int id) {
 		List<Bill> bills = billDAO.getByOwner(id);
-		return bills.stream().map(BillResponseDTO::new).collect(Collectors.toList());
+		return bills.stream().map(BillResponse::new).collect(Collectors.toList());
 	}
 	
 }

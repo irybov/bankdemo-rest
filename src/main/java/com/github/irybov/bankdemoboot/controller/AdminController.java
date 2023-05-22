@@ -16,6 +16,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 //import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 //import java.nio.file.FileSystems;
 import java.time.LocalDate;
@@ -63,9 +64,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.BillResponseDTO;
-import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
+import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
+import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
 import com.github.irybov.bankdemoboot.service.OperationService;
@@ -102,7 +103,7 @@ public class AdminController extends BaseController {
 	@GetMapping("/accounts/search")
 	public String getAdminPage(@RequestParam(required = false) String phone, Model model) {
 		
-		AccountResponseDTO admin;
+		AccountResponse admin;
 		try {
 			admin = accountService.getAccountDTO(authentication().getName());
 			model.addAttribute("admin", admin);
@@ -151,14 +152,14 @@ public class AdminController extends BaseController {
 			}
 		}
 		
-		AccountResponseDTO target = null;
+		AccountResponse target = null;
 		try {
 //			target = accountService.getAccountDTO(phone);
 			target = accountService.getFullDTO(phone);
 //			List<BillResponseDTO> bills = accountService.getBills(target.getId());
 //			target.setBills(bills);
 			log.info("Admin {} requests data about client {}", authentication().getName(), phone);
-			return new ResponseEntity<AccountResponseDTO>(target, HttpStatus.OK);
+			return new ResponseEntity<AccountResponse>(target, HttpStatus.OK);
 		}
 		catch (PersistenceException exc) {
 			log.error("Database exception: account with phone {} not found", phone, exc);
@@ -200,7 +201,7 @@ public class AdminController extends BaseController {
 	@GetMapping("/accounts/list/all")
 	public ResponseEntity<byte[]> getClientsList(){
 		
-		List<AccountResponseDTO> clients = accountService.getAll();
+		List<AccountResponse> clients = accountService.getAll();
 		String json = null;
 		try {
 			json = mapper.writeValueAsString(clients);
@@ -308,7 +309,7 @@ public class AdminController extends BaseController {
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/list/{id}")
 	@ResponseBody
-	public Page<OperationResponseDTO> getOperationsList(@PathVariable int id,
+	public Page<OperationResponse> getOperationsList(@PathVariable int id,
 			@RequestParam Optional<String> mindate, @RequestParam Optional<String> maxdate,
 			@RequestParam Optional<Double> minval, @RequestParam Optional<Double> maxval,
 			@RequestParam Optional<String> action, Pageable pageable) {
@@ -342,16 +343,16 @@ public class AdminController extends BaseController {
 
 		List<String[]> data = new ArrayList<>();
 
-		CompletableFuture<List<OperationResponseDTO>> futureOperations =
+		CompletableFuture<List<OperationResponse>> futureOperations =
 				CompletableFuture.supplyAsync(() -> operationService.getAll(id), executorService);
-		CompletableFuture<BillResponseDTO> futureBill = CompletableFuture.supplyAsync
+		CompletableFuture<BillResponse> futureBill = CompletableFuture.supplyAsync
 				(() -> {try {return billService.getBillDTO(id);}
 					   	catch(EntityNotFoundException exc) {log.error(exc.getMessage(), exc);
 					   	throw new CompletionException(exc);}
 				}, executorService);
 		
-		BillResponseDTO bill = futureBill.join();
-		AccountResponseDTO account = bill.getOwner();
+		BillResponse bill = futureBill.join();
+		AccountResponse account = bill.getOwner();
 		
 		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};		
 		data.add(owner);
@@ -366,8 +367,8 @@ public class AdminController extends BaseController {
 		data.add(header);
 		data.add(new String[0]);		
 		
-		List<OperationResponseDTO> operations = futureOperations.join();
-		for(OperationResponseDTO operation : operations) {
+		List<OperationResponse> operations = futureOperations.join();
+		for(OperationResponse operation : operations) {
 			String[] row = {operation.getAction(),
 							String.valueOf(operation.getAmount()),
 							operation.getCreatedAt().toString(),
@@ -383,9 +384,9 @@ public class AdminController extends BaseController {
 		
 		byte[] byteArray = null;
 		try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				OutputStreamWriter osw = new OutputStreamWriter(baos);
-				PrintWriter pw = new PrintWriter(osw);
-				BufferedWriter bw = new BufferedWriter(pw);
+				Writer osw = new OutputStreamWriter(baos);
+				Writer pw = new PrintWriter(osw);
+				Writer bw = new BufferedWriter(pw);
 				CSVWriter writer = new CSVWriter(bw);) {
 			writer.writeAll(data);
 			writer.flush();

@@ -33,7 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
 import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.model.OperationPage;
 import com.github.irybov.bankdemoboot.repository.OperationRepository;
@@ -97,9 +97,9 @@ class OperationServiceJPATest {
 		when(operationRepository.findBySenderOrRecipientOrderByIdDesc(id, id))
 			.thenReturn(operations);
 		
-		List<OperationResponseDTO> dtos = operationService.getAll(id);
+		List<OperationResponse> dtos = operationService.getAll(id);
 		assertAll(
-				() -> assertThat(dtos).hasSameClassAs(new ArrayList<OperationResponseDTO>()),
+				() -> assertThat(dtos).hasSameClassAs(new ArrayList<OperationResponse>()),
 				() -> assertThat(dtos.size()).isEqualTo(operations.size()));
 		verify(operationRepository).findBySenderOrRecipientOrderByIdDesc(id, id);
 	}
@@ -121,10 +121,10 @@ class OperationServiceJPATest {
 		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
 				   page.getSortDirection(), page.getSortBy());
 		
-		Page<OperationResponseDTO> dtos = operationService.getPage(id, "^[a-z]{7,8}", value, value,
+		Page<OperationResponse> dtos = operationService.getPage(id, "^[a-z]{7,8}", value, value,
 				any(OffsetDateTime.class), any(OffsetDateTime.class), pageable);
 		assertThat(dtos)
-			.hasSameClassAs(new PageImpl<OperationResponseDTO>(new ArrayList<OperationResponseDTO>()));
+			.hasSameClassAs(new PageImpl<OperationResponse>(new ArrayList<OperationResponse>()));
 		assertThat(dtos.getContent().size()).isEqualTo(size);
 		verify(operationRepository).findAll(any(Specification.class), any(Pageable.class));
 	}

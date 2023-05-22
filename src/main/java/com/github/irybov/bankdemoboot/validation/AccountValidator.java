@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 
-import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountRequest;
 import com.github.irybov.bankdemoboot.service.AccountService;
 
 @Component
@@ -30,7 +30,7 @@ public class AccountValidator implements org.springframework.validation.Validato
 
 	@Override
 	public boolean supports(Class<?> clazz) {
-		return AccountRequestDTO.class.equals(clazz);
+		return AccountRequest.class.equals(clazz);
 	}
 
 	@Override
@@ -43,7 +43,7 @@ public class AccountValidator implements org.springframework.validation.Validato
 	        errors.rejectValue(propertyPath, "", message);
 	    }
 		
-		AccountRequestDTO account = (AccountRequestDTO) target;
+		AccountRequest account = (AccountRequest) target;
 		if(accountService.getPhone(account.getPhone()) == null) return;
 		errors.rejectValue("phone", "", "Validator in action!");
 	}

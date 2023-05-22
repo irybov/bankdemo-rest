@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
-import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
-import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountRequest;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.AccountServiceDAO;
 import com.github.irybov.bankdemoboot.service.AccountServiceJPA;
@@ -53,7 +53,7 @@ public class AuthController extends BaseController {
 	@ApiOperation("Returns registration html-page")
 	@GetMapping("/register")
 	public String createAccount(Model model) {
-		model.addAttribute("account", new AccountRequestDTO());
+		model.addAttribute("account", new AccountRequest());
 		return "/auth/register";
 	}
 	
@@ -67,7 +67,7 @@ public class AuthController extends BaseController {
 	@GetMapping("/success")
 	public String getRegistrationForm(Model model) {
 		
-		AccountResponseDTO account;
+		AccountResponse account;
 		try {
 			account = accountService.getAccountDTO(authentication().getName());
 			model.addAttribute("account", account);
@@ -82,7 +82,7 @@ public class AuthController extends BaseController {
 	
 	@ApiOperation("Confirms registration web-form")
 	@PostMapping("/confirm")
-	public String confirmRegistration(@ModelAttribute("account") AccountRequestDTO accountRequestDTO,
+	public String confirmRegistration(@ModelAttribute("account") AccountRequest accountRequestDTO,
 			BindingResult result, Model model, HttpServletResponse response) {
 		
 		accountValidator.validate(accountRequestDTO, result);

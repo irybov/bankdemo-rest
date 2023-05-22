@@ -37,8 +37,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.Validator;
 
-import com.github.irybov.bankdemoboot.controller.dto.AccountRequestDTO;
-import com.github.irybov.bankdemoboot.controller.dto.AccountResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.AccountRequest;
+import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.exception.RegistrationException;
 import com.github.irybov.bankdemoboot.security.AccountDetailsService;
@@ -103,7 +103,7 @@ class AuthControllerTest {
 	@Test
 	void can_get_menu_html() throws Exception {
 
-		AccountResponseDTO account = new AccountResponseDTO(new Account
+		AccountResponse account = new AccountResponse(new Account
 				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true));
 		
 		when(accountService.getAccountDTO(anyString())).thenReturn(account);
@@ -157,7 +157,7 @@ class AuthControllerTest {
 	@Test
 	void accepted_registration() throws Exception {
 		
-		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
+		AccountRequest accountRequestDTO = new AccountRequest();
 //		accountRequestDTO.setBirthday("2001-01-01");
 		accountRequestDTO.setBirthday(LocalDate.of(2001, 01, 01));
 		accountRequestDTO.setName("Admin");
@@ -173,7 +173,7 @@ class AuthControllerTest {
 	@Test
 	void rejected_registration() throws Exception {
 		
-		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
+		AccountRequest accountRequestDTO = new AccountRequest();
 		accountRequestDTO.setBirthday(null);
 		accountRequestDTO.setName("i");
 		accountRequestDTO.setPassword("superb");
@@ -200,7 +200,7 @@ class AuthControllerTest {
 	@Test
 	void interrupted_registration() throws Exception {
 		
-		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
+		AccountRequest accountRequestDTO = new AccountRequest();
 		accountRequestDTO.setBirthday(LocalDate.now().minusYears(10L));
 		accountRequestDTO.setName("Admin");
 		accountRequestDTO.setPassword("superadmin");
@@ -223,7 +223,7 @@ class AuthControllerTest {
 	@Test
 	void violated_registration() throws Exception {
 		
-		AccountRequestDTO accountRequestDTO = new AccountRequestDTO();
+		AccountRequest accountRequestDTO = new AccountRequest();
 //		accountRequestDTO.setBirthday("2001-01-01");
 		accountRequestDTO.setBirthday(LocalDate.of(2001, 01, 01));
 		accountRequestDTO.setName("Admin");

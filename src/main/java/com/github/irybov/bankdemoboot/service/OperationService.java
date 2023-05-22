@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
+import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
 import com.github.irybov.bankdemoboot.entity.Operation;
 //import com.github.irybov.bankdemoboot.model.OperationPage;
 
@@ -41,8 +41,8 @@ public interface OperationService {
 				.build();
 	};
 	public Operation getOne(long id);
-	public List<OperationResponseDTO> getAll(int id);
+	public List<OperationResponse> getAll(int id);
 //	public Page<OperationResponseDTO> getPage(int id, OperationPage page);
-	public Page<OperationResponseDTO> getPage(int id, String action, double minval, double maxval,
+	public Page<OperationResponse> getPage(int id, String action, double minval, double maxval,
 			OffsetDateTime mindate, OffsetDateTime maxdate, Pageable pageable);
 }

@@ -8,13 +8,13 @@ import org.springframework.beans.factory.annotation.Value;
 
 //import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 //import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+//import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -25,7 +25,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 
-@Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter{
@@ -72,6 +71,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	protected void configure(HttpSecurity http) throws Exception {
 
 		http
+//			.sessionManagement()
+//	        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 //			.cors(Customizer.withDefaults())
 //			.cors()
 //			.and()
@@ -109,6 +110,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
             .deleteCookies("JSESSIONID")
 			.logoutSuccessUrl("/home")
 			.permitAll();
+//				.and()
+//			.httpBasic();
 //			.and().cors().configurationSource(corsConfigurationSource());
 //		http.headers().frameOptions().disable();
 	}
@@ -120,17 +123,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
                 .allowedMethods("*");
     }*/
 	
-    @Bean
+//    @Bean
     CorsConfigurationSource corsConfigurationSource() {
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(Arrays.asList("http://" + uri +":" + port));
 //				("http://" + uri +":" + port, "http://" + uri +":" + m_port));
-		configuration.setAllowedMethods(Arrays.asList("GET", "OPTIONS", "PATCH"));
+		configuration.setAllowedMethods(Arrays.asList("*"));
 		configuration.setAllowCredentials(true);
 		configuration.setExposedHeaders(Arrays.asList("*"));
-//		configuration.setMaxAge(3600L);
+//		configuration.setMaxAge(1800L);
 		configuration.setAllowedHeaders(Arrays.asList("*"));
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
