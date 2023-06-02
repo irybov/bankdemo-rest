@@ -125,7 +125,7 @@ public class AdminController extends BaseController {
 			modelMap.addAttribute("admin", admin);
 			modelMap.addAttribute("target", target);
 		}*/
-		return "/account/search";
+		return "account/search";
 	}
 	
 	@ApiOperation("Returns information about client")
@@ -194,7 +194,7 @@ public class AdminController extends BaseController {
 //	public String getClients(Model model){
 //		List<AccountResponseDTO> clients = accountService.getAll();
 //		model.addAttribute("clients", clients);
-		return "/account/clients";
+		return "account/clients";
 	}
 	@ApiOperation("Returns list of all clients")
 	@PreAuthorize("hasRole('ADMIN')")
@@ -303,7 +303,7 @@ public class AdminController extends BaseController {
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/list")
 	public String getOperationsPage() {
-		return "/account/history";
+		return "account/history";
 	}
 	@ApiOperation("Returns filtered pageable list of bill's operations")
 	@PreAuthorize("hasRole('ADMIN')")

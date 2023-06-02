@@ -72,7 +72,7 @@ class AuthControllerTest {
 	        .andExpect(status().isOk())
 	//        .andExpect(content().string(html))
 	        .andExpect(content().string(containsString("Welcome!")))
-	        .andExpect(view().name("/auth/home"));
+	        .andExpect(view().name("auth/home"));
 	}
 	
 	@Test
@@ -83,7 +83,7 @@ class AuthControllerTest {
 	        .andExpect(content().string(containsString("Registration")))
 	        .andExpect(model().size(1))
 	        .andExpect(model().attributeExists("account"))
-	        .andExpect(view().name("/auth/register"));
+	        .andExpect(view().name("auth/register"));
 	}
 
 	@Test
@@ -96,7 +96,7 @@ class AuthControllerTest {
 	        .andExpect(status().isOk())
 	//        .andExpect(content().string(html))
 	        .andExpect(content().string(containsString("Log In")))
-	        .andExpect(view().name("/auth/login"));
+	        .andExpect(view().name("auth/login"));
 	}
 	
 	@WithMockUser(username = "0000000000", roles = {"ADMIN", "CLIENT"})
@@ -120,7 +120,7 @@ class AuthControllerTest {
 			.andExpect(content().string(containsString(roles)))
 	        .andExpect(model().size(1))
 	        .andExpect(model().attribute("account", account))
-	        .andExpect(view().name("/auth/success"));
+	        .andExpect(view().name("auth/success"));
 	    
 	    verify(accountService).getAccountDTO(anyString());
 	}
@@ -146,8 +146,9 @@ class AuthControllerTest {
 	@Test
 	void unauthorized_success() throws Exception {
 		mockMVC.perform(get("/success"))
-			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("http://localhost/home"));
+//			.andExpect(status().is3xxRedirection())
+//			.andExpect(redirectedUrl("http://localhost/home"));
+			.andExpect(status().isUnauthorized());
 	}
 	@Test
 	void unauthorized_confirm() throws Exception {
@@ -167,7 +168,7 @@ class AuthControllerTest {
 
 		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequestDTO))
 			.andExpect(status().isCreated())
-			.andExpect(view().name("/auth/login"));
+			.andExpect(view().name("auth/login"));
 	}
 	
 	@Test
@@ -185,7 +186,7 @@ class AuthControllerTest {
 	        .andExpect(model().size(1))
 	        .andExpect(model().attributeExists("account"))
 	        .andExpect(model().hasErrors())
-			.andExpect(view().name("/auth/register"));
+			.andExpect(view().name("auth/register"));
 		
 		accountRequestDTO.setBirthday(LocalDate.now().plusYears(10L));
 		
@@ -194,7 +195,7 @@ class AuthControllerTest {
 	        .andExpect(model().size(1))
 	        .andExpect(model().attributeExists("account"))
 	        .andExpect(model().hasErrors())
-			.andExpect(view().name("/auth/register"));
+			.andExpect(view().name("auth/register"));
 	}
 	
 	@Test
@@ -215,7 +216,7 @@ class AuthControllerTest {
 	        .andExpect(model().size(2))
 	        .andExpect(model().attributeExists("account"))
         	.andExpect(model().attribute("message", "You must be 18+ to register"))
-			.andExpect(view().name("/auth/register"));
+			.andExpect(view().name("auth/register"));
 		
 	    verify(accountService).saveAccount(refEq(accountRequestDTO));
 	}
@@ -239,7 +240,7 @@ class AuthControllerTest {
 	        .andExpect(model().size(2))
 	        .andExpect(model().attributeExists("account"))
         	.andExpect(model().attribute("message", "This number is already in use."))
-			.andExpect(view().name("/auth/register"));
+			.andExpect(view().name("auth/register"));
 		
 	    verify(accountService).saveAccount(refEq(accountRequestDTO));
 	}

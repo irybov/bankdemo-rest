@@ -169,7 +169,7 @@ public class BankController extends BaseController {
 		modelMap.addAttribute("bills", account.getBills());
 		modelMap.addAttribute("currencies", currencies);
 		log.info("User {} has enter own private area", account.getPhone());
-		return "/account/private";
+		return "account/private";
 	}
 	
 /*	@PostMapping("/accounts/show")
@@ -229,9 +229,9 @@ public class BankController extends BaseController {
 		modelMap.addAttribute("action",  params.get("action"));
 		modelMap.addAttribute("balance", params.get("balance"));
 		if(params.get("action").equals("transfer")) {
-			return "/bill/transfer";
+			return "bill/transfer";
 		}
-		return "/bill/payment";
+		return "bill/payment";
 	}
 	
 	@ApiOperation("Checks recipient's name and surename")
@@ -270,7 +270,7 @@ public class BankController extends BaseController {
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", "Please provide correct bill number");
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST); 
-				return "/bill/transfer";
+				return "bill/transfer";
 			}
 			else target = Integer.parseInt(recipient);
 		}		
@@ -292,7 +292,7 @@ public class BankController extends BaseController {
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", exc.getMessage());
 				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				return "/bill/payment";
+				return "bill/payment";
 			}
 			break;
 		case "withdraw":
@@ -309,7 +309,7 @@ public class BankController extends BaseController {
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", exc.getMessage());
 				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				return "/bill/payment";
+				return "bill/payment";
 			}
 			break;
 		case "transfer":
@@ -330,7 +330,7 @@ public class BankController extends BaseController {
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", exc.getMessage());
 				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				return "/bill/transfer";
+				return "bill/transfer";
 			}
 			break;			
 		}
@@ -416,7 +416,7 @@ public class BankController extends BaseController {
 	@GetMapping("/accounts/password/{phone}")
 	public String getPasswordForm(@PathVariable String phone, Model model) {
 		model.addAttribute("password", new PasswordRequest());
-		return "/account/password";
+		return "account/password";
 	}
 	
 	@ApiOperation("Confirms password's change web-form")
@@ -429,7 +429,7 @@ public class BankController extends BaseController {
 		if(result.hasErrors()) {
 			log.warn(result.getFieldErrors().toString());
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			return "/account/password";
+			return "account/password";
 		}
 		
 		try {
@@ -437,7 +437,7 @@ public class BankController extends BaseController {
 				log.warn("User {} fails to confirm old password", authentication().getName());
 				model.addAttribute("message", "Old password mismatch");
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				return "/account/password";
+				return "account/password";
 			}
 		}
 		catch (Exception exc) {
@@ -457,7 +457,7 @@ public class BankController extends BaseController {
 		return "redirect:/accounts/show/{phone}";*/
 		model.addAttribute("success", "Password changed");
 		log.info("User {} changes password to a new one", authentication().getName());
-		return "/account/password";
+		return "account/password";
 	}
 
 	@Override

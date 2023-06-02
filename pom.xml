@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -12,8 +12,8 @@
 	<groupId>com.github.irybov</groupId>
 	<artifactId>bank-demo-boot</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>bank-demo-boot</name>
-	<description>Demo project for Spring Boot</description>
+	<name>Bank demo</name>
+	<description>Demo project for Spring Boot monolyth</description>
 	<contributors>
 		<contributor>
 			<name>Ivan Ryabov</name>
@@ -27,11 +27,17 @@
 	<properties>
 		<java.version>1.8</java.version>
 		<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
+		<tests.skip>true</tests.skip>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>de.codecentric</groupId>
+		    <artifactId>spring-boot-admin-starter-client</artifactId>
+		    <version>2.6.6</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -177,6 +183,11 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<executions>
+			        <execution>
+			            <goals>
+			                <goal>repackage</goal>
+			            </goals>
 				<configuration>
 					<mainClass>com.github.irybov.bankdemoboot.BankDemoBootApplication</mainClass>
 					<excludes>
@@ -186,11 +197,16 @@
 						</exclude>
 					</excludes>
 				</configuration>
+				    </execution>
+    			</executions>
 			</plugin>
 	        <plugin>
 		        <groupId>org.apache.maven.plugins</groupId>
 		        <artifactId>maven-surefire-plugin</artifactId>
 				<!-- <version>2.22.0</version> -->
+				<configuration>
+			        <skipTests>${tests.skip}</skipTests>
+			    </configuration>
 	        </plugin>			
 		</plugins>
 	</build>

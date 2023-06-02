@@ -154,7 +154,7 @@ class BankControllerTest {
 //			.andExpect(model().attribute("bills", bills))			
 			.andExpect(model().attribute("bills", account.getBills()))
 			.andExpect(model().attribute("currencies", any(Set.class)))
-			.andExpect(view().name("/account/private"));
+			.andExpect(view().name("account/private"));
 		
 //		verify(accountService).getAccountDTO(phone);
 //		verify(accountService).getBills(account.getId());
@@ -221,7 +221,7 @@ class BankControllerTest {
 			.andExpect(model().attribute("id", "0"))
 			.andExpect(model().attribute("action", "deposit"))
 			.andExpect(model().attribute("balance", "0.00"))
-			.andExpect(view().name("/bill/payment"));
+			.andExpect(view().name("bill/payment"));
 		
 		mockMVC.perform(post("/bills/operate").with(csrf())
 										   .param("id", "0")
@@ -233,7 +233,7 @@ class BankControllerTest {
 			.andExpect(model().attribute("id", "0"))
 			.andExpect(model().attribute("action", "withdraw"))
 			.andExpect(model().attribute("balance", "0.00"))
-			.andExpect(view().name("/bill/payment"));
+			.andExpect(view().name("bill/payment"));
 	}
 
 	@Test
@@ -249,7 +249,7 @@ class BankControllerTest {
 			.andExpect(model().attribute("id", "0"))
 			.andExpect(model().attribute("action", "transfer"))
 			.andExpect(model().attribute("balance", "0.00"))
-			.andExpect(view().name("/bill/transfer"));
+			.andExpect(view().name("bill/transfer"));
 	}
 	
 	@Test
@@ -294,7 +294,7 @@ class BankControllerTest {
 			.andExpect(model().size(1))
 			.andExpect(model().attributeExists("password"))
 			.andExpect(model().attribute("password", org.hamcrest.CoreMatchers.any(PasswordRequest.class)))
-			.andExpect(view().name("/account/password"));
+			.andExpect(view().name("account/password"));
 	}
 	
 	@Test
@@ -313,7 +313,7 @@ class BankControllerTest {
 			.andExpect(model().size(2))
 			.andExpect(model().attributeExists("password"))
 			.andExpect(model().attribute("success", "Password changed"))
-			.andExpect(view().name("/account/password"));
+			.andExpect(view().name("account/password"));
 		
 		verify(accountService).comparePassword(pwDTO.getOldPassword(), phone);
 	}
@@ -334,7 +334,7 @@ class BankControllerTest {
 			.andExpect(model().size(2))
 			.andExpect(model().attributeExists("password"))
 			.andExpect(model().attribute("message", "Old password mismatch"))
-			.andExpect(view().name("/account/password"));
+			.andExpect(view().name("account/password"));
 		
 		verify(accountService).comparePassword(pwDTO.getOldPassword(), phone);
 	}
@@ -353,7 +353,7 @@ class BankControllerTest {
 			.andExpect(model().size(1))
 			.andExpect(model().errorCount(2))
 			.andExpect(model().attributeExists("password"))
-			.andExpect(view().name("/account/password"));
+			.andExpect(view().name("account/password"));
 	}
 	
 	@Test
@@ -371,7 +371,7 @@ class BankControllerTest {
 			.andExpect(model().attribute("action", "transfer"))
 			.andExpect(model().attribute("balance", "0.00"))
 			.andExpect(model().attribute("message", "Please provide correct bill number"))
-			.andExpect(view().name("/bill/transfer"));
+			.andExpect(view().name("bill/transfer"));
 	}
 	
 	@Test
@@ -469,7 +469,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("action", "deposit"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
-				.andExpect(view().name("/bill/payment"));
+				.andExpect(view().name("bill/payment"));
 				
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
 //													    .param("id", "0")
@@ -483,7 +483,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("action", "withdraw"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
-				.andExpect(view().name("/bill/payment"));
+				.andExpect(view().name("bill/payment"));
 				
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
 //														.param("id", "0")
@@ -497,7 +497,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("action", "transfer"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
-				.andExpect(view().name("/bill/transfer"));
+				.andExpect(view().name("bill/transfer"));
 		
 		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.00);
 		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
@@ -543,7 +543,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("action", "withdraw"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Not enough money to complete operation"))
-				.andExpect(view().name("/bill/payment"));
+				.andExpect(view().name("bill/payment"));
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
 //														.param("id", "0")
@@ -557,7 +557,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("action", "transfer"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Not enough money to complete operation"))
-				.andExpect(view().name("/bill/transfer"));
+				.andExpect(view().name("bill/transfer"));
 
 		verify(operationService).withdraw(anyDouble(), anyString(), anyString(), anyInt());
 		verify(operationService).transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt());
@@ -591,7 +591,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("action", "transfer"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Source and target bills should not be the same"))
-				.andExpect(view().name("/bill/transfer"));
+				.andExpect(view().name("bill/transfer"));
 		
 		OperationRequest dto = new OperationRequest(777, 777, "USD", 0.01);
 		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
@@ -633,7 +633,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("action", "transfer"))
 				.andExpect(model().attribute("balance", "0.01"))
 				.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
-				.andExpect(view().name("/bill/transfer"));
+				.andExpect(view().name("bill/transfer"));
 		
 		OperationRequest dto = new OperationRequest(777, 3, "SEA", 0.01);
 		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")

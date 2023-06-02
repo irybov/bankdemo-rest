@@ -47,20 +47,20 @@ public class AuthController extends BaseController {
 	@ApiOperation("Returns apllication's start html-page")
 	@GetMapping("/home")
 	public String getStartPage() {
-		return "/auth/home";
+		return "auth/home";
 	}
 	
 	@ApiOperation("Returns registration html-page")
 	@GetMapping("/register")
 	public String createAccount(Model model) {
 		model.addAttribute("account", new AccountRequest());
-		return "/auth/register";
+		return "auth/register";
 	}
 	
 	@ApiOperation("Returns login form html-page")
 	@GetMapping("/login")
 	public String getLoginForm() {
-		return "/auth/login";
+		return "auth/login";
 	}
 	
 	@ApiOperation("Returns welcome html-page")
@@ -72,7 +72,7 @@ public class AuthController extends BaseController {
 			account = accountService.getAccountDTO(authentication().getName());
 			model.addAttribute("account", account);
 			log.info("User {} has enter the system", account.getPhone());
-			return "/auth/success";
+			return "auth/success";
 		}
 		catch (PersistenceException exc) {
 			log.error(exc.getMessage(), exc);
@@ -89,18 +89,18 @@ public class AuthController extends BaseController {
 		if(result.hasErrors()) {
 			log.warn("{}", result.getFieldErrors().toString());
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			return "/auth/register";
+			return "auth/register";
 		}
 		try {
 			accountService.saveAccount(accountRequestDTO);
 			response.setStatus(HttpServletResponse.SC_CREATED);
-			return "/auth/login";
+			return "auth/login";
 		}
 		catch (Exception exc) {
 			model.addAttribute("message", exc.getMessage());
 			log.error(exc.getMessage(), exc);
 			response.setStatus(HttpServletResponse.SC_CONFLICT);
-			return "/auth/register";
+			return "auth/register";
 		}
 	}
 

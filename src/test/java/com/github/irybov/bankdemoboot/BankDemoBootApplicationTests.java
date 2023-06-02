@@ -122,7 +122,7 @@ public class BankDemoBootApplicationTests {
 	        mockMVC.perform(get("/home"))
 	        	.andExpect(status().isOk())
 	        	.andExpect(content().string(containsString("Welcome!")))
-	        	.andExpect(view().name("/auth/home"));
+	        	.andExpect(view().name("auth/home"));
 		}
 		
 		@Test
@@ -133,7 +133,7 @@ public class BankDemoBootApplicationTests {
 		        .andExpect(content().string(containsString("Registration")))
 		        .andExpect(model().size(1))
 		        .andExpect(model().attribute("account", any(AccountRequest.class)))
-		        .andExpect(view().name("/auth/register"));
+		        .andExpect(view().name("auth/register"));
 		}
 	
 		@Test
@@ -142,7 +142,7 @@ public class BankDemoBootApplicationTests {
 	        mockMVC.perform(get("/login"))
 		        .andExpect(status().isOk())
 		        .andExpect(content().string(containsString("Log In")))
-		        .andExpect(view().name("/auth/login"));
+		        .andExpect(view().name("auth/login"));
 		}
 		
 		@WithMockUser(username = "0000000000", roles = "ADMIN")
@@ -161,7 +161,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(content().string(containsString("[ROLE_ADMIN]")))
 		        .andExpect(model().size(1))
 		        .andExpect(model().attribute("account", any(AccountResponse.class)))
-		        .andExpect(view().name("/auth/success"));
+		        .andExpect(view().name("auth/success"));
 		}
 		
 		@WithMockUser(username = "9999999999")
@@ -180,8 +180,9 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void unauthorized_success() throws Exception {
 			mockMVC.perform(get("/success"))
-				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("http://localhost/home"));
+//				.andExpect(status().is3xxRedirection())
+//				.andExpect(redirectedUrl("http://localhost/home"));
+				.andExpect(status().isUnauthorized());
 		}
 		@Test
 		void unauthorized_confirm() throws Exception {
@@ -199,7 +200,7 @@ public class BankDemoBootApplicationTests {
 										 .param("surname", "Nacci")
 						)
 				.andExpect(status().isCreated())
-				.andExpect(view().name("/auth/login"));
+				.andExpect(view().name("auth/login"));
 		}
 		
 		@Test
@@ -216,7 +217,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().size(1))
 				.andExpect(model().attribute("account", any(AccountRequest.class)))
 				.andExpect(model().hasErrors())
-				.andExpect(view().name("/auth/register"));
+				.andExpect(view().name("auth/register"));
 			
 			mockMVC.perform(post("/confirm").with(csrf())
 										 .param("birthday", LocalDate.now().plusYears(10L).toString())
@@ -229,7 +230,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().size(1))
 				.andExpect(model().attribute("account", any(AccountRequest.class)))
 				.andExpect(model().hasErrors())
-				.andExpect(view().name("/auth/register"));
+				.andExpect(view().name("auth/register"));
 		}
 		
 		@Test
@@ -246,7 +247,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().size(2))
 				.andExpect(model().attribute("account", any(AccountRequest.class)))
 				.andExpect(model().attribute("message", "You must be 18+ to register"))
-				.andExpect(view().name("/auth/register"));
+				.andExpect(view().name("auth/register"));
 		}
 		
 		@Test
@@ -263,7 +264,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().size(1))
 				.andExpect(model().attribute("account", any(AccountRequest.class)))
 				.andExpect(content().string(containsString("Validator in action!")))
-				.andExpect(view().name("/auth/register"));
+				.andExpect(view().name("auth/register"));
 		}
 		
 	}
@@ -281,7 +282,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().size(1))
 		        .andExpect(model().attribute("admin", any(AccountResponse.class)))
 				.andExpect(content().string(containsString("Admin's area")))
-		        .andExpect(view().name("/account/search"));
+		        .andExpect(view().name("account/search"));
 	    }
 		
 		@Test
@@ -290,7 +291,7 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(get("/operations/list"))
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString("Operations history")))
-				.andExpect(view().name("/account/history"));
+				.andExpect(view().name("account/history"));
 		}
 		
 		@Test
@@ -299,7 +300,7 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(get("/accounts/list"))
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString("Clients list")))
-		        .andExpect(view().name("/account/clients"));
+		        .andExpect(view().name("account/clients"));
 		}
 		
 		@Test
@@ -413,7 +414,7 @@ public class BankDemoBootApplicationTests {
 			.andExpect(model().attribute("account", any(AccountResponse.class)))
 			.andExpect(model().attribute("bills", any(List.class)))
 			.andExpect(model().attribute("currencies", any(Set.class)))
-			.andExpect(view().name("/account/private"));
+			.andExpect(view().name("account/private"));
 		}
 		
 		@Test
@@ -463,7 +464,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().attribute("id", "1"))
 				.andExpect(model().attribute("action", "deposit"))
 				.andExpect(model().attribute("balance", "0.00"))
-				.andExpect(view().name("/bill/payment"));
+				.andExpect(view().name("bill/payment"));
 			
 			mockMVC.perform(post("/bills/operate").with(csrf())
 											   .param("id", "1")
@@ -475,7 +476,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().attribute("id", "1"))
 				.andExpect(model().attribute("action", "withdraw"))
 				.andExpect(model().attribute("balance", "0.00"))
-				.andExpect(view().name("/bill/payment"));
+				.andExpect(view().name("bill/payment"));
 		}
 
 		@Test
@@ -491,7 +492,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().attribute("id", "1"))
 				.andExpect(model().attribute("action", "transfer"))
 				.andExpect(model().attribute("balance", "0.00"))
-				.andExpect(view().name("/bill/transfer"));
+				.andExpect(view().name("bill/transfer"));
 		}
 		
 		@Test
@@ -519,7 +520,7 @@ public class BankDemoBootApplicationTests {
 			.andExpect(status().isOk())
 			.andExpect(model().size(1))
 			.andExpect(model().attribute("password", any(PasswordRequest.class)))
-			.andExpect(view().name("/account/password"));
+			.andExpect(view().name("account/password"));
 		}
 		
 		@Disabled
@@ -534,7 +535,7 @@ public class BankDemoBootApplicationTests {
 					.andExpect(model().size(2))
 					.andExpect(model().attributeExists("password"))
 					.andExpect(model().attribute("success", "Password changed"))
-					.andExpect(view().name("/account/password"));
+					.andExpect(view().name("account/password"));
 		}
 		
 		@Test
@@ -548,7 +549,7 @@ public class BankDemoBootApplicationTests {
 					.andExpect(model().size(2))
 					.andExpect(model().attributeExists("password"))
 					.andExpect(model().attribute("message", "Old password mismatch"))
-					.andExpect(view().name("/account/password"));			
+					.andExpect(view().name("account/password"));			
 		}
 		
 		@Test
@@ -562,7 +563,7 @@ public class BankDemoBootApplicationTests {
 					.andExpect(model().size(1))
 					.andExpect(model().errorCount(2))
 					.andExpect(model().attributeExists("password"))
-					.andExpect(view().name("/account/password"));			
+					.andExpect(view().name("account/password"));			
 		}
 		
 		@Test
@@ -580,7 +581,7 @@ public class BankDemoBootApplicationTests {
 					.andExpect(model().attribute("action", "transfer"))
 					.andExpect(model().attribute("balance", "10.00"))
 					.andExpect(model().attribute("message", "Please provide correct bill number"))
-					.andExpect(view().name("/bill/transfer"));
+					.andExpect(view().name("bill/transfer"));
 		}
 		
 		@Test
@@ -628,7 +629,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().attribute("action", "deposit"))
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
-				.andExpect(view().name("/bill/payment"));
+				.andExpect(view().name("bill/payment"));
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 //								    .param("id", "1")
@@ -642,7 +643,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().attribute("action", "withdraw"))
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
-				.andExpect(view().name("/bill/payment"));
+				.andExpect(view().name("bill/payment"));
 			
 			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.00);
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
@@ -668,7 +669,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().attribute("action", "withdraw"))
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Not enough money to complete operation"))
-				.andExpect(view().name("/bill/payment"));
+				.andExpect(view().name("bill/payment"));
 		}
 		
 		@Test
@@ -687,7 +688,7 @@ public class BankDemoBootApplicationTests {
 			.andExpect(model().attribute("action", "transfer"))
 			.andExpect(model().attribute("balance", "10.00"))
 			.andExpect(model().attribute("message", "Source and target bills should not be the same"))
-			.andExpect(view().name("/bill/transfer"));
+			.andExpect(view().name("bill/transfer"));
 			
 			OperationRequest dto = new OperationRequest(777, 777, "SEA", 0.01);
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
@@ -714,7 +715,7 @@ public class BankDemoBootApplicationTests {
 					.andExpect(model().attribute("action", "transfer"))
 					.andExpect(model().attribute("balance", "10.00"))
 					.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
-					.andExpect(view().name("/bill/transfer"));
+					.andExpect(view().name("bill/transfer"));
 			
 			OperationRequest dto = new OperationRequest(777, 2, "AUD", 0.01);
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")

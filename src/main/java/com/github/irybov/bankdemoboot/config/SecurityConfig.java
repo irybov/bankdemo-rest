@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 //import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 //import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -39,6 +40,32 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 //	@Autowired
 //	private DataSource dataSource;
 	
+    private static final String[] WHITE_LIST_URLS = { 
+    		"/login", 
+    		"/register", 
+    		"/confirm", 
+    		"/webjars/**", 
+    		"/css/**", 
+    		"/js/**", 
+			"/bills/external", 
+			"/**/swagger*/**", 
+			"/**/api-docs/**"
+    };
+    private static final String[] SHARED_LIST_URLS = {
+    		"/bills/**", 
+    		"/accounts/show", 
+    		"/accounts/password"
+    };
+    private static final String[] ADMIN_LIST_URLS = {
+    		"/accounts/search", 
+    		"/accounts/status", 
+    		"/accounts/list/**", 
+    		"/actuator/**", 
+			"/control", 
+			"/h2-console/**", 
+			"/operations/**"
+    };
+	
 	@Bean
 	protected BCryptPasswordEncoder passwordEncoder() {
 	    return new BCryptPasswordEncoder(4);
@@ -50,8 +77,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
     }	
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(accountDetailsService)
-            .passwordEncoder(passwordEncoder());
+    	
+        DaoAuthenticationProvider dao = new DaoAuthenticationProvider();
+        dao.setUserDetailsService(accountDetailsService);
+        dao.setPasswordEncoder(passwordEncoder());
+        auth.authenticationProvider(dao);
+            	
+    	auth.inMemoryAuthentication()
+    		.withUser("remote")
+    		.password(passwordEncoder().encode("remote"))
+    		.roles("ADMIN");
+    	
+//        auth.userDetailsService(accountDetailsService)
+//            .passwordEncoder(passwordEncoder());
     }
 	
 /*	@Override
@@ -77,20 +115,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 //			.cors()
 //			.and()
 			.authorizeRequests()
-			.antMatchers("/login", "/register", "/confirm", "/webjars/**", "/css/**", "/js/**",
-					"/bills/external", "/**/swagger*/**", "/**/api-docs/**")
-			.permitAll()
-				.and()
-			.authorizeRequests()
-			.antMatchers("/bills/**", "/accounts/show", "/accounts/password")
-			.hasAnyRole("ADMIN", "CLIENT")
-			.antMatchers("/accounts/search", "/accounts/status", "/accounts/list/**", "/actuator/**",
-				"/control", "/h2-console/**", "/operations/**")
-			.hasRole("ADMIN")
+			.antMatchers(WHITE_LIST_URLS).permitAll()
+			.antMatchers(SHARED_LIST_URLS).hasAnyRole("ADMIN", "CLIENT")
+			.antMatchers(ADMIN_LIST_URLS).hasRole("ADMIN")
 			.anyRequest().authenticated()
 				.and()
 		    .csrf()
-		    .ignoringAntMatchers("/control", "/bills/external")
+		    .ignoringAntMatchers("/control", "/bills/external", "/actuator/**")
 		        .and()
 			.formLogin()
 			.usernameParameter("phone")
@@ -109,12 +140,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
             .clearAuthentication(true)
             .deleteCookies("JSESSIONID")
 			.logoutSuccessUrl("/home")
-			.permitAll();
-//				.and()
-//			.httpBasic();
+			.permitAll()
+				.and()
+			.httpBasic();
 //			.and().cors().configurationSource(corsConfigurationSource());
 //		http.headers().frameOptions().disable();
 	}
+    
 	
 /*    @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -129,7 +161,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(Arrays.asList("http://" + uri +":" + port));
-//				("http://" + uri +":" + port, "http://" + uri +":" + m_port));
 		configuration.setAllowedMethods(Arrays.asList("*"));
 		configuration.setAllowCredentials(true);
 		configuration.setExposedHeaders(Arrays.asList("*"));

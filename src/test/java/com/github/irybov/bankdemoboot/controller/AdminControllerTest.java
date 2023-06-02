@@ -141,7 +141,7 @@ class AdminControllerTest {
 			.andExpect(model().size(1))
 	        .andExpect(model().attribute("admin", admin))
 			.andExpect(content().string(containsString("Admin's area")))
-	        .andExpect(view().name("/account/search"));
+	        .andExpect(view().name("account/search"));
 		
 	    verify(accountService).getAccountDTO(anyString());
 	}
@@ -152,7 +152,7 @@ class AdminControllerTest {
 		mockMVC.perform(get("/operations/list"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("Operations history")))
-			.andExpect(view().name("/account/history"));
+			.andExpect(view().name("account/history"));
 	}
 	
 	@Test
@@ -161,7 +161,7 @@ class AdminControllerTest {
 		mockMVC.perform(get("/accounts/list"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("Clients list")))
-	        .andExpect(view().name("/account/clients"));
+	        .andExpect(view().name("account/clients"));
 	}
 	
 	@Test
