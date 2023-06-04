@@ -6,12 +6,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -32,6 +35,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.zip.GZIPOutputStream;
 
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceException;
 
 import org.junit.jupiter.api.AfterAll;
@@ -56,6 +60,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -175,7 +180,11 @@ class AdminControllerTest {
 		
 		byte[] output = data_2_gzip_converter(clients);
 		
-		mockMVC.perform(get("/accounts/list/all"))
+		MvcResult result = mockMVC.perform(get("/accounts/list/all"))
+			.andExpect(request().asyncStarted())
+			.andReturn();
+			
+		mockMVC.perform(asyncDispatch(result))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
 			.andExpect(content().bytes(output));
@@ -189,7 +198,7 @@ class AdminControllerTest {
 			json = mapper.writeValueAsString(clients);
 		}
 		catch (JsonProcessingException exc) {
-//			log.warn(exc.getMessage(), exc);
+//			log.error(exc.getMessage(), exc);
 		}
 		
 		byte[] data = json.getBytes(StandardCharsets.UTF_8);
@@ -199,7 +208,7 @@ class AdminControllerTest {
 			gzip.flush();
 		}
 		catch (IOException exc) {
-//			log.warn(exc.getMessage(), exc);
+//			log.error(exc.getMessage(), exc);
 		}
 		byte[] bytes = baos.toByteArray();
 		try {
@@ -207,10 +216,36 @@ class AdminControllerTest {
 			baos.close();
 		}
 		catch (IOException exc) {
-//			log.warn(exc.getMessage(), exc);
+//			log.error(exc.getMessage(), exc);
 		}
 		
 		return bytes;
+	}
+	
+	@Test
+	void clients_not_found_exception() throws Exception {
+		
+		when(accountService.getAll()).thenReturn(new ArrayList<AccountResponse>());
+		
+		MvcResult result = mockMVC.perform(get("/accounts/list/all"))
+			.andExpect(request().asyncStarted())
+			.andReturn();
+			
+		mockMVC.perform(asyncDispatch(result))
+			.andExpect(status().isInternalServerError());
+		
+		
+		when(accountService.getAll()).thenReturn(null);
+		
+		result = mockMVC.perform(get("/accounts/list/all"))
+			.andExpect(request().asyncStarted())
+			.andReturn();
+			
+		mockMVC.perform(asyncDispatch(result))
+			.andExpect(status().isInternalServerError());
+		
+		
+	    verify(accountService, times(2)).getAll();
 	}
 	
 	@Test
@@ -250,7 +285,7 @@ class AdminControllerTest {
 	}
 	
 	@Test
-	void entity_not_found_exception() throws Exception {
+	void account_not_found_exception() throws Exception {
 		
 		String wrong = "9999999999";
 //		when(accountService.getAccountDTO(wrong))
@@ -335,29 +370,36 @@ class AdminControllerTest {
 				.build();
 		operations.add(new OperationResponse(operation));
 
-		Bill bill = new Bill("SEA", true, entity);
-		bill.setBalance(BigDecimal.valueOf(9.99));
-		bill.setCreatedAt(OffsetDateTime.now());
-		BillResponse fake = new BillResponse(bill);
+		Bill fake = new Bill("SEA", true, entity);
+		fake.setBalance(BigDecimal.valueOf(9.99));
+		fake.setCreatedAt(OffsetDateTime.now());
+		BillResponse bill = new BillResponse(fake);
 		
 		CompletableFuture<List<OperationResponse>> futureOperations =
 				CompletableFuture.completedFuture(operations);
 		when(operationService.getAll(anyInt())).thenReturn(futureOperations.join());
-		CompletableFuture<BillResponse> futureBill = CompletableFuture.completedFuture(fake);
+		CompletableFuture<BillResponse> futureBill = CompletableFuture.completedFuture(bill);
 		when(billService.getBillDTO(anyInt())).thenReturn(futureBill.join());
+
+		CompletableFuture<byte[]> futureByteArray = CompletableFuture.completedFuture
+				(data_2_csv_converter(futureBill.join(), futureOperations.join()));
 		
-		byte[] output = data_2_csv_converter(entity, bill, operations);
+		MvcResult result = mockMVC.perform(get("/operations/print/{id}", "0"))
+			.andExpect(request().asyncStarted())
+			.andReturn();
 		
-		mockMVC.perform(get("/operations/print/{id}", "0"))
+		mockMVC.perform(asyncDispatch(result))
 			.andExpect(status().isCreated())
 			.andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
-			.andExpect(content().bytes(output));
+			.andExpect(content().bytes(futureByteArray.join()));
 		
 		verify(operationService).getAll(anyInt());
 		verify(billService).getBillDTO(anyInt());
 	}	
-	private byte[] data_2_csv_converter(Account account, Bill bill, List<OperationResponse> operations) {
+	private byte[] data_2_csv_converter(BillResponse bill, List<OperationResponse> operations) {
 
+		AccountResponse account = bill.getOwner();
+		
 		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};		
 		List<String[]> data = new ArrayList<>();
 		data.add(owner);
@@ -391,10 +433,34 @@ class AdminControllerTest {
 			writer.flush();
 			byteArray = baos.toByteArray();
 		}
-        catch (IOException exc) {
-//        	log.error(exc.getMessage(), exc);
-		}		
-		return byteArray;		
+		catch (IOException exc) {
+//			log.error(exc.getMessage(), exc);
+		}
+		
+		return byteArray;
+	}
+	
+	@Test
+	void data_on_fetch_exception() throws Exception {
+		
+		List<OperationResponse> operations = new ArrayList<>();
+		
+		CompletableFuture<List<OperationResponse>> futureOperations =
+				CompletableFuture.completedFuture(operations);
+		when(operationService.getAll(anyInt())).thenReturn(futureOperations.join());
+		when(billService.getBillDTO(anyInt())).thenThrow(new EntityNotFoundException());
+//		CompletableFuture<BillResponse> futureBill = CompletableFuture.completedFuture(null);
+		
+		MvcResult result = mockMVC.perform(get("/operations/print/{id}", "0"))
+			.andExpect(request().asyncStarted())
+			.andReturn();
+			
+		mockMVC.perform(asyncDispatch(result))
+			.andExpect(status().isInternalServerError())
+			.andExpect(content().bytes(new byte[0]));
+			
+		verify(operationService).getAll(anyInt());
+		verify(billService).getBillDTO(anyInt());
 	}
 	
 	@AfterEach

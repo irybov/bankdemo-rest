@@ -7,6 +7,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -18,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -40,6 +42,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -306,9 +309,25 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void can_get_clients_list() throws Exception {
 			
-			mockMVC.perform(get("/accounts/list/all"))
+			MvcResult result = mockMVC.perform(get("/accounts/list/all"))
+				.andExpect(request().asyncStarted())
+				.andReturn();
+					
+			mockMVC.perform(asyncDispatch(result))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE));
+		}
+		
+		@Disabled
+		@Test
+		void clients_not_found_exception() throws Exception {
+			
+			MvcResult result = mockMVC.perform(get("/accounts/list/all"))
+				.andExpect(request().asyncStarted())
+				.andReturn();
+					
+			mockMVC.perform(asyncDispatch(result))
+				.andExpect(status().isInternalServerError());
 		}
 	    
 		@Test
@@ -340,7 +359,7 @@ public class BankDemoBootApplicationTests {
 		}
 		
 		@Test
-		void entity_not_found_exception() throws Exception {
+		void account_not_found_exception() throws Exception {
 			
 			String wrong = "4444444444";
 			mockMVC.perform(get("/accounts/search/{phone}", wrong))
@@ -386,9 +405,25 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void can_export_data_2_csv_file() throws Exception {
 			
-			mockMVC.perform(get("/operations/print/{id}", "1"))
+			MvcResult result = mockMVC.perform(get("/operations/print/{id}", "1"))
+				.andExpect(request().asyncStarted())
+				.andReturn();
+				
+			mockMVC.perform(asyncDispatch(result))
 				.andExpect(status().isCreated())
 				.andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE));
+		}
+		
+		@Test
+		void data_on_fetch_exception() throws Exception {
+			
+			MvcResult result = mockMVC.perform(get("/operations/print/{id}", "0"))
+				.andExpect(request().asyncStarted())
+				.andReturn();
+					
+			mockMVC.perform(asyncDispatch(result))
+				.andExpect(status().isInternalServerError())
+				.andExpect(content().bytes(new byte[0]));
 		}
 		
 	}

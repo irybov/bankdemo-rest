@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 //import java.util.concurrent.ExecutorService;
@@ -43,7 +42,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -199,15 +197,25 @@ public class AdminController extends BaseController {
 	@ApiOperation("Returns list of all clients")
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/list/all")
-	public ResponseEntity<byte[]> getClientsList(){
+	public CompletableFuture<ResponseEntity<byte[]>> getClientsList(){
 		
 		List<AccountResponse> clients = accountService.getAll();
+		if(clients == null || clients.isEmpty()) {
+			return CompletableFuture.completedFuture(ResponseEntity.internalServerError().build());
+		}
+		byte[] bytes = data_2_gzip_converter(clients);
+		
+		return CompletableFuture.supplyAsync(() -> 
+		ResponseEntity.ok().header(HttpHeaders.CONTENT_ENCODING, "gzip").body(bytes), executorService);
+	}
+	private byte[] data_2_gzip_converter(List<AccountResponse> clients) {
+		
 		String json = null;
 		try {
 			json = mapper.writeValueAsString(clients);
 		}
 		catch (JsonProcessingException exc) {
-			log.warn(exc.getMessage(), exc);
+			log.error(exc.getMessage(), exc);
 		}
 		
 		byte[] data = json.getBytes(StandardCharsets.UTF_8);
@@ -217,7 +225,7 @@ public class AdminController extends BaseController {
 			gzip.flush();
 		}
 		catch (IOException exc) {
-			log.warn(exc.getMessage(), exc);
+			log.error(exc.getMessage(), exc);
 		}
 		byte[] bytes = baos.toByteArray();
 		try {
@@ -225,11 +233,12 @@ public class AdminController extends BaseController {
 			baos.close();
 		}
 		catch (IOException exc) {
-			log.warn(exc.getMessage(), exc);
+			log.error(exc.getMessage(), exc);
 		}
 		
-		return ResponseEntity.ok().header(HttpHeaders.CONTENT_ENCODING, "gzip").body(bytes);
+		return bytes;
 	}
+	
 	/*	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/list/{pageNumber}")
 	@ResponseBody
@@ -336,30 +345,76 @@ public class AdminController extends BaseController {
 	@ApiOperation("Exports bill's operations list to CSV file")
 	@PreAuthorize("hasRole('ADMIN')")
 //	@GetMapping("/operations/print/{id}")
-	@GetMapping(value = "/operations/print/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@GetMapping(value = "/operations/print/{id}", 
+				produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	@ResponseBody
 //	public void export2csv(@PathVariable int id, HttpServletResponse response) throws IOException {
-	public Resource export2csv(@PathVariable int id, HttpServletResponse response) {
-
-		List<String[]> data = new ArrayList<>();
+	public CompletableFuture<InputStreamResource> export2csv(@PathVariable int id, HttpServletResponse response) {
 
 		CompletableFuture<List<OperationResponse>> futureOperations =
 				CompletableFuture.supplyAsync(() -> operationService.getAll(id), executorService);
 		CompletableFuture<BillResponse> futureBill = CompletableFuture.supplyAsync
 				(() -> {try {return billService.getBillDTO(id);}
-					   	catch(EntityNotFoundException exc) {log.error(exc.getMessage(), exc);
-					   	throw new CompletionException(exc);}
-				}, executorService);
+					   	catch(EntityNotFoundException exc) {
+					   		log.error(exc.getMessage(), exc);
+					   		return null;
+					   	}
+					}, executorService);
 		
-		BillResponse bill = futureBill.join();
+/*		final String SLASH = FileSystems.getDefault().getSeparator();
+		final String PATH = System.getProperty("user.dir") + SLASH + "files";
+		new File(PATH).mkdir();
+		final String FILENAME = "Bill-" + id +".csv";*/
+		
+/*		try {futureBill.get();}
+		catch (InterruptedException | ExecutionException exc) {
+			futureOperations.complete(null);
+			log.error(exc.getMessage(), exc);
+	   		response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+	   		return CompletableFuture.completedFuture(null);
+		}*/
+		CompletableFuture<byte[]> futureByteArray = CompletableFuture.supplyAsync
+				(() -> {
+					try {return data_2_csv_converter(futureBill.join(), futureOperations.join());}
+					catch (Exception exc) {
+						log.error(exc.getMessage(), exc);
+						response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+					}
+					return null;}, executorService);
+
+		
+/*        try (CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter
+        		(new File(PATH, FILENAME))))) {
+            writer.writeAll(data);
+        }
+        catch (IOException exc) {
+        	log.error(exc.getMessage(), exc);
+		}*/
+		response.setStatus(HttpServletResponse.SC_CREATED);
+		log.info("Admin {} exports data about bill {} to csv", authentication().getName(), id);		
+        return CompletableFuture.supplyAsync(() -> 
+        					new InputStreamResource(new BufferedInputStream(
+        					new ByteArrayInputStream(futureByteArray.join()))), executorService)
+	        		.exceptionally(exc -> null);
+        
+//		File file = new File(PATH + SLASH + FILENAME);
+//		return new InputStreamResource(new BufferedInputStream(new FileInputStream(file)));
+/*        response.setContentType("text/csv");
+        response.setContentLength((int)file.length());
+        response.setHeader("Content-Disposition", "attachment; filename="+FILENAME+"");
+        response.getWriter().print(file);*/
+	}
+	private byte[] data_2_csv_converter(BillResponse bill, List<OperationResponse> operations) throws Exception {
+
 		AccountResponse account = bill.getOwner();
 		
 		String[] owner = {account.getName(), account.getSurname(), account.getPhone()};		
+		List<String[]> data = new ArrayList<>();
 		data.add(owner);
 		data.add(new String[0]);
 		
-		String[] info = {bill.getCurrency(), String.valueOf(bill.getBalance()),
-						 bill.getCreatedAt().toString()};
+		String[] info = {bill.getCurrency(), String.valueOf(bill.getBalance()), bill.getCreatedAt()
+				.toString()};
 		data.add(info);
 		data.add(new String[0]);
 		
@@ -367,7 +422,6 @@ public class AdminController extends BaseController {
 		data.add(header);
 		data.add(new String[0]);		
 		
-		List<OperationResponse> operations = futureOperations.join();
 		for(OperationResponse operation : operations) {
 			String[] row = {operation.getAction(),
 							String.valueOf(operation.getAmount()),
@@ -376,11 +430,6 @@ public class AdminController extends BaseController {
 							String.valueOf(operation.getSender())};
 			data.add(row);
 		}
-		
-/*		final String SLASH = FileSystems.getDefault().getSeparator();
-		final String PATH = System.getProperty("user.dir") + SLASH + "files";
-		new File(PATH).mkdir();
-		final String FILENAME = "Bill-" + id +".csv";*/
 		
 		byte[] byteArray = null;
 		try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -392,27 +441,11 @@ public class AdminController extends BaseController {
 			writer.flush();
 			byteArray = baos.toByteArray();
 		}
-        catch (IOException exc) {
-        	log.error(exc.getMessage(), exc);
+/*		catch (IOException exc) {
+			log.error(exc.getMessage(), exc);
 		}
-		
-/*        try (CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter
-        		(new File(PATH, FILENAME))))) {
-            writer.writeAll(data);
-        }
-        catch (IOException exc) {
-        	log.error(exc.getMessage(), exc);
-		}*/
-		response.setStatus(HttpServletResponse.SC_CREATED);        		
-		log.info("Admin {} exports data about bill {} to csv", authentication().getName(), id);		
-        return new InputStreamResource(new BufferedInputStream(new ByteArrayInputStream(byteArray)));
-        
-//		File file = new File(PATH + SLASH + FILENAME);
-//		return new InputStreamResource(new BufferedInputStream(new FileInputStream(file)));
-/*        response.setContentType("text/csv");
-        response.setContentLength((int)file.length());
-        response.setHeader("Content-Disposition", "attachment; filename="+FILENAME+"");
-        response.getWriter().print(file);*/
+		*/
+		return byteArray;		
 	}
 
 	@Override
