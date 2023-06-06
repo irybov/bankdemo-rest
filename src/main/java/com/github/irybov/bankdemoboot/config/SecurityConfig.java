@@ -47,9 +47,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
     		"/webjars/**", 
     		"/css/**", 
     		"/js/**", 
-			"/bills/external", 
-			"/**/swagger*/**", 
-			"/**/api-docs/**"
+			"/bills/external"
     };
     private static final String[] SHARED_LIST_URLS = {
     		"/bills/**", 
@@ -63,7 +61,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
     		"/actuator/**", 
 			"/control", 
 			"/h2-console/**", 
-			"/operations/**"
+			"/operations/**", 
+			"/**/swagger*/**", 
+			"/**/api-docs/**"
     };
 	
 	@Bean

@@ -1,6 +1,7 @@
 package com.github.irybov.bankdemoboot.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -25,8 +26,13 @@ import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.AuthorizationScope;
+import springfox.documentation.service.BasicAuth;
 import springfox.documentation.service.Contact;
+import springfox.documentation.service.SecurityReference;
+import springfox.documentation.service.SecurityScheme;
 import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.plugins.Docket;
 
 @Configuration
@@ -38,11 +44,29 @@ public class SwaggerConfig {
           .select() 
           .apis(RequestHandlerSelectors.basePackage("com.github.irybov.bankdemoboot.controller"))
           .paths(PathSelectors.any())
-          .build().apiInfo(metaData());
-    }
+          .build().apiInfo(metaData())
+          .securityContexts(Arrays.asList(mySecurityContext()))
+          .securitySchemes(Arrays.asList(basicAuthScheme()));
+	}
+	
+	private SecurityContext mySecurityContext() {
+		return SecurityContext.builder()
+	      .securityReferences(Arrays.asList(basicAuthReference()))
+	      .build();
+	}
+	
+	private SecurityScheme basicAuthScheme() {
+		return new BasicAuth("basicAuth");
+	}
+	
+	private SecurityReference basicAuthReference() {
+		return new SecurityReference("basicAuth", new AuthorizationScope[0]);
+	}
+    
+    
     private ApiInfo metaData() {
         return new ApiInfoBuilder()
-                .title("Spring Boot (Bank Demo)")
+                .title("Spring Boot (bank demo)")
                 .description("Swagger configuration for application")
                 .version("0.0.1")
                 .license("Apache 2.0")

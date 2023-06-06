@@ -379,8 +379,9 @@ public class AdminController extends BaseController {
 					catch (Exception exc) {
 						log.error(exc.getMessage(), exc);
 						response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+						return null;
 					}
-					return null;}, executorService);
+				}, executorService);
 
 		
 /*        try (CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter

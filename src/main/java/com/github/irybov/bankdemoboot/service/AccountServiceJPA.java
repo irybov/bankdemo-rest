@@ -58,7 +58,7 @@ public class AccountServiceJPA implements AccountService {
 			accountRepository.save(account);
 		}
 		catch (RuntimeException exc) {
-			throw new DataIntegrityViolationException("Number " + account.getPhone() + " is already in use.");
+			throw new DataIntegrityViolationException("This number is already in use.");
 		}
 	}
 	

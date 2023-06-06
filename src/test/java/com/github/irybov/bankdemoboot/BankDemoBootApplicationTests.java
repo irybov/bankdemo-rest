@@ -70,6 +70,34 @@ public class BankDemoBootApplicationTests {
 		assertThat(context).isNotNull();
 	}
 	
+    @Nested
+    class ActuatorAccessTest{
+	
+		@WithMockUser(username = "remote", roles = "ADMIN")
+		@Test
+		void actuator_allowed() throws Exception {
+			
+	        mockMVC.perform(get("/actuator/"))
+	    		.andExpect(status().isOk());
+		}
+		
+		@Test
+		void actuator_denied() throws Exception {
+			
+	        mockMVC.perform(get("/actuator/"))
+	    		.andExpect(status().isUnauthorized());
+		}
+		
+		@WithMockUser(username = "2222222222", roles = "CLIENT")
+		@Test
+		void actuator_forbidden() throws Exception {
+			
+	        mockMVC.perform(get("/actuator/"))
+	    		.andExpect(status().isForbidden());
+		}
+		
+	}	
+	
 	@WithMockUser(username = "0000000000", roles = "ADMIN")
     @Nested
     class SwaggerAccessTest{
@@ -81,7 +109,6 @@ public class BankDemoBootApplicationTests {
 	    		.andExpect(status().isOk());
 		}
 		
-		@Disabled
 		@WithMockUser(username = "1111111111", roles = "CLIENT")
 		@Test
 		void swagger_denied() throws Exception {
@@ -100,7 +127,7 @@ public class BankDemoBootApplicationTests {
 	    @Test
 	    void can_get_api_docs() throws Exception {
 
-	        mockMVC.perform(get("/v2/api-docs"))
+	        mockMVC.perform(get("/v2/api-docs/"))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));		
 		}
