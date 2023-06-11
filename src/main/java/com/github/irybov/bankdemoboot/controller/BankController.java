@@ -3,6 +3,7 @@ package com.github.irybov.bankdemoboot.controller;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.Currency;
@@ -57,7 +58,7 @@ import com.github.irybov.bankdemoboot.controller.dto.OperationRequest;
 //import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequest;
 import com.github.irybov.bankdemoboot.entity.Operation;
-import com.github.irybov.bankdemoboot.model.PayLoad;
+import com.github.irybov.bankdemoboot.model.EmitterPayload;
 import com.github.irybov.bankdemoboot.service.OperationService;
 
 import io.swagger.annotations.Api;
@@ -104,21 +105,25 @@ public class BankController extends BaseController {
 		if(!dir.exists()) {new File(PATH).mkdir();}		
 		File file = new File(PATH + SLASH + "currencies.txt");
 		
-		if(file.exists() & file.length() > 2) {			
+//		if(file.exists() & file.length() > 2) {			
 			try(Scanner scanner = new Scanner(new FileReader(file))) {
 				while(scanner.hasNextLine()) {
 					String line = scanner.nextLine();
-					if(line.length() > 2) {
+					line.trim();
+					if(line.length() == 3) {
 						Currency currency = Currency.getInstance(line.toUpperCase());
 						currencies.add(currency);
 					}
-					else break;
+					else if(line.length() == 0) break;					
+					else throw new UncheckedIOException(
+							new IOException("Wrong data format inside currencies.txt file"));
 				}
 			}
 			catch (IOException exc) {
 				log.error(exc.getMessage(), exc);
+				throw new UncheckedIOException(exc);
 			}
-		}
+/*		}
 		else {
 			Currency usd = Currency.getInstance("USD");
 			currencies.add(usd);
@@ -128,7 +133,7 @@ public class BankController extends BaseController {
 			currencies.add(gbp);
 			Currency rub = Currency.getInstance("RUB");
 			currencies.add(rub);
-		}
+		}*/
 	}
 	
 	@ApiOperation("Returns client's private html-page")
@@ -400,7 +405,7 @@ public class BankController extends BaseController {
 		if(emitters.containsKey(phone)) {
 			ResponseBodyEmitter emitter = emitters.get(phone);
 			try {
-				String load = mapper.writeValueAsString(new PayLoad(id, amount));
+				String load = mapper.writeValueAsString(new EmitterPayload(id, amount));
 				emitter.send(load);
 				emitter.complete();
 			}

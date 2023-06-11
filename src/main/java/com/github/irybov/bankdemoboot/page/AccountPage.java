@@ -1,4 +1,4 @@
-package com.github.irybov.bankdemoboot.model;
+package com.github.irybov.bankdemoboot.page;
 
 import org.springframework.data.domain.Sort;
 

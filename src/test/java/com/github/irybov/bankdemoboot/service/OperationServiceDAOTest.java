@@ -37,7 +37,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
 import com.github.irybov.bankdemoboot.dao.OperationDAO;
 import com.github.irybov.bankdemoboot.entity.Operation;
-import com.github.irybov.bankdemoboot.model.OperationPage;
+import com.github.irybov.bankdemoboot.page.OperationPage;
 
 class OperationServiceDAOTest {
 

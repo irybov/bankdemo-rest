@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class PayLoad {
+public class EmitterPayload {
 
 	private int id;
 	private double income;

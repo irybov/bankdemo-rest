@@ -1,4 +1,4 @@
-package com.github.irybov.bankdemoboot.model;
+package com.github.irybov.bankdemoboot.page;
 
 import org.springframework.data.domain.Sort;
 
@@ -7,11 +7,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class OperationPage {
-	
-    private int pageNumber = 0;
-    private int pageSize = 20;
-    private Sort.Direction sortDirection = Sort.Direction.DESC;
-    private String sortBy = "id";
+public class BillPage {
 
+    private int pageNumber = 0;
+    private int pageSize = 5;
+    private Sort.Direction sortDirection = Sort.Direction.ASC;
+    private String sortBy = "id";
+	
 }

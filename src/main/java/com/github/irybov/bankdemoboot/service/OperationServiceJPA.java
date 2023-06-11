@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
 import com.github.irybov.bankdemoboot.entity.Operation;
-//import com.github.irybov.bankdemoboot.model.OperationPage;
 import com.github.irybov.bankdemoboot.model.OperationSpecs;
 import com.github.irybov.bankdemoboot.repository.OperationRepository;
 

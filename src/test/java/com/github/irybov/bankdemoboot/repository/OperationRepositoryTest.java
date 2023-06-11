@@ -23,8 +23,8 @@ import org.springframework.test.context.jdbc.Sql;
 
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
 import com.github.irybov.bankdemoboot.entity.Operation;
-import com.github.irybov.bankdemoboot.model.OperationPage;
 import com.github.irybov.bankdemoboot.model.OperationSpecs;
+import com.github.irybov.bankdemoboot.page.OperationPage;
 
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Sql("/test-operations-h2.sql")
