@@ -58,12 +58,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
     		"/accounts/search", 
     		"/accounts/status", 
     		"/accounts/list/**", 
-    		"/actuator/**", 
 			"/control", 
 			"/h2-console/**", 
 			"/operations/**", 
 			"/**/swagger*/**", 
 			"/**/api-docs/**"
+    };
+    private static final String[] REMOTE_LIST_URLS = {
+    		"/actuator/**"	
     };
 	
 	@Bean
@@ -86,7 +88,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
     	auth.inMemoryAuthentication()
     		.withUser("remote")
     		.password(passwordEncoder().encode("remote"))
-    		.roles("ADMIN");
+    		.roles("REMOTE");
     	
 //        auth.userDetailsService(accountDetailsService)
 //            .passwordEncoder(passwordEncoder());
@@ -118,6 +120,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			.antMatchers(WHITE_LIST_URLS).permitAll()
 			.antMatchers(SHARED_LIST_URLS).hasAnyRole("ADMIN", "CLIENT")
 			.antMatchers(ADMIN_LIST_URLS).hasRole("ADMIN")
+			.antMatchers(REMOTE_LIST_URLS).hasRole("REMOTE")
 			.anyRequest().authenticated()
 				.and()
 		    .csrf()

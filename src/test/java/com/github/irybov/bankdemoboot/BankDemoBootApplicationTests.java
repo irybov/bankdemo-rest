@@ -73,7 +73,7 @@ public class BankDemoBootApplicationTests {
     @Nested
     class ActuatorAccessTest{
 	
-		@WithMockUser(username = "remote", roles = "ADMIN")
+		@WithMockUser(username = "remote", roles = "REMOTE")
 		@Test
 		void actuator_allowed() throws Exception {
 			
@@ -88,7 +88,7 @@ public class BankDemoBootApplicationTests {
 	    		.andExpect(status().isUnauthorized());
 		}
 		
-		@WithMockUser(username = "2222222222", roles = "CLIENT")
+		@WithMockUser(username = "3333333333", roles = {"ADMIN", "CLIENT"})
 		@Test
 		void actuator_forbidden() throws Exception {
 			
