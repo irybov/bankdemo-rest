@@ -17,7 +17,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 //import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+//import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -42,6 +42,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 //	private DataSource dataSource;
 	
     private static final String[] WHITE_LIST_URLS = { 
+    		"/home", 
     		"/login", 
     		"/register", 
     		"/confirm", 
@@ -136,7 +137,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 //			response.sendRedirect("/accounts/show/" + authentication.getName()))
 			.defaultSuccessUrl("/success", true)
             .failureUrl("/login?error=true")
-            .permitAll()
 				.and()
 			.logout()
 //          .logoutUrl("/logout")
@@ -145,7 +145,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
             .clearAuthentication(true)
             .deleteCookies("JSESSIONID")
 			.logoutSuccessUrl("/home")
-			.permitAll()
 				.and()
 			.httpBasic();
 //			.and().cors().configurationSource(corsConfigurationSource());

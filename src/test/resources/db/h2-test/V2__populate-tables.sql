@@ -13,3 +13,5 @@ UNION SELECT id, 'ADMIN' FROM bankdemo.accounts WHERE phone='3333333333';
 
 INSERT INTO bankdemo.bills(is_active, balance, currency, account_id, created_at)
 VALUES('1', '10.00', 'RUB', '1', now());
+
+--UPDATE bankdemo.accounts SET password = HASH('SHA256', password, 4);

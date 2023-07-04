@@ -5,6 +5,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
@@ -44,6 +45,7 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -194,6 +196,22 @@ public class BankDemoBootApplicationTests {
 		        .andExpect(view().name("auth/success"));
 		}
 		
+		@Test
+		void correct_user_creds() throws Exception {
+			
+			mockMVC.perform(formLogin("/auth").user("phone", "remote").password("remote"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/success"));
+		}
+		
+		@Test
+		void wrong_user_creds() throws Exception {
+			
+			mockMVC.perform(formLogin("/auth").user("phone", "9999999999").password("localadmin"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login?error=true"));
+		}
+		
 		@WithMockUser(username = "9999999999")
 		@Test
 		void entity_not_found() throws Exception {
@@ -208,15 +226,9 @@ public class BankDemoBootApplicationTests {
 		}
 		
 		@Test
-		void unauthorized_success() throws Exception {
-			mockMVC.perform(get("/success"))
-//				.andExpect(status().is3xxRedirection())
-//				.andExpect(redirectedUrl("http://localhost/home"));
-				.andExpect(status().isUnauthorized());
-		}
-		@Test
-		void unauthorized_confirm() throws Exception {
-			mockMVC.perform(post("/confirm")).andExpect(status().isForbidden());
+		void unauthorized_denied() throws Exception {
+			mockMVC.perform(get("/success")).andExpect(status().isUnauthorized());
+			mockMVC.perform(post("/confirm")).andExpect(status().isForbidden());			
 		}
 		
 		@Test
@@ -456,7 +468,7 @@ public class BankDemoBootApplicationTests {
 	}
 	
 	@Sql(statements = "INSERT INTO bankdemo.bills(id, is_active, balance, currency, account_id)"
-				 +" "+"VALUES('2', '1', '10.00', 'SEA', '2');")
+				 +" "+"VALUES('2', '1', '10.00', 'USD', '2');")
 	@WithMockUser(username = "1111111111", roles = "CLIENT")
 	@Nested
 	class BankControllerTest{
@@ -567,12 +579,28 @@ public class BankDemoBootApplicationTests {
 		}
 		
 		@Test
-		void recipient_not_found() throws Exception {
+		void owner_not_found() throws Exception {
 			
 			mockMVC.perform(get("/bills/validate/{id}", "4"))
 				.andExpect(status().isNotFound())
 				.andExpect(content().contentType(MediaType.valueOf("text/plain;charset=UTF-8")))
 				.andExpect(content().string(containsString("Target bill with id: 4 not found")));
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+										.param("recipient", String.valueOf(777))
+//										.param("id", "1")
+										.param("action", "transfer")
+										.param("balance", "0.00")
+										.param("amount", "0.00")
+					)
+					.andExpect(status().isNotFound())
+					.andExpect(model().size(4))
+					.andExpect(model().attribute("id", 1))
+					.andExpect(model().attribute("action", "transfer"))
+					.andExpect(model().attribute("balance", "0.00"))
+					.andExpect(model().attribute("message", 
+							"Target bill with id: " + 777 + " not found"))
+					.andExpect(view().name("bill/transfer"));
 		}
 		
 		@Test
@@ -667,7 +695,18 @@ public class BankDemoBootApplicationTests {
 					.andExpect(status().is3xxRedirection())
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
-			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.01, "Demo");
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+//				    					.param("id", "1")
+									    .param("action", "external")
+									    .param("balance", "20.00")
+									    .param("amount", "20.00")
+									    .param("bank", "Penkov")
+									    .param("recipient", "22")
+					)
+					.andExpect(status().is3xxRedirection())
+					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
+			
+			OperationRequest dto = new OperationRequest(777, 2, "USD", 0.01, "Demo");
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -735,7 +774,7 @@ public class BankDemoBootApplicationTests {
 		}
 		
 		@Test
-		void bills_id_match_exception() throws Exception {
+		void same_bill_id_exception() throws Exception {
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 				    			.param("recipient", "1")

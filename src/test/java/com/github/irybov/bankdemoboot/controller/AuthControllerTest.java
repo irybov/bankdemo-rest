@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -32,6 +33,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.test.context.support.WithMockUser;
 //import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -41,6 +43,7 @@ import com.github.irybov.bankdemoboot.controller.dto.AccountRequest;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
 import com.github.irybov.bankdemoboot.entity.Account;
 import com.github.irybov.bankdemoboot.exception.RegistrationException;
+import com.github.irybov.bankdemoboot.security.AccountDetails;
 import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 import com.github.irybov.bankdemoboot.service.AccountService;
 
@@ -103,10 +106,10 @@ class AuthControllerTest {
 	@Test
 	void can_get_menu_html() throws Exception {
 
-		AccountResponse account = new AccountResponse(new Account
+		AccountResponse accountResponse = new AccountResponse(new Account
 				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true));
 		
-		when(accountService.getAccountDTO(anyString())).thenReturn(account);
+		when(accountService.getAccountDTO(anyString())).thenReturn(accountResponse);
 		
 		String roles = authentication().getAuthorities().toString();
 		assertThat(authentication().getName()).isEqualTo("0000000000");
@@ -116,13 +119,40 @@ class AuthControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(authenticated())
 			.andExpect(content().string(containsString("Welcome!")))
-			.andExpect(content().string(containsString(account.getName()+" "+account.getSurname())))
+			.andExpect(content().string(containsString(accountResponse.getName()+" "
+					+accountResponse.getSurname())))
 			.andExpect(content().string(containsString(roles)))
 	        .andExpect(model().size(1))
-	        .andExpect(model().attribute("account", account))
+	        .andExpect(model().attribute("account", accountResponse))
 	        .andExpect(view().name("auth/success"));
 	    
 	    verify(accountService).getAccountDTO(anyString());
+	}
+	
+	@Test
+	void correct_user_creds() throws Exception {
+
+		when(accountDetailsService.loadUserByUsername(anyString()))
+				.thenThrow(new UsernameNotFoundException("User remote not found"));
+		
+		mockMVC.perform(formLogin("/auth").user("phone", "remote").password("remote"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/success"));
+		
+	    verify(accountDetailsService).loadUserByUsername(anyString());
+	}
+	
+	@Test
+	void wrong_user_creds() throws Exception {
+		
+		when(accountDetailsService.loadUserByUsername(anyString()))
+		.thenThrow(new UsernameNotFoundException("User 9999999999 not found"));
+		
+		mockMVC.perform(formLogin("/auth").user("phone", "9999999999").password("localadmin"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/login?error=true"));
+		
+	    verify(accountDetailsService).loadUserByUsername(anyString());
 	}
 	
 	@WithMockUser(username = "9999999999")
@@ -144,29 +174,23 @@ class AuthControllerTest {
 	}
 	
 	@Test
-	void unauthorized_success() throws Exception {
-		mockMVC.perform(get("/success"))
-//			.andExpect(status().is3xxRedirection())
-//			.andExpect(redirectedUrl("http://localhost/home"));
-			.andExpect(status().isUnauthorized());
-	}
-	@Test
-	void unauthorized_confirm() throws Exception {
+	void unauthorized_denied() throws Exception {
+		mockMVC.perform(get("/success")).andExpect(status().isUnauthorized());
 		mockMVC.perform(post("/confirm")).andExpect(status().isForbidden());
 	}
 	
 	@Test
 	void accepted_registration() throws Exception {
 		
-		AccountRequest accountRequestDTO = new AccountRequest();
+		AccountRequest accountRequest = new AccountRequest();
 //		accountRequestDTO.setBirthday("2001-01-01");
-		accountRequestDTO.setBirthday(LocalDate.of(2001, 01, 01));
-		accountRequestDTO.setName("Admin");
-		accountRequestDTO.setPassword("superadmin");
-		accountRequestDTO.setPhone("0000000000");
-		accountRequestDTO.setSurname("Adminov");
+		accountRequest.setBirthday(LocalDate.of(2001, 01, 01));
+		accountRequest.setName("Admin");
+		accountRequest.setPassword("superadmin");
+		accountRequest.setPhone("0000000000");
+		accountRequest.setSurname("Adminov");
 
-		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequestDTO))
+		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequest))
 			.andExpect(status().isCreated())
 			.andExpect(view().name("auth/login"));
 	}
@@ -174,23 +198,23 @@ class AuthControllerTest {
 	@Test
 	void rejected_registration() throws Exception {
 		
-		AccountRequest accountRequestDTO = new AccountRequest();
-		accountRequestDTO.setBirthday(null);
-		accountRequestDTO.setName("i");
-		accountRequestDTO.setPassword("superb");
-		accountRequestDTO.setPhone("xxx");
-		accountRequestDTO.setSurname("a");
+		AccountRequest accountRequest = new AccountRequest();
+		accountRequest.setBirthday(null);
+		accountRequest.setName("i");
+		accountRequest.setPassword("superb");
+		accountRequest.setPhone("xxx");
+		accountRequest.setSurname("a");
 
-		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequestDTO))
+		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequest))
 			.andExpect(status().isBadRequest())
 	        .andExpect(model().size(1))
 	        .andExpect(model().attributeExists("account"))
 	        .andExpect(model().hasErrors())
 			.andExpect(view().name("auth/register"));
 		
-		accountRequestDTO.setBirthday(LocalDate.now().plusYears(10L));
+		accountRequest.setBirthday(LocalDate.now().plusYears(10L));
 		
-		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequestDTO))
+		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequest))
 			.andExpect(status().isBadRequest())
 	        .andExpect(model().size(1))
 	        .andExpect(model().attributeExists("account"))
@@ -201,48 +225,48 @@ class AuthControllerTest {
 	@Test
 	void interrupted_registration() throws Exception {
 		
-		AccountRequest accountRequestDTO = new AccountRequest();
-		accountRequestDTO.setBirthday(LocalDate.now().minusYears(10L));
-		accountRequestDTO.setName("Admin");
-		accountRequestDTO.setPassword("superadmin");
-		accountRequestDTO.setPhone("0000000000");
-		accountRequestDTO.setSurname("Adminov");
+		AccountRequest accountRequest = new AccountRequest();
+		accountRequest.setBirthday(LocalDate.now().minusYears(10L));
+		accountRequest.setName("Admin");
+		accountRequest.setPassword("superadmin");
+		accountRequest.setPhone("0000000000");
+		accountRequest.setSurname("Adminov");
 		
 		doThrow(new RegistrationException("You must be 18+ to register"))
-		.when(accountService).saveAccount(refEq(accountRequestDTO));
+		.when(accountService).saveAccount(refEq(accountRequest));
 
-		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequestDTO))
+		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequest))
 			.andExpect(status().isConflict())
 	        .andExpect(model().size(2))
 	        .andExpect(model().attributeExists("account"))
         	.andExpect(model().attribute("message", "You must be 18+ to register"))
 			.andExpect(view().name("auth/register"));
 		
-	    verify(accountService).saveAccount(refEq(accountRequestDTO));
+	    verify(accountService).saveAccount(refEq(accountRequest));
 	}
 	
 	@Test
 	void violated_registration() throws Exception {
 		
-		AccountRequest accountRequestDTO = new AccountRequest();
+		AccountRequest accountRequest = new AccountRequest();
 //		accountRequestDTO.setBirthday("2001-01-01");
-		accountRequestDTO.setBirthday(LocalDate.of(2001, 01, 01));
-		accountRequestDTO.setName("Admin");
-		accountRequestDTO.setPassword("superadmin");
-		accountRequestDTO.setPhone("0000000000");
-		accountRequestDTO.setSurname("Adminov");
+		accountRequest.setBirthday(LocalDate.of(2001, 01, 01));
+		accountRequest.setName("Admin");
+		accountRequest.setPassword("superadmin");
+		accountRequest.setPhone("0000000000");
+		accountRequest.setSurname("Adminov");
 		
 		doThrow(new RuntimeException("This number is already in use."))
-		.when(accountService).saveAccount(refEq(accountRequestDTO));
+		.when(accountService).saveAccount(refEq(accountRequest));
 
-		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequestDTO))
+		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequest))
 			.andExpect(status().isConflict())
 	        .andExpect(model().size(2))
 	        .andExpect(model().attributeExists("account"))
         	.andExpect(model().attribute("message", "This number is already in use."))
 			.andExpect(view().name("auth/register"));
 		
-	    verify(accountService).saveAccount(refEq(accountRequestDTO));
+	    verify(accountService).saveAccount(refEq(accountRequest));
 	}
 	
 }

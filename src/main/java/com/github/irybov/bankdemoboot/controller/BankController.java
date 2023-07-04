@@ -90,6 +90,9 @@ public class BankController extends BaseController {
 	@Qualifier("operationServiceAlias")
 	private OperationService operationService;
 	
+	@Autowired
+	private RestTemplate restTemplate;
+	
 	private final Executor executorService;
 	public BankController(Executor executorService) {
 		this.executorService = executorService;
@@ -283,21 +286,38 @@ public class BankController extends BaseController {
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", "Please provide correct bill number");
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST); 
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				return "bill/transfer";
 			}
-			else target = Integer.parseInt(recipient);
+			else {
+				target = Integer.parseInt(recipient);
+				if(params.get("action").equals("transfer")) {
+					try {
+						billService.getBillDTO(target);
+					}
+					catch (Exception exc) {
+						log.error(exc.getMessage(), exc);
+						modelMap.addAttribute("id", id);
+						modelMap.addAttribute("action", params.get("action"));
+						modelMap.addAttribute("balance", params.get("balance"));
+						modelMap.addAttribute("message", exc.getMessage());
+						response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+						return "bill/transfer";
+					}
+				}
+			}
 		}		
 		log.info("User {} performs {} operation with bill {}", phone, params.get("action"), id);
 		
 		String currency = billService.getBillDTO(id).getCurrency();
 		switch(params.get("action")) {
+		
 		case "deposit":
 			try {
 				Operation operation = operationService.deposit
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, "Demo");
 				billService.deposit(operation);
-				log.info("{} has been added", params.get("amount"));
+				log.info("{} has been added to bill {}", params.get("amount"), id);
 			}
 			catch (Exception exc) {
 				log.warn(exc.getMessage(), exc);
@@ -309,12 +329,13 @@ public class BankController extends BaseController {
 				return "bill/payment";
 			}
 			break;
+			
 		case "withdraw":
 			try {
 				Operation operation = operationService.withdraw
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, "Demo");
 				billService.withdraw(operation);
-				log.info("{} has been taken", params.get("amount"));
+				log.info("{} has been taken from bill {}", params.get("amount"), id);
 			}
 			catch (Exception exc) {
 				log.warn(exc.getMessage(), exc);
@@ -326,13 +347,14 @@ public class BankController extends BaseController {
 				return "bill/payment";
 			}
 			break;
-		case "transfer":
+			
+		case "transfer":						
 			try {
 				Operation operation = operationService.transfer
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, target, 
 						"Demo");
 				billService.transfer(operation);
-				log.info("{} has been sent to bill {}", params.get("amount"), target);
+				log.info("{} has been sent from {} to bill ", params.get("amount"), id, target);
 
 				executorService.execute(() -> {
 					activateEmitter(operation.getRecipient(), operation.getAmount());
@@ -348,6 +370,7 @@ public class BankController extends BaseController {
 				return "bill/transfer";
 			}
 			break;
+			
 		case "external":
 			OperationRequest request = new OperationRequest(id, target, currency, 
 					Double.valueOf(params.get("amount")), params.get("bank"));
@@ -355,20 +378,20 @@ public class BankController extends BaseController {
 			try {
 				json = mapper.writeValueAsString(request);
 			}
-			catch (JsonProcessingException jsonExc) {
-				log.warn(jsonExc.getMessage(), jsonExc);
+			catch (JsonProcessingException exc) {
+				log.warn(exc.getMessage(), exc);
 			}
-			ResponseEntity<String> result = new RestTemplate().postForEntity(externalURL+"/verify", 
+			ResponseEntity<String> result = restTemplate.postForEntity(externalURL+"/verify", 
 					json, String.class);
-			int status = result.getStatusCodeValue();
 			
-			if(status == 200) {
+			if(result.getStatusCodeValue() == 200) {
 				try {
 					Operation operation = operationService.transfer
 					(Double.valueOf(params.get("amount")), params.get("action"), currency, id, 
 							target, params.get("bank"));
 					billService.outward(operation);
-					log.info("{} has been sent to bill {}", params.get("amount"), target);
+					log.info("{} has been sent to bill {} in bank {}", params.get("amount"), target,
+							params.get("bank"));
 				}
 				catch (Exception exc) {
 					log.warn(exc.getMessage(), exc);

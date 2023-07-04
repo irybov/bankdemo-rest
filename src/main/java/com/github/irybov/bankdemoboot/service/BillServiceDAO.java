@@ -48,8 +48,7 @@ public class BillServiceDAO implements BillService {
 		Bill bill = billDAO.getBill(id);
 		if(bill == null)
 			throw new EntityNotFoundException("Target bill with id: " + id + " not found");
-		else
-		return bill;
+		else return bill;
 	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public BillResponse getBillDTO(int id) throws EntityNotFoundException {
