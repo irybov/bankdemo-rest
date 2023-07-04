@@ -93,18 +93,18 @@ public class BillServiceJPA implements BillService {
 			throw new PaymentException("Target bill with id: " + to + " not found");
 		}*/
 		
-		Bill bill = getBill(from);
-		if(!bill.getCurrency().equals(target.getCurrency())){
+		Bill sender = getBill(from);
+		if(!sender.getCurrency().equals(target.getCurrency())){
 			throw new PaymentException("Wrong currency type of the target bill");
 		}
-		if(bill.getBalance().compareTo(BigDecimal.valueOf(amount)) == -1) {
+		if(sender.getBalance().compareTo(BigDecimal.valueOf(amount)) == -1) {
 			throw new PaymentException("Not enough money to complete operation");
 		}
 		
 		target.setBalance(target.getBalance().add(BigDecimal.valueOf(amount)));
-		bill.setBalance(bill.getBalance().subtract(BigDecimal.valueOf(amount)));
+		sender.setBalance(sender.getBalance().subtract(BigDecimal.valueOf(amount)));
 		updateBill(target);
-		updateBill(bill);
+		updateBill(sender);
 		operationRepository.save(operation);
 	}
 	
@@ -126,6 +126,21 @@ public class BillServiceJPA implements BillService {
 		operationRepository.save(operation);
 	}
 	
+	public void outward(Operation operation) throws Exception {
+		
+		double amount = operation.getAmount();
+		if(amount < 0.01) throw new PaymentException("Amount of money should be higher than zero");
+		
+		int from = operation.getSender();
+		int to = operation.getRecipient();
+		if(from == to) throw new PaymentException("Source and target bills should not be the same");
+		
+		Bill sender = getBill(from);
+		sender.setBalance(sender.getBalance().subtract(BigDecimal.valueOf(amount)));
+		updateBill(sender);
+		operationRepository.save(operation);
+	}
+	
 	public boolean changeStatus(int id) {
 		
 		Bill bill = getBill(id);
@@ -139,7 +154,8 @@ public class BillServiceJPA implements BillService {
 		return bill.isActive();
 	}
 	
-	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
+	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, 
+			noRollbackFor = Exception.class)
 	public List<BillResponse> getAll(int id) {		
 //		List<Bill> bills = billRepository.getAll(id);
 		List<Bill> bills = billRepository.findByOwnerId(id);

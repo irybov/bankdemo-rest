@@ -23,8 +23,8 @@ import org.springframework.test.context.jdbc.Sql;
 
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
 import com.github.irybov.bankdemoboot.entity.Operation;
-import com.github.irybov.bankdemoboot.model.OperationSpecs;
 import com.github.irybov.bankdemoboot.page.OperationPage;
+import com.github.irybov.bankdemoboot.util.OperationSpecifications;
 
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Sql("/test-operations-h2.sql")
@@ -58,10 +58,10 @@ class OperationRepositoryTest {
 				page.getSortDirection(), page.getSortBy());
 		
 		Page<OperationResponse> resultPage = operationRepository.findAll
-				(Specification.where(OperationSpecs.hasAction(action)
-				.and(OperationSpecs.hasOwner(id))
-				.and(OperationSpecs.amountBetween(minval, maxval))
-				.and(OperationSpecs.dateBetween(mindate, maxdate))), pageable)
+				(Specification.where(OperationSpecifications.hasAction(action)
+				.and(OperationSpecifications.hasOwner(id))
+				.and(OperationSpecifications.amountBetween(minval, maxval))
+				.and(OperationSpecifications.dateBetween(mindate, maxdate))), pageable)
 				.map(OperationResponse::new);
 		
 		assertThat(resultPage.getContent().size()).isEqualTo(quantity);

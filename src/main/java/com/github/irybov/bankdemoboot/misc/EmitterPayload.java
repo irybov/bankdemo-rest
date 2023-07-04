@@ -1,4 +1,4 @@
-package com.github.irybov.bankdemoboot.model;
+package com.github.irybov.bankdemoboot.misc;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

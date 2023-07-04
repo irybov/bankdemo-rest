@@ -2,6 +2,7 @@ package com.github.irybov.bankdemoboot.controller;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -315,17 +316,16 @@ class AdminControllerTest {
 		
 		mockMVC.perform(get("/accounts/search/{phone}", phone))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.id").exists())
-			.andExpect(jsonPath("$.createdAt").exists())
-			.andExpect(jsonPath("$.updatedAt").exists())
-			.andExpect(jsonPath("$.active").exists())
-			.andExpect(jsonPath("$.name").exists())
-			.andExpect(jsonPath("$.surname").exists())
-			.andExpect(jsonPath("$.phone").exists())
-			.andExpect(jsonPath("$.birthday").exists())
-			.andExpect(jsonPath("$.bills").exists())
+			.andExpect(jsonPath("$.id").isNumber())
+			.andExpect(jsonPath("$.createdAt").isNotEmpty())
+			.andExpect(jsonPath("$.updatedAt").isNotEmpty())
+			.andExpect(jsonPath("$.active").isBoolean())
+			.andExpect(jsonPath("$.name").value("Admin"))
+			.andExpect(jsonPath("$.surname").value("Adminov"))
+			.andExpect(jsonPath("$.phone").value(phone))
+			.andExpect(jsonPath("$.birthday").isNotEmpty())
 			.andExpect(jsonPath("$.bills").isArray())
-			.andExpect(jsonPath("$.bills").isNotEmpty());
+			.andExpect(jsonPath("$.bills.length()", is(1)));
 		
 //	    verify(accountService).getAccountDTO(phone);
 //	    verify(accountService).getBills(anyInt());
@@ -367,6 +367,7 @@ class AdminControllerTest {
 				.currency("SEA")
 				.recipient(0)
 				.createdAt(OffsetDateTime.now())
+				.bank("Demo")
 				.build();
 		operations.add(new OperationResponse(operation));
 
@@ -410,7 +411,7 @@ class AdminControllerTest {
 		data.add(info);
 		data.add(new String[0]);
 		
-		String[] header = {"Action", "Amount", "When", "Recipient", "Sender"};
+		String[] header = {"Action", "Amount", "When", "Recipient", "Sender", "Bank"};
 		data.add(header);
 		data.add(new String[0]);		
 		
@@ -419,7 +420,8 @@ class AdminControllerTest {
 							String.valueOf(operation.getAmount()),
 							operation.getCreatedAt().toString(),
 							String.valueOf(operation.getRecipient()),
-							String.valueOf(operation.getSender())};
+							String.valueOf(operation.getSender()),
+							operation.getBank()};
 			data.add(row);
 		}
 		

@@ -1,4 +1,4 @@
-package com.github.irybov.bankdemoboot.model;
+package com.github.irybov.bankdemoboot.util;
 
 import java.time.OffsetDateTime;
 
@@ -9,7 +9,7 @@ import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.entity.Operation_;
 
 @Component
-public class OperationSpecs {
+public class OperationSpecifications {
 	
 	public static Specification<Operation> hasAction(String action){
 			

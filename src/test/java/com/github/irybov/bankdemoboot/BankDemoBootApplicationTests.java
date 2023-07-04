@@ -187,7 +187,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(authenticated())
 				.andExpect(content().string(containsString("Welcome!")))
-				.andExpect(content().string(containsString("Admin Adminsky")))
+				.andExpect(content().string(containsString("Admin Adminov")))
 				.andExpect(content().string(containsString("[ROLE_ADMIN]")))
 		        .andExpect(model().size(1))
 		        .andExpect(model().attribute("account", any(AccountResponse.class)))
@@ -397,7 +397,7 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void can_get_account_info() throws Exception {
 			
-			String phone = "0000000000";
+			String phone = authentication().getName();
 			mockMVC.perform(get("/accounts/search/{phone}", phone))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").isNumber())
@@ -405,7 +405,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(jsonPath("$.updatedAt").isNotEmpty())
 				.andExpect(jsonPath("$.active").isBoolean())
 				.andExpect(jsonPath("$.name").value("Admin"))
-				.andExpect(jsonPath("$.surname").value("Adminsky"))
+				.andExpect(jsonPath("$.surname").value("Adminov"))
 				.andExpect(jsonPath("$.phone").value(phone))
 				.andExpect(jsonPath("$.birthday").isNotEmpty())
 				.andExpect(jsonPath("$.bills").isArray())
@@ -563,7 +563,7 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(get("/bills/validate/{id}", "1"))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.valueOf("text/plain;charset=UTF-8")))
-				.andExpect(content().string(containsString("Admin Adminsky")));
+				.andExpect(content().string(containsString("Admin Adminov")));
 		}
 		
 		@Test
@@ -667,7 +667,7 @@ public class BankDemoBootApplicationTests {
 					.andExpect(status().is3xxRedirection())
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
-			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.01);
+			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.01, "Demo");
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -707,7 +707,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
 				.andExpect(view().name("bill/payment"));
 			
-			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.00);
+			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.00, "Demo");
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -752,7 +752,7 @@ public class BankDemoBootApplicationTests {
 			.andExpect(model().attribute("message", "Source and target bills should not be the same"))
 			.andExpect(view().name("bill/transfer"));
 			
-			OperationRequest dto = new OperationRequest(777, 777, "SEA", 0.01);
+			OperationRequest dto = new OperationRequest(777, 777, "SEA", 0.01, "Demo");
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -779,7 +779,7 @@ public class BankDemoBootApplicationTests {
 					.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
 					.andExpect(view().name("bill/transfer"));
 			
-			OperationRequest dto = new OperationRequest(777, 2, "AUD", 0.01);
+			OperationRequest dto = new OperationRequest(777, 2, "AUD", 0.01, "Demo");
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -791,7 +791,7 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void constraint_violation_exception() throws Exception {
 			
-			OperationRequest dto = new OperationRequest(1_000_000_000, -1, "yuan", -0.01);
+			OperationRequest dto = new OperationRequest(1_000_000_000, -1, "yuan", -0.01, "Demo");
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -802,7 +802,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(content().string(containsString("Currency code should be 3 capital characters length")))
 				.andExpect(content().string(containsString("Amount of money should be higher than zero")));
 			
-			dto = new OperationRequest(null, null, " ", null);
+			dto = new OperationRequest(null, null, " ", null, null);
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
@@ -811,7 +811,8 @@ public class BankDemoBootApplicationTests {
 				.andExpect(content().string(containsString("Sender must not be null")))
 				.andExpect(content().string(containsString("Recepient must not be null")))
 				.andExpect(content().string(containsString("Currency must not be blank")))
-				.andExpect(content().string(containsString("Amount must not be null")));
+				.andExpect(content().string(containsString("Amount must not be null")))
+				.andExpect(content().string(containsString("Bank name must not be blank")));
 		}
 		
 		@Test
@@ -837,7 +838,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(status().isUnsupportedMediaType());
 			
 			XmlMapper xmlMapper = new XmlMapper();
-			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.01);
+			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.01, "Demo");
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.header("Accept", "application/xml")
 													.contentType(MediaType.APPLICATION_XML)

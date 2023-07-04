@@ -12,7 +12,8 @@ import com.github.irybov.bankdemoboot.entity.Operation;
 
 public interface OperationService {
 
-	public default Operation transfer(double amount, String action, String currency, int sender, int recipient) {
+	public default Operation transfer(double amount, String action, String currency, int sender, 
+			int recipient, String bank) {
 		return Operation.builder()
 				.amount(amount)
 				.action(action)
@@ -20,24 +21,29 @@ public interface OperationService {
 				.sender(sender)
 				.recipient(recipient)
 				.createdAt(OffsetDateTime.now())
+				.bank(bank)
 				.build();
 	};
-	public default Operation deposit(double amount, String action, String currency, int recipient) {
+	public default Operation deposit(double amount, String action, String currency, int recipient, 
+			String bank) {
 		return Operation.builder()
 				.amount(amount)
 				.action(action)
 				.currency(currency)
 				.recipient(recipient)
 				.createdAt(OffsetDateTime.now())
+				.bank(bank)
 				.build();
 	};
-	public default Operation withdraw(double amount, String action, String currency, int sender) {
+	public default Operation withdraw(double amount, String action, String currency, int sender, 
+			String bank) {
 		return Operation.builder()
 				.amount(amount)
 				.action(action)
 				.currency(currency)
 				.sender(sender)
 				.createdAt(OffsetDateTime.now())
+				.bank(bank)
 				.build();
 	};
 	public Operation getOne(long id);

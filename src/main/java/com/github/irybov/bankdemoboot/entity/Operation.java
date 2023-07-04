@@ -51,4 +51,7 @@ public class Operation {
 	@Column(updatable = false)
 	private Integer recipient;
 	
+	@Column(nullable = false, updatable = false)
+	private String bank;
+	
 }

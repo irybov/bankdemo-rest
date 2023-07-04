@@ -18,6 +18,7 @@ public class OperationResponse {
 	private String currency;	
 	private Integer sender;		
 	private Integer recipient;
+	private String bank;
 	
 	public OperationResponse(Operation operation) {
 		
@@ -28,6 +29,7 @@ public class OperationResponse {
 		this.currency = operation.getCurrency();
 		this.sender = operation.getSender();
 		this.recipient = operation.getRecipient();
+		this.bank = operation.getBank();
 	}
 	
 }

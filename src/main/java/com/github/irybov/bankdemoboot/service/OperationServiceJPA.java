@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
 import com.github.irybov.bankdemoboot.entity.Operation;
-import com.github.irybov.bankdemoboot.model.OperationSpecs;
 import com.github.irybov.bankdemoboot.repository.OperationRepository;
+import com.github.irybov.bankdemoboot.util.OperationSpecifications;
 
 @Service
 @Transactional(readOnly = true, noRollbackFor = Exception.class)
@@ -49,9 +49,9 @@ public class OperationServiceJPA implements OperationService {
 //		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
 //											page.getSortDirection(), page.getSortBy());
 		
-		return operationRepository.findAll(Specification.where(OperationSpecs.hasAction(action)
-				.and(OperationSpecs.hasOwner(id)).and(OperationSpecs.amountBetween(minval, maxval))
-				.and(OperationSpecs.dateBetween(mindate, maxdate))), pageable)
+		return operationRepository.findAll(Specification.where(OperationSpecifications.hasAction(action)
+				.and(OperationSpecifications.hasOwner(id)).and(OperationSpecifications.amountBetween(minval, maxval))
+				.and(OperationSpecifications.dateBetween(mindate, maxdate))), pageable)
 				.map(OperationResponse::new);
 	}
 	

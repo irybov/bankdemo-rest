@@ -27,6 +27,7 @@ import javax.validation.ValidatorFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 //import org.springframework.data.domain.Page;
 //import org.springframework.data.domain.Pageable;
@@ -49,16 +50,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 //import com.github.irybov.bankdemoboot.Currency;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
 import com.github.irybov.bankdemoboot.controller.dto.OperationRequest;
-//import com.github.irybov.bankdemoboot.controller.dto.OperationResponseDTO;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequest;
 import com.github.irybov.bankdemoboot.entity.Operation;
-import com.github.irybov.bankdemoboot.model.EmitterPayload;
+import com.github.irybov.bankdemoboot.misc.EmitterPayload;
 import com.github.irybov.bankdemoboot.service.OperationService;
 
 import io.swagger.annotations.Api;
@@ -94,6 +96,9 @@ public class BankController extends BaseController {
 	}
 
 	private Map<String, ResponseBodyEmitter> emitters = new ConcurrentHashMap<>();
+	
+	@Value("${external.payment-service}")
+	private String externalURL;
 	
 	private Set<Currency> currencies = new HashSet<>();
 	@PostConstruct
@@ -233,8 +238,12 @@ public class BankController extends BaseController {
 		modelMap.addAttribute("id", params.get("id"));
 		modelMap.addAttribute("action",  params.get("action"));
 		modelMap.addAttribute("balance", params.get("balance"));
+		
 		if(params.get("action").equals("transfer")) {
 			return "bill/transfer";
+		}
+		if(params.get("action").equals("external")) {
+			return "bill/external";
 		}
 		return "bill/payment";
 	}
@@ -260,7 +269,7 @@ public class BankController extends BaseController {
 	@ApiOperation("Operates money by specified action's type")
 	@PreAuthorize("hasRole('CLIENT')")
 	@PatchMapping("/bills/launch/{id}")
-	public String driveMoney(@PathVariable int id, @RequestParam(required=false) String recipient,
+	public String operateMoney(@PathVariable int id, @RequestParam(required=false) String recipient,
 			@RequestParam Map<String, String> params, ModelMap modelMap,
 			HttpServletResponse response) {
 		
@@ -286,7 +295,7 @@ public class BankController extends BaseController {
 		case "deposit":
 			try {
 				Operation operation = operationService.deposit
-				(Double.valueOf(params.get("amount")), params.get("action"), currency, id);
+				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, "Demo");
 				billService.deposit(operation);
 				log.info("{} has been added", params.get("amount"));
 			}
@@ -303,7 +312,7 @@ public class BankController extends BaseController {
 		case "withdraw":
 			try {
 				Operation operation = operationService.withdraw
-				(Double.valueOf(params.get("amount")), params.get("action"), currency, id);
+				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, "Demo");
 				billService.withdraw(operation);
 				log.info("{} has been taken", params.get("amount"));
 			}
@@ -320,7 +329,8 @@ public class BankController extends BaseController {
 		case "transfer":
 			try {
 				Operation operation = operationService.transfer
-				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, target);
+				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, target, 
+						"Demo");
 				billService.transfer(operation);
 				log.info("{} has been sent to bill {}", params.get("amount"), target);
 
@@ -337,7 +347,49 @@ public class BankController extends BaseController {
 				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				return "bill/transfer";
 			}
-			break;			
+			break;
+		case "external":
+			OperationRequest request = new OperationRequest(id, target, currency, 
+					Double.valueOf(params.get("amount")), params.get("bank"));
+			String json = null;
+			try {
+				json = mapper.writeValueAsString(request);
+			}
+			catch (JsonProcessingException jsonExc) {
+				log.warn(jsonExc.getMessage(), jsonExc);
+			}
+			ResponseEntity<String> result = new RestTemplate().postForEntity(externalURL+"/verify", 
+					json, String.class);
+			int status = result.getStatusCodeValue();
+			
+			if(status == 200) {
+				try {
+					Operation operation = operationService.transfer
+					(Double.valueOf(params.get("amount")), params.get("action"), currency, id, 
+							target, params.get("bank"));
+					billService.outward(operation);
+					log.info("{} has been sent to bill {}", params.get("amount"), target);
+				}
+				catch (Exception exc) {
+					log.warn(exc.getMessage(), exc);
+					modelMap.addAttribute("id", id);
+					modelMap.addAttribute("action", params.get("action"));
+					modelMap.addAttribute("balance", params.get("balance"));
+					modelMap.addAttribute("message", exc.getMessage());
+					response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+					return "bill/external";
+				}
+			}
+			else {
+				log.warn(result.getBody());
+				modelMap.addAttribute("id", id);
+				modelMap.addAttribute("action", params.get("action"));
+				modelMap.addAttribute("balance", params.get("balance"));
+				modelMap.addAttribute("message", result.getBody());
+				response.setStatus(result.getStatusCodeValue());
+				return "bill/external";
+			}
+			break;
 		}
 		return "redirect:/accounts/show/" + phone;
 	}
@@ -345,13 +397,14 @@ public class BankController extends BaseController {
 	@ApiOperation(value = "Recieves incoming payment from external systems")
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully recieved", 
 							response = String.class), 
-		@ApiResponse(code = 404, message = "", responseContainer = "List", response = String.class), 
+		@ApiResponse(code = 404, message = "", responseContainer = "List", response = String.class),
 		@ApiResponse(code = 500, message = "", response = String.class)})
 	@CrossOrigin(originPatterns = "*", methods = {RequestMethod.OPTIONS, RequestMethod.PATCH})
 	@PatchMapping(path = "/bills/external",
 					consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
 					produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-	public ResponseEntity<?> outerIncome(@RequestBody OperationRequest dto) {	
+	@ResponseBody
+	public ResponseEntity<?> receiveMoney(@RequestBody OperationRequest dto) {	
 		
 		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 		Validator validator = factory.getValidator();
@@ -366,9 +419,11 @@ public class BankController extends BaseController {
 		
 		try {
 			Operation operation = operationService.transfer
-			(dto.getAmount(), "external", dto.getCurrency(), dto.getSender(), dto.getRecipient());
+			(dto.getAmount(), "external", dto.getCurrency(), dto.getSender(), dto.getRecipient(), 
+					dto.getBank());
 			billService.external(operation);
-			log.info("{} has been sent to bill {}", operation.getAmount(), operation.getRecipient());
+			log.info("{} has been recieved to bill {}", operation.getAmount(), 
+					operation.getRecipient());
 		}
 		catch (Exception exc) {
 			log.warn(exc.getMessage(), exc);
@@ -390,7 +445,7 @@ public class BankController extends BaseController {
 		
 		ResponseBodyEmitter emitter = new ResponseBodyEmitter(0L);
 		String phone = authentication().getName();
-		emitters.put(phone, emitter);	
+		emitters.putIfAbsent(phone, emitter);	
 		
 		emitter.onTimeout(()-> emitters.remove(phone, emitter));
 		emitter.onError((e)-> emitters.remove(phone, emitter));

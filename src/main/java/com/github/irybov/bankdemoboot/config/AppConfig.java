@@ -1,5 +1,6 @@
 package com.github.irybov.bankdemoboot.config;
 
+import java.io.IOException;
 import java.util.concurrent.Executor;
 
 import javax.sql.DataSource;
@@ -9,12 +10,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.RestTemplate;
 
 import com.github.irybov.bankdemoboot.service.AccountService;
 import com.github.irybov.bankdemoboot.service.BillService;
@@ -67,6 +72,18 @@ public class AppConfig {
         executor.setQueueCapacity(cores * 10);
     	executor.initialize();
     	return executor;
+    }
+    
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplateBuilder()
+        		.errorHandler(new DefaultResponseErrorHandler() {
+                    @Override
+                    public void handleError(ClientHttpResponse response) throws IOException {
+                        //do nothing :)
+                    }
+                })
+                .build();
     }
     
 /*    @Bean

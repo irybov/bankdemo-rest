@@ -91,13 +91,13 @@ class AccountRepositoryTest {
     	assertThat(clients.isEmpty()).isTrue();
     	
 		Account vixenEntity = new Account
-		("Marica", "Hase", "1111111111", LocalDate.of(1981, Month.SEPTEMBER, 26), "supervixen", true);
+		("Kae", "Yukawa", "1111111111", LocalDate.of(1985, Month.AUGUST, 31), "supervixen", true);
 		vixenEntity.addRole(Role.CLIENT);
 		Account blondeEntity = new Account
-		("Sarah", "Vandella", "2222222222", LocalDate.of(1983, Month.DECEMBER, 02), "bustyblonde", true);
+		("Hannah", "Waddingham", "2222222222", LocalDate.of(1974, Month.JULY, 28), "bustyblonde", true);
 		blondeEntity.addRole(Role.CLIENT);
 		Account gingerEntity = new Account
-		("Lily", "Cade", "3333333333", LocalDate.of(1995, Month.JANUARY, 25), "gingerchick", true);
+		("Ella", "Hughes", "3333333333", LocalDate.of(1995, Month.JUNE, 13), "gingerchick", true);
 		gingerEntity.addRole(Role.CLIENT);
 		gingerEntity.addRole(Role.ADMIN);
 		

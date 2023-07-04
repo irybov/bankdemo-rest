@@ -70,11 +70,11 @@ class OperationServiceJPATest {
 		when(builder.build()).thenReturn(operation);
 		
 		assertThat(operationService.deposit(new Random().nextDouble(), currency, "^[A-Z]{3}",
-				new Random().nextInt())).hasSameClassAs(operation);
+				new Random().nextInt(), "Demo")).hasSameClassAs(operation);
 		assertThat(operationService.withdraw(new Random().nextDouble(), currency, "^[A-Z]{3}",
-				new Random().nextInt())).hasSameClassAs(operation);
+				new Random().nextInt(), "Demo")).hasSameClassAs(operation);
 		assertThat(operationService.transfer(new Random().nextDouble(), currency, "^[A-Z]{3}",
-				new Random().nextInt(), new Random().nextInt())).hasSameClassAs(operation);
+				new Random().nextInt(), new Random().nextInt(), "Demo")).hasSameClassAs(operation);
 //		verify(operationRepository, times(3)).save(any(Operation.class));
 	}
 	

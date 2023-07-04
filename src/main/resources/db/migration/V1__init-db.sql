@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS bankdemo.operations(
 	action VARCHAR(10) NOT NULL,
 	currency VARCHAR(3) NOT NULL CONSTRAINT currencychk CHECK (CHAR_LENGTH(currency) = 3),
 	sender INTEGER,
-	recipient INTEGER
+	recipient INTEGER,
+	bank VARCHAR(30) NOT NULL
 );
 CREATE TABLE IF NOT EXISTS bankdemo.roles(
 	roles VARCHAR(10) NOT NULL,

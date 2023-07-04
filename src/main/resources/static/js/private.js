@@ -17,6 +17,7 @@ $(document).ready(function(){
 			+ '<button class="btn btn-primary" value="deposit">Deposit</button>'
 			+ '<button class="btn btn-info" value="withdraw">Withdraw</button>'
 			+ '<button class="btn btn-warning" value="transfer">Transfer</button>'
+			+ '<button class="btn btn-dark" value="external">External</button>'
 			+ '</div></td>'
 			+ '<td><button class="btn btn-danger" id="erase'+rowID+'">Erase</button></td>'
 			+ '</tr>';
@@ -114,6 +115,7 @@ $(document).ready(function(){
    					+ '<button class="btn btn-primary" value="deposit">Deposit</button>'
    					+ '<button class="btn btn-info" value="withdraw">Withdraw</button>'
    					+ '<button class="btn btn-warning" value="transfer">Transfer</button>'
+   					+ '<button class="btn btn-dark" value="external">External</button>'
    					+ '</div></td>'
  					+ '<td><button class="btn btn-danger" id="erase'+rowID+'">Erase</button>'
  					+'</td></tr>';

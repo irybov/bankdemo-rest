@@ -37,6 +37,7 @@ import com.github.irybov.bankdemoboot.entity.Bill;
 import com.github.irybov.bankdemoboot.entity.Operation;
 import com.github.irybov.bankdemoboot.exception.PaymentException;
 
+//@ExtendWith(MockitoExtension.class)
 class BillServiceDAOTest {
 	
 //	@Mock

@@ -55,9 +55,8 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 //import org.springframework.ui.ModelMap;
 //import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 //import org.springframework.web.bind.annotation.PatchMapping;
-//import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -206,7 +205,8 @@ public class AdminController extends BaseController {
 		byte[] bytes = data_2_gzip_converter(clients);
 		
 		return CompletableFuture.supplyAsync(() -> 
-		ResponseEntity.ok().header(HttpHeaders.CONTENT_ENCODING, "gzip").body(bytes), executorService);
+				ResponseEntity.ok().header(HttpHeaders.CONTENT_ENCODING, "gzip").body(bytes), 
+				executorService);
 	}
 	private byte[] data_2_gzip_converter(List<AccountResponse> clients) {
 		
@@ -349,7 +349,8 @@ public class AdminController extends BaseController {
 				produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	@ResponseBody
 //	public void export2csv(@PathVariable int id, HttpServletResponse response) throws IOException {
-	public CompletableFuture<InputStreamResource> export2csv(@PathVariable int id, HttpServletResponse response) {
+	public CompletableFuture<InputStreamResource> export2csv(@PathVariable int id, 
+			HttpServletResponse response) {
 
 		CompletableFuture<List<OperationResponse>> futureOperations =
 				CompletableFuture.supplyAsync(() -> operationService.getAll(id), executorService);
@@ -419,7 +420,7 @@ public class AdminController extends BaseController {
 		data.add(info);
 		data.add(new String[0]);
 		
-		String[] header = {"Action", "Amount", "When", "Recipient", "Sender"};
+		String[] header = {"Action", "Amount", "When", "Recipient", "Sender", "Bank"};
 		data.add(header);
 		data.add(new String[0]);		
 		
@@ -428,7 +429,8 @@ public class AdminController extends BaseController {
 							String.valueOf(operation.getAmount()),
 							operation.getCreatedAt().toString(),
 							String.valueOf(operation.getRecipient()),
-							String.valueOf(operation.getSender())};
+							String.valueOf(operation.getSender()),
+							operation.getBank()};
 			data.add(row);
 		}
 		

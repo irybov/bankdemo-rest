@@ -44,7 +44,7 @@ class BillDAOTest {
 	void set_up() {
 		entityManager.createNativeQuery("DELETE FROM {h-schema}bills").executeUpdate();
 		account = new Account
-				("Nia", "Nacci", "4444444444", LocalDate.of(1998, 12, 10), "blackmamba", true);
+				("Kylie", "Bunbury", "4444444444", LocalDate.of(1989, 01, 30), "blackmamba", true);
 		bill = new Bill("SEA", true, account);
 		billDAO.saveBill(bill);
 	}

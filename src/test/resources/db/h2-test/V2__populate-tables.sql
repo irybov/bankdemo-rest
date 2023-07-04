@@ -1,9 +1,9 @@
 INSERT INTO bankdemo.accounts(is_active, birthday, name, password, phone, surname, created_at, updated_at)
-VALUES('1', '2001-01-01', 'Admin', 'superadmin', '0000000000', 'Adminsky', now(), now());
+VALUES('1', '2001-01-01', 'Admin', 'superadmin', '0000000000', 'Adminov', now(), now());
 INSERT INTO bankdemo.accounts(is_active, birthday, name, password, phone, surname, created_at, updated_at)
-VALUES('1', '1981-09-26', 'Marica', 'supervixen', '1111111111', 'Hase', now(), now()),
-('1', '1983-12-02', 'Sarah', 'bustyblonde', '2222222222', 'Vandella', now(), now()),
-('1', '1995-01-25', 'Lily', 'gingerchick', '3333333333', 'Cade', now(), now())
+VALUES('1', '1985-08-31', 'Kae', 'supervixen', '1111111111', 'Yukawa', now(), now()),
+('1', '1974-07-28', 'Hannah', 'bustyblonde', '2222222222', 'Waddingham', now(), now()),
+('1', '1995-06-13', 'Ella', 'gingerchick', '3333333333', 'Hughes', now(), now())
 ON CONFLICT DO NOTHING;
 INSERT INTO bankdemo.roles(account_id, roles) SELECT id, 'ADMIN' FROM bankdemo.accounts WHERE phone='0000000000'
 UNION SELECT id, 'CLIENT' FROM bankdemo.accounts WHERE phone='1111111111'
