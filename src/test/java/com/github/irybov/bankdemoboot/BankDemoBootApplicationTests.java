@@ -29,10 +29,15 @@ import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.jetty.http.HttpStatus;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -53,6 +58,9 @@ import com.github.irybov.bankdemoboot.controller.dto.AccountRequest;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
 import com.github.irybov.bankdemoboot.controller.dto.OperationRequest;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequest;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 //@Sql("/test-data-h2.sql")
@@ -62,6 +70,18 @@ public class BankDemoBootApplicationTests {
 
 	@Autowired
 	private MockMvc mockMVC;
+	
+	private static WireMockServer wireMockServer;
+	@Value("${external.payment-service}")
+	private static String externalURL;
+	@BeforeAll
+	static void prepare() {
+		wireMockServer = new WireMockServer(
+		        new WireMockConfiguration().port(4567)
+		    );
+		    wireMockServer.start();
+		    WireMock.configureFor(externalURL, 4567);
+	}
 	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
@@ -675,7 +695,58 @@ public class BankDemoBootApplicationTests {
 		}
 		
 		@Test
+		void wrong_bill_serial() throws Exception {
+			
+			wireMockServer.stubFor(WireMock.post(WireMock.urlEqualTo("/verify"))
+					.willReturn(WireMock.aResponse()
+					.withStatus(HttpStatus.NOT_FOUND_404)
+					.withBody("No bill with serial 33 found")));
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+//										.param("id", "1")
+									    .param("action", "external")
+									    .param("balance", "5.00")
+									    .param("amount", "5.00")
+									    .param("bank", "Penkov")
+									    .param("recipient", "33")
+					)
+					.andExpect(status().isNotFound())
+					.andExpect(view().name("bill/external"));
+			
+			wireMockServer.verify(WireMock.exactly(1), 
+					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));			
+		}
+		
+		@Test
+		void wrong_bank_name() throws Exception {
+			
+			wireMockServer.stubFor(WireMock.post(WireMock.urlEqualTo("/verify"))
+					.willReturn(WireMock.aResponse()
+					.withStatus(HttpStatus.NOT_FOUND_404)
+					.withBody("No bank with name Demo found")));
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+//										.param("id", "1")
+									    .param("action", "external")
+									    .param("balance", "5.00")
+									    .param("amount", "5.00")
+									    .param("bank", "Demo")
+									    .param("recipient", "22")
+					)
+					.andExpect(status().isNotFound())
+					.andExpect(view().name("bill/external"));
+			
+			wireMockServer.verify(WireMock.exactly(1), 
+					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));				
+		}
+		
+		@Test
 		void successful_payment() throws Exception {
+			
+			wireMockServer.stubFor(WireMock.post(WireMock.urlEqualTo("/verify"))
+					.willReturn(WireMock.aResponse()
+					.withStatus(HttpStatus.OK_200)
+					.withBody("Data has been verified")));
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 //									    .param("id", "1")
@@ -689,8 +760,8 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 //									    .param("id", "1")
 									    .param("action", "withdraw")
-									    .param("balance", "20.00")
-									    .param("amount", "20.00")
+									    .param("balance", "10.00")
+									    .param("amount", "10.00")
 					)
 					.andExpect(status().is3xxRedirection())
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
@@ -698,8 +769,8 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 //				    					.param("id", "1")
 									    .param("action", "external")
-									    .param("balance", "20.00")
-									    .param("amount", "20.00")
+									    .param("balance", "5.00")
+									    .param("amount", "5.00")
 									    .param("bank", "Penkov")
 									    .param("recipient", "22")
 					)
@@ -712,7 +783,10 @@ public class BankDemoBootApplicationTests {
 													.content(mapper.writeValueAsString(dto))
 							)
 				.andExpect(status().isOk())
-				.andExpect(content().string(containsString("Successful")));
+				.andExpect(content().string(containsString("Successfully received")));
+			
+			wireMockServer.verify(WireMock.exactly(1), 
+					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));
 		}
 		
 		@Test
@@ -877,7 +951,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(status().isUnsupportedMediaType());
 			
 			XmlMapper xmlMapper = new XmlMapper();
-			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.01, "Demo");
+			OperationRequest dto = new OperationRequest(777, 2, "USD", 0.01, "Demo");
 			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
 													.header("Accept", "application/xml")
 													.contentType(MediaType.APPLICATION_XML)
@@ -886,6 +960,11 @@ public class BankDemoBootApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_XML))
 				.andExpect(content().string(containsString("Successful")));
+		}
+				
+		@AfterEach
+		void tear_down() {
+			wireMockServer.resetAll();
 		}
 		
 	}
@@ -925,6 +1004,11 @@ public class BankDemoBootApplicationTests {
 						.string(containsString("Wrong implementation type specified, retry")));
 		}
 		
+	}
+	
+	@AfterAll
+	static void clear() {
+		wireMockServer.stop();
 	}
 	
 }

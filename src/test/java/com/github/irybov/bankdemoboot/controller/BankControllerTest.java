@@ -538,7 +538,7 @@ class BankControllerTest {
 												.content(mapper.writeValueAsString(dto))
 						)
 			.andExpect(status().isOk())
-			.andExpect(content().string(containsString("Successful")));
+			.andExpect(content().string(containsString("Successfully received")));
 		
 		verify(billService, times(4)).getBillDTO(anyInt());
 		verify(billService).deposit(operation);

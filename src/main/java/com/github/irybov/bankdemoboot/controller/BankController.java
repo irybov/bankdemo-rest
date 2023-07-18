@@ -418,7 +418,7 @@ public class BankController extends BaseController {
 	}
 	
 	@ApiOperation(value = "Recieves incoming payment from external systems")
-	@ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully recieved", 
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully received", 
 							response = String.class), 
 		@ApiResponse(code = 404, message = "", responseContainer = "List", response = String.class),
 		@ApiResponse(code = 500, message = "", response = String.class)})
@@ -458,7 +458,7 @@ public class BankController extends BaseController {
 		});
 		
 //		return new ResponseEntity<String>("Successfully recieved", HttpStatus.OK);
-		return ResponseEntity.ok().body(new String("Successfully recieved"));
+		return ResponseEntity.ok().body(new String("Successfully received"));
 	}
 	
 	@ApiIgnore
