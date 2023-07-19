@@ -31,14 +31,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.test.context.support.WithMockUser;
-//import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.Validator;
 
+import com.github.irybov.bankdemoboot.config.SecurityConfig;
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequest;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
 import com.github.irybov.bankdemoboot.entity.Account;
@@ -47,7 +49,8 @@ import com.github.irybov.bankdemoboot.security.AccountDetails;
 import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 import com.github.irybov.bankdemoboot.service.AccountService;
 
-@WebMvcTest(controllers = AuthController.class)
+@WebMvcTest(AuthController.class)
+//@Import(SecurityConfig.class)
 class AuthControllerTest {
 
 	@MockBean
@@ -132,10 +135,14 @@ class AuthControllerTest {
 	@Test
 	void correct_user_creds() throws Exception {
 
-		when(accountDetailsService.loadUserByUsername(anyString()))
-				.thenThrow(new UsernameNotFoundException("User remote not found"));
+		final String hashedPW = BCrypt.hashpw("superadmin", BCrypt.gensalt(4));
 		
-		mockMVC.perform(formLogin("/auth").user("phone", "remote").password("remote"))
+		when(accountDetailsService.loadUserByUsername(anyString()))
+			.thenReturn(new AccountDetails(new Account
+			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), hashedPW, true)));
+
+		mockMVC.perform(formLogin("/auth").user("phone", "0000000000").password("superadmin"))
+			.andExpect(authenticated())
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/success"));
 		
@@ -146,7 +153,7 @@ class AuthControllerTest {
 	void wrong_user_creds() throws Exception {
 		
 		when(accountDetailsService.loadUserByUsername(anyString()))
-		.thenThrow(new UsernameNotFoundException("User 9999999999 not found"));
+			.thenThrow(new UsernameNotFoundException("User 9999999999 not found"));
 		
 		mockMVC.perform(formLogin("/auth").user("phone", "9999999999").password("localadmin"))
 			.andExpect(status().is3xxRedirection())

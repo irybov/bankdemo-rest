@@ -62,16 +62,16 @@ $(document).ready(function(){
 			let xhr = new XMLHttpRequest();
 			xhr.open('GET', '/bankdemo/bills/notify');
 			xhr.onload = function() {
-				if (xhr.status != 200) {
-					alert('Request failed: ' + xhr.status + ', ' + xhr.statusText);
-				}
-				else {
+				if (xhr.status == 201) {
 					const json = JSON.parse(xhr.responseText);
 					var cell = '#balance'+json.id;
 					var total = parseFloat($(cell).html(), 2) + json.income;
 					$(cell).text(total.toFixed(2));
 					alert('+ ' + json.income);
 					connect();
+				}
+				else {
+					alert('Request failed: ' + xhr.status + ', ' + xhr.statusText);
 				}			
 			};
 			xhr.onerror = function() {

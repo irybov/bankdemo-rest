@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -41,16 +42,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -58,6 +64,12 @@ import com.github.irybov.bankdemoboot.controller.dto.AccountRequest;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
 import com.github.irybov.bankdemoboot.controller.dto.OperationRequest;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequest;
+import com.github.irybov.bankdemoboot.dao.AccountDAO;
+import com.github.irybov.bankdemoboot.entity.Account;
+import com.github.irybov.bankdemoboot.repository.AccountRepository;
+import com.github.irybov.bankdemoboot.service.AccountService;
+import com.github.irybov.bankdemoboot.service.AccountServiceDAO;
+import com.github.irybov.bankdemoboot.service.AccountServiceJPA;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -167,6 +179,15 @@ public class BankDemoBootApplicationTests {
 
 	@Nested
 	class AuthControllerTest{
+		
+		@Autowired
+		private AccountService accountService;
+		@Autowired
+		private AccountRepository repository;
+		@Autowired
+		private AccountDAO dao;
+		
+		private static final String PHONE = "0000000000";
 	
 		@Test
 		void can_get_start_html() throws Exception {
@@ -202,7 +223,7 @@ public class BankDemoBootApplicationTests {
 		void can_get_menu_html() throws Exception {
 			
 			String roles = authentication().getAuthorities().toString();
-			assertThat(authentication().getName()).isEqualTo("0000000000");
+			assertThat(authentication().getName()).isEqualTo(PHONE);
 			assertThat(roles).isEqualTo("[ROLE_ADMIN]");
 
 			mockMVC.perform(get("/success").with(csrf()))
@@ -219,7 +240,20 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void correct_user_creds() throws Exception {
 			
-			mockMVC.perform(formLogin("/auth").user("phone", "remote").password("remote"))
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = repository.findByPhone(PHONE);
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				repository.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount(PHONE);
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
+
+			mockMVC.perform(formLogin("/auth").user("phone", PHONE).password("superadmin"))
+				.andExpect(authenticated())
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/success"));
 		}
@@ -495,6 +529,15 @@ public class BankDemoBootApplicationTests {
 		
 		@Autowired
 		private ObjectMapper mapper;
+		@Autowired
+		private TestRestTemplate testRestTemplate;
+		
+		@Autowired
+		private AccountService accountService;
+		@Autowired
+		private AccountRepository repository;
+		@Autowired
+		private AccountDAO dao;
 		
 		private static final String PHONE = "1111111111";
 		
@@ -595,7 +638,13 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(get("/bills/validate/{id}", "1"))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.valueOf("text/plain;charset=UTF-8")))
-				.andExpect(content().string(containsString("Admin Adminov")));
+				.andExpect(content().string(equalTo("Admin Adminov")));
+			
+/*		    HttpHeaders headers = new HttpHeaders();
+		    headers.add(HttpHeaders.ACCEPT, MediaType.TEXT_PLAIN_VALUE);
+			String response = testRestTemplate.withBasicAuth(PHONE, "supervixen")
+					.getForObject("/bills/validate/{id}", String.class, "1");
+			assertThat(response).contains("Admin Adminov");*/
 		}
 		
 		@Test
@@ -633,9 +682,20 @@ public class BankDemoBootApplicationTests {
 			.andExpect(view().name("account/password"));
 		}
 		
-		@Disabled
 		@Test
 		void success_password_change() throws Exception {
+			
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = repository.findByPhone(PHONE);
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				repository.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount(PHONE);
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
 			
 			mockMVC.perform(patch("/accounts/password/{phone}", PHONE).with(csrf())
 										.param("oldPassword", "supervixen")
@@ -651,9 +711,21 @@ public class BankDemoBootApplicationTests {
 		@Test
 		void failure_password_change() throws Exception {
 			
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = repository.findByPhone(PHONE);
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				repository.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount(PHONE);
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
+			
 			mockMVC.perform(patch("/accounts/password/{phone}", PHONE).with(csrf())
 										.param("oldPassword", "superjapan")
-										.param("newPassword", "japanrocks")
+										.param("newPassword", "vixenrocks")
 					)
 					.andExpect(status().isBadRequest())
 					.andExpect(model().size(2))
@@ -778,12 +850,20 @@ public class BankDemoBootApplicationTests {
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
 			OperationRequest dto = new OperationRequest(777, 2, "USD", 0.01, "Demo");
-			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
-													.contentType(MediaType.APPLICATION_JSON)
-													.content(mapper.writeValueAsString(dto))
+			mockMVC.perform(post("/bills/external")
+										.contentType(MediaType.APPLICATION_JSON)
+										.content(mapper.writeValueAsString(dto))
 							)
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString("Successfully received")));
+			
+/*		    HttpHeaders headers = new HttpHeaders();
+		    headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+			HttpEntity<String> request = new HttpEntity<>(mapper.writeValueAsString(dto), headers);
+			ResponseEntity<String> response = testRestTemplate.postForEntity("/bills/external", 
+					request, String.class);
+			assertThat(response.getStatusCodeValue()).isEqualTo(HttpStatus.OK_200);
+			assertThat(response.getBody()).isEqualTo("Successfully received");*/
 			
 			wireMockServer.verify(WireMock.exactly(1), 
 					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));
@@ -821,7 +901,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(view().name("bill/payment"));
 			
 			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.00, "Demo");
-			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -866,7 +946,7 @@ public class BankDemoBootApplicationTests {
 			.andExpect(view().name("bill/transfer"));
 			
 			OperationRequest dto = new OperationRequest(777, 777, "SEA", 0.01, "Demo");
-			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -893,7 +973,7 @@ public class BankDemoBootApplicationTests {
 					.andExpect(view().name("bill/transfer"));
 			
 			OperationRequest dto = new OperationRequest(777, 2, "AUD", 0.01, "Demo");
-			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -905,7 +985,7 @@ public class BankDemoBootApplicationTests {
 		void constraint_violation_exception() throws Exception {
 			
 			OperationRequest dto = new OperationRequest(1_000_000_000, -1, "yuan", -0.01, "Demo");
-			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -916,7 +996,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(content().string(containsString("Amount of money should be higher than zero")));
 			
 			dto = new OperationRequest(null, null, " ", null, null);
-			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -930,36 +1010,39 @@ public class BankDemoBootApplicationTests {
 		
 		@Test
 		void establish_emitter_connection() throws Exception {			
-			mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
+			mockMVC.perform(get("/bills/notify")).andExpect(status().isCreated());
+/*			ResponseBodyEmitter emitter = testRestTemplate.getForObject(("/bills/notify"), 
+					ResponseBodyEmitter.class);
+			assertThat(emitter).isNotNull();*/
 		}
 		
 		@WithMockUser
 		@Test
-		void check_cors_protection() throws Exception {
+		void check_cors_and_xml_support() throws Exception {
 			
 			mockMVC.perform(options("/bills/external").header("Origin", "http://evil.com"))
 				.andExpect(status().isOk());
 			
-			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_XML))
 				.andExpect(status().isBadRequest());
 			
 			mockMVC.perform(get("/bills/notify").header("Origin", "http://evil.com"))
 				.andExpect(status().isForbidden());
 			
-			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com"))
+			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com"))
 				.andExpect(status().isUnsupportedMediaType());
 			
 			XmlMapper xmlMapper = new XmlMapper();
 			OperationRequest dto = new OperationRequest(777, 2, "USD", 0.01, "Demo");
-			mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 													.header("Accept", "application/xml")
 													.contentType(MediaType.APPLICATION_XML)
 													.content(xmlMapper.writeValueAsString(dto))
 							)
 				.andExpect(status().isOk())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_XML))
-				.andExpect(content().string(containsString("Successful")));
+				.andExpect(content().string(containsString("Successfully received")));
 		}
 				
 		@AfterEach

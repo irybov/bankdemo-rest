@@ -422,10 +422,10 @@ public class BankController extends BaseController {
 							response = String.class), 
 		@ApiResponse(code = 404, message = "", responseContainer = "List", response = String.class),
 		@ApiResponse(code = 500, message = "", response = String.class)})
-	@CrossOrigin(originPatterns = "*", methods = {RequestMethod.OPTIONS, RequestMethod.PATCH})
-	@PatchMapping(path = "/bills/external",
-					consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
-					produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@CrossOrigin(originPatterns = "*", methods = {RequestMethod.OPTIONS, RequestMethod.POST})
+	@PostMapping(path = "/bills/external",
+					consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
+					produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
 	@ResponseBody
 	public ResponseEntity<?> receiveMoney(@RequestBody OperationRequest dto) {	
 		
@@ -464,7 +464,7 @@ public class BankController extends BaseController {
 	@ApiIgnore
 	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping(path = "/bills/notify")
-	public ResponseBodyEmitter registerEmitter() {
+	public ResponseBodyEmitter registerEmitter(HttpServletResponse response) {
 		
 		ResponseBodyEmitter emitter = new ResponseBodyEmitter(0L);
 		String phone = authentication().getName();
@@ -473,6 +473,7 @@ public class BankController extends BaseController {
 		emitter.onTimeout(()-> emitters.remove(phone, emitter));
 		emitter.onError((e)-> emitters.remove(phone, emitter));
 		
+		response.setStatus(HttpServletResponse.SC_CREATED);
 		return emitter;
 	}
 	private void activateEmitter(int id, double amount) {
@@ -506,7 +507,7 @@ public class BankController extends BaseController {
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
 	@PatchMapping("/accounts/password/{phone}")
 	public String submitPassword(@PathVariable String phone,
-			@ModelAttribute("password") @Valid PasswordRequest passwordRequestDTO,
+			@ModelAttribute("password") @Valid PasswordRequest passwordRequest,
 			BindingResult result, Model model, HttpServletResponse response) {
 
 		if(result.hasErrors()) {
@@ -516,7 +517,7 @@ public class BankController extends BaseController {
 		}
 		
 		try {
-			if(!accountService.comparePassword(passwordRequestDTO.getOldPassword(), phone)) {
+			if(!accountService.comparePassword(passwordRequest.getOldPassword(), phone)) {
 				log.warn("User {} fails to confirm old password", authentication().getName());
 				model.addAttribute("message", "Old password mismatch");
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -528,7 +529,7 @@ public class BankController extends BaseController {
 		}
 		
 		try {
-			accountService.changePassword(phone, passwordRequestDTO.getNewPassword());
+			accountService.changePassword(phone, passwordRequest.getNewPassword());
 		}
 		catch (Exception exc) {
 			log.error(exc.getMessage(), exc);

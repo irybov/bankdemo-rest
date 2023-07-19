@@ -2,6 +2,7 @@ package com.github.irybov.bankdemoboot.controller;
 
 import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
 //import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyDouble;
@@ -284,7 +285,7 @@ class BankControllerTest {
 		mockMVC.perform(get("/bills/validate/{id}", "4"))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.valueOf("text/plain;charset=UTF-8")))
-			.andExpect(content().string(containsString
+			.andExpect(content().string(equalTo
 					  (bill.getOwner().getName() + " " + bill.getOwner().getSurname())));
 		
 		verify(billService).getBillDTO(anyInt());
@@ -342,8 +343,8 @@ class BankControllerTest {
 		when(accountService.comparePassword(pwDTO.getOldPassword(), phone)).thenReturn(true);
 		
 		mockMVC.perform(patch("/accounts/password/{phone}", phone).with(csrf())
-														.param("oldPassword", pwDTO.getOldPassword())
-														.param("newPassword", pwDTO.getNewPassword())
+													.param("oldPassword", pwDTO.getOldPassword())
+													.param("newPassword", pwDTO.getNewPassword())
 					)
 			.andExpect(status().isOk())
 			.andExpect(model().size(2))
@@ -358,13 +359,13 @@ class BankControllerTest {
 	void failure_password_change() throws Exception {
 		
 		pwDTO.setOldPassword("blackcorba");
-		pwDTO.setNewPassword("whitecobra");
+		pwDTO.setNewPassword("whitemamba");
 		
 		when(accountService.comparePassword(pwDTO.getOldPassword(), phone)).thenReturn(false);
 		
 		mockMVC.perform(patch("/accounts/password/{phone}", phone).with(csrf())
-														.param("oldPassword", pwDTO.getOldPassword())
-														.param("newPassword", pwDTO.getNewPassword())
+													.param("oldPassword", pwDTO.getOldPassword())
+													.param("newPassword", pwDTO.getNewPassword())
 					)
 			.andExpect(status().isBadRequest())
 			.andExpect(model().size(2))
@@ -382,8 +383,8 @@ class BankControllerTest {
 		pwDTO.setNewPassword("white");
 		
 		mockMVC.perform(patch("/accounts/password/{phone}", phone).with(csrf())
-														.param("oldPassword", pwDTO.getOldPassword())
-														.param("newPassword", pwDTO.getNewPassword())
+													.param("oldPassword", pwDTO.getOldPassword())
+													.param("newPassword", pwDTO.getNewPassword())
 				)
 			.andExpect(status().isBadRequest())
 			.andExpect(model().size(1))
@@ -533,7 +534,7 @@ class BankControllerTest {
 			.andExpect(redirectedUrl("/accounts/show/" + phone));
 		
 		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01, "Demo");
-		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -641,7 +642,7 @@ class BankControllerTest {
 				.andExpect(view().name("bill/external"));
 		
 		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.00, "Demo");
-		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -792,7 +793,7 @@ class BankControllerTest {
 				.andExpect(view().name("bill/external"));
 		
 		OperationRequest dto = new OperationRequest(777, 777, "USD", 0.01, "Demo");
-		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -861,7 +862,7 @@ class BankControllerTest {
 				.andExpect(view().name("bill/external"));
 		
 		OperationRequest dto = new OperationRequest(777, 3, "SEA", 0.01, "Demo");
-		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -881,7 +882,7 @@ class BankControllerTest {
 	void constraint_violation_exception() throws Exception {
 		
 		OperationRequest dto = new OperationRequest(1_000_000_000, -1, "yuan", -0.01, "Demo");
-		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -892,7 +893,7 @@ class BankControllerTest {
 			.andExpect(content().string(containsString("Amount of money should be higher than zero")));
 		
 		dto = new OperationRequest(null, null, " ", null, null);
-		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -906,7 +907,7 @@ class BankControllerTest {
 	
 	@Test
 	void establish_emitter_connection() throws Exception {		
-		mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
+		mockMVC.perform(get("/bills/notify")).andExpect(status().isCreated());
 	}
 	
 	@WithMockUser
@@ -916,14 +917,14 @@ class BankControllerTest {
 		mockMVC.perform(options("/bills/external").header("Origin", "http://evil.com"))
 			.andExpect(status().isOk());
 		
-		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 												.contentType(MediaType.APPLICATION_XML))
 			.andExpect(status().isBadRequest());
 		
 		mockMVC.perform(get("/bills/notify").header("Origin", "http://evil.com"))
 			.andExpect(status().isForbidden());
 		
-		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com"))
+		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com"))
 			.andExpect(status().isUnsupportedMediaType());
 		
 		
@@ -937,7 +938,7 @@ class BankControllerTest {
 		
 		XmlMapper xmlMapper = new XmlMapper();
 		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01, "Demo");
-		mockMVC.perform(patch("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 												.header("Accept", "application/xml")
 												.contentType(MediaType.APPLICATION_XML)
 												.content(xmlMapper.writeValueAsString(dto))
@@ -945,6 +946,7 @@ class BankControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_XML))
 			.andExpect(content().string(containsString("Successful")));
+		
 		verify(billService).external(operation);
 		verify(operationService).transfer(anyDouble(), anyString(), anyString(), 
 				anyInt(), anyInt(), anyString());
