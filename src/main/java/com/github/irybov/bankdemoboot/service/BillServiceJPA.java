@@ -136,6 +136,9 @@ public class BillServiceJPA implements BillService {
 		if(from == to) throw new PaymentException("Source and target bills should not be the same");
 		
 		Bill sender = getBill(from);
+		if(sender.getBalance().compareTo(BigDecimal.valueOf(amount)) == -1) {
+			throw new PaymentException("Not enough money to complete operation");
+		}
 		sender.setBalance(sender.getBalance().subtract(BigDecimal.valueOf(amount)));
 		updateBill(sender);
 		operationRepository.save(operation);

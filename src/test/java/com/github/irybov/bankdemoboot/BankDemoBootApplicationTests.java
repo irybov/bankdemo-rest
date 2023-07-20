@@ -841,8 +841,8 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 //				    					.param("id", "1")
 									    .param("action", "external")
-									    .param("balance", "5.00")
-									    .param("amount", "5.00")
+									    .param("balance", "10.00")
+									    .param("amount", "10.00")
 									    .param("bank", "Penkov")
 									    .param("recipient", "22")
 					)
@@ -857,13 +857,14 @@ public class BankDemoBootApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString("Successfully received")));
 			
-/*		    HttpHeaders headers = new HttpHeaders();
+			dto = new OperationRequest(777, 3, "NOK", 0.01, "Demo");
+		    HttpHeaders headers = new HttpHeaders();
 		    headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 			HttpEntity<String> request = new HttpEntity<>(mapper.writeValueAsString(dto), headers);
 			ResponseEntity<String> response = testRestTemplate.postForEntity("/bills/external", 
 					request, String.class);
 			assertThat(response.getStatusCodeValue()).isEqualTo(HttpStatus.OK_200);
-			assertThat(response.getBody()).isEqualTo("Successfully received");*/
+			assertThat(response.getBody()).isEqualTo("Successfully received");
 			
 			wireMockServer.verify(WireMock.exactly(1), 
 					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));
@@ -871,6 +872,11 @@ public class BankDemoBootApplicationTests {
 		
 		@Test
 		void zero_amount_exception() throws Exception {
+			
+			wireMockServer.stubFor(WireMock.post(WireMock.urlEqualTo("/verify"))
+					.willReturn(WireMock.aResponse()
+					.withStatus(HttpStatus.OK_200)
+					.withBody("Data has been verified")));
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 //								    .param("id", "1")
@@ -900,17 +906,40 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
 				.andExpect(view().name("bill/payment"));
 			
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+//									.param("id", "1")
+								    .param("action", "external")
+								    .param("balance", "10.00")
+								    .param("amount", "0.00")
+								    .param("bank", "Penkov")
+								    .param("recipient", "22")
+				)
+				.andExpect(status().isInternalServerError())
+				.andExpect(model().attribute("id", 1))
+				.andExpect(model().attribute("action", "external"))
+				.andExpect(model().attribute("balance", "10.00"))
+				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
+				.andExpect(view().name("bill/external"));
+			
 			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.00, "Demo");
 			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
 				.andExpect(status().isBadRequest())
-				.andExpect(content().string(containsString("Amount of money should be higher than zero")));	
+				.andExpect(content().string(containsString("Amount of money should be higher than zero")));
+			
+			wireMockServer.verify(WireMock.exactly(1), 
+					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));
 		}
 		
 		@Test
 		void negative_balance_exception() throws Exception {
+			
+			wireMockServer.stubFor(WireMock.post(WireMock.urlEqualTo("/verify"))
+					.willReturn(WireMock.aResponse()
+					.withStatus(HttpStatus.OK_200)
+					.withBody("Data has been verified")));
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 //								    .param("id", "1")
@@ -925,10 +954,34 @@ public class BankDemoBootApplicationTests {
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Not enough money to complete operation"))
 				.andExpect(view().name("bill/payment"));
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+//									.param("id", "1")
+								    .param("action", "external")
+								    .param("balance", "10.00")
+								    .param("amount", "10.01")
+								    .param("bank", "Penkov")
+								    .param("recipient", "22")
+				)
+				.andExpect(status().isInternalServerError())
+				.andExpect(model().size(4))
+				.andExpect(model().attribute("id", 1))
+				.andExpect(model().attribute("action", "external"))
+				.andExpect(model().attribute("balance", "10.00"))
+				.andExpect(model().attribute("message", "Not enough money to complete operation"))
+				.andExpect(view().name("bill/external"));
+			
+			wireMockServer.verify(WireMock.exactly(1), 
+					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));
 		}
 		
 		@Test
 		void same_bill_id_exception() throws Exception {
+			
+			wireMockServer.stubFor(WireMock.post(WireMock.urlEqualTo("/verify"))
+					.willReturn(WireMock.aResponse()
+					.withStatus(HttpStatus.OK_200)
+					.withBody("Data has been verified")));
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 				    			.param("recipient", "1")
@@ -945,6 +998,22 @@ public class BankDemoBootApplicationTests {
 			.andExpect(model().attribute("message", "Source and target bills should not be the same"))
 			.andExpect(view().name("bill/transfer"));
 			
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+//								.param("id", "1")
+							    .param("action", "external")
+							    .param("balance", "10.00")
+							    .param("amount", "5.00")
+							    .param("bank", "Penkov")
+							    .param("recipient", "1")
+			)
+			.andExpect(status().isInternalServerError())
+			.andExpect(model().size(4))
+			.andExpect(model().attribute("id", 1))
+			.andExpect(model().attribute("action", "external"))
+			.andExpect(model().attribute("balance", "10.00"))
+			.andExpect(model().attribute("message", "Source and target bills should not be the same"))
+			.andExpect(view().name("bill/external"));
+			
 			OperationRequest dto = new OperationRequest(777, 777, "SEA", 0.01, "Demo");
 			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
@@ -952,10 +1021,18 @@ public class BankDemoBootApplicationTests {
 							)
 				.andExpect(status().isInternalServerError())
 				.andExpect(content().string(containsString("Source and target bills should not be the same")));
+			
+			wireMockServer.verify(WireMock.exactly(1), 
+					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));
 		}
 		
 		@Test
 		void currency_mismatch_exception() throws Exception {
+			
+			wireMockServer.stubFor(WireMock.post(WireMock.urlEqualTo("/verify"))
+					.willReturn(WireMock.aResponse()
+					.withStatus(HttpStatus.BAD_REQUEST_400)
+					.withBody("Wrong currency type NOK for the target bill 22")));
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 										.param("recipient", "2")
@@ -972,6 +1049,22 @@ public class BankDemoBootApplicationTests {
 					.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
 					.andExpect(view().name("bill/transfer"));
 			
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+//										.param("id", "1")
+									    .param("action", "external")
+									    .param("balance", "10.00")
+									    .param("amount", "0.01")
+									    .param("bank", "Penkov")
+									    .param("recipient", "22")
+					)
+					.andExpect(status().isBadRequest())
+					.andExpect(model().size(4))
+					.andExpect(model().attribute("id", 1))
+					.andExpect(model().attribute("action", "external"))
+					.andExpect(model().attribute("balance", "10.00"))
+					.andExpect(model().attribute("message", "Wrong currency type NOK for the target bill 22"))
+					.andExpect(view().name("bill/external"));
+			
 			OperationRequest dto = new OperationRequest(777, 2, "AUD", 0.01, "Demo");
 			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
 													.contentType(MediaType.APPLICATION_JSON)
@@ -979,6 +1072,9 @@ public class BankDemoBootApplicationTests {
 							)
 				.andExpect(status().isInternalServerError())
 				.andExpect(content().string(containsString("Wrong currency type of the target bill")));
+			
+			wireMockServer.verify(WireMock.exactly(1), 
+					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));
 		}
 		
 		@Test
