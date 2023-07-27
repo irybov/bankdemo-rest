@@ -783,6 +783,11 @@ public class BankDemoBootApplicationTests {
 									    .param("recipient", "33")
 					)
 					.andExpect(status().isNotFound())
+					.andExpect(model().size(4))
+					.andExpect(model().attribute("id", 1))
+					.andExpect(model().attribute("action", "external"))
+					.andExpect(model().attribute("balance", "5.00"))
+					.andExpect(model().attribute("message", "No bill with serial 33 found"))
 					.andExpect(view().name("bill/external"));
 			
 			wireMockServer.verify(WireMock.exactly(1), 
@@ -806,6 +811,38 @@ public class BankDemoBootApplicationTests {
 									    .param("recipient", "22")
 					)
 					.andExpect(status().isNotFound())
+					.andExpect(model().size(4))
+					.andExpect(model().attribute("id", 1))
+					.andExpect(model().attribute("action", "external"))
+					.andExpect(model().attribute("balance", "5.00"))
+					.andExpect(model().attribute("message", "No bank with name Demo found"))
+					.andExpect(view().name("bill/external"));
+			
+			wireMockServer.verify(WireMock.exactly(1), 
+					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));				
+		}
+		
+		@Test
+		void connection_failure() throws Exception {
+			
+			wireMockServer.stubFor(WireMock.post(WireMock.urlEqualTo("/verify"))
+					.willReturn(WireMock.aResponse()
+					.withStatus(HttpStatus.SERVICE_UNAVAILABLE_503)));
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+//										.param("id", "1")
+									    .param("action", "external")
+									    .param("balance", "10.00")
+									    .param("amount", "10.00")
+									    .param("bank", "Penkov")
+									    .param("recipient", "22")
+					)
+					.andExpect(status().isServiceUnavailable())
+					.andExpect(model().size(4))
+					.andExpect(model().attribute("id", 1))
+					.andExpect(model().attribute("action", "external"))
+					.andExpect(model().attribute("balance", "10.00"))
+					.andExpect(model().attribute("message", "Service is temporary unavailable"))
 					.andExpect(view().name("bill/external"));
 			
 			wireMockServer.verify(WireMock.exactly(1), 

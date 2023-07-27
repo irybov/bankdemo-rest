@@ -82,17 +82,17 @@ public class AuthController extends BaseController {
 	
 	@ApiOperation("Confirms registration web-form")
 	@PostMapping("/confirm")
-	public String confirmRegistration(@ModelAttribute("account") AccountRequest accountRequestDTO,
+	public String confirmRegistration(@ModelAttribute("account") AccountRequest accountRequest,
 			BindingResult result, Model model, HttpServletResponse response) {
 		
-		accountValidator.validate(accountRequestDTO, result);
+		accountValidator.validate(accountRequest, result);
 		if(result.hasErrors()) {
 			log.warn("{}", result.getFieldErrors().toString());
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			return "auth/register";
 		}
 		try {
-			accountService.saveAccount(accountRequestDTO);
+			accountService.saveAccount(accountRequest);
 			response.setStatus(HttpServletResponse.SC_CREATED);
 			return "auth/login";
 		}

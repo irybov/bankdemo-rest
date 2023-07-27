@@ -471,6 +471,35 @@ class BankControllerTest {
 	}
 	
 	@Test
+	void connection_failure() throws Exception {
+		
+		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
+		when(restTemplate.postForEntity(anyString(), anyString(), 
+				org.mockito.ArgumentMatchers.any(Class.class)))
+			.thenReturn(new ResponseEntity<>(new String(), HttpStatus.SERVICE_UNAVAILABLE));
+		
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+//														.param("id", "0")
+														.param("action", "external")
+														.param("balance", "0.00")
+														.param("amount", "0.00")
+														.param("bank", "Demo")
+													    .param("recipient", "22")
+						)
+			.andExpect(status().isServiceUnavailable())
+			.andExpect(model().size(4))
+			.andExpect(model().attribute("id", 0))
+			.andExpect(model().attribute("action", "external"))
+			.andExpect(model().attribute("balance", "0.00"))
+			.andExpect(model().attribute("message", "Service is temporary unavailable"))
+			.andExpect(view().name("bill/external"));
+		
+		verify(billService).getBillDTO(anyInt());
+		verify(restTemplate).postForEntity(anyString(), anyString(), 
+				org.mockito.ArgumentMatchers.any(Class.class));		
+	}
+	
+	@Test
 	void successful_payment() throws Exception {
 		
 		when(builder.build()).thenReturn(operation);

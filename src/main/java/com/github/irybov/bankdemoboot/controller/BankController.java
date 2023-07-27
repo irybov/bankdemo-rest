@@ -403,6 +403,15 @@ public class BankController extends BaseController {
 					return "bill/external";
 				}
 			}
+			else if(result.getStatusCodeValue() == 503) {
+				log.warn(result.getBody());
+				modelMap.addAttribute("id", id);
+				modelMap.addAttribute("action", params.get("action"));
+				modelMap.addAttribute("balance", params.get("balance"));
+				modelMap.addAttribute("message", "Service is temporary unavailable");
+				response.setStatus(result.getStatusCodeValue());
+				return "bill/external";
+			}
 			else {
 				log.warn(result.getBody());
 				modelMap.addAttribute("id", id);
