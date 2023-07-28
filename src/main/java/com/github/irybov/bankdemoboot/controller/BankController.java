@@ -50,8 +50,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.UnknownHttpStatusCodeException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 //import com.github.irybov.bankdemoboot.Currency;
@@ -273,8 +278,8 @@ public class BankController extends BaseController {
 	@PreAuthorize("hasRole('CLIENT')")
 	@PatchMapping("/bills/launch/{id}")
 	public String operateMoney(@PathVariable int id, @RequestParam(required=false) String recipient,
-			@RequestParam Map<String, String> params, ModelMap modelMap,
-			HttpServletResponse response) {
+			@RequestParam Map<String, String> params, ModelMap modelMap, 
+			RedirectAttributes redirectAttributes, HttpServletResponse response) {
 		
 		String phone = authentication().getName();
 		int target = 0;
@@ -310,8 +315,7 @@ public class BankController extends BaseController {
 		log.info("User {} performs {} operation with bill {}", phone, params.get("action"), id);
 		
 		String currency = billService.getBillDTO(id).getCurrency();
-		switch(params.get("action")) {
-		
+		switch(params.get("action")) {		
 		case "deposit":
 			try {
 				Operation operation = operationService.deposit
@@ -381,44 +385,59 @@ public class BankController extends BaseController {
 			catch (JsonProcessingException exc) {
 				log.warn(exc.getMessage(), exc);
 			}
-			ResponseEntity<String> result = restTemplate.postForEntity(externalURL+"/verify", 
-					json, String.class);
 			
-			if(result.getStatusCodeValue() == 200) {
-				try {
-					Operation operation = operationService.transfer
-					(Double.valueOf(params.get("amount")), params.get("action"), currency, id, 
-							target, params.get("bank"));
-					billService.outward(operation);
-					log.info("{} has been sent to bill {} in bank {}", params.get("amount"), target,
-							params.get("bank"));
+			try {
+//				RestTemplate restTemplate = new RestTemplate();
+				ResponseEntity<String> result = restTemplate.postForEntity(externalURL+"/verify", 
+						json, String.class);
+				
+				if(result.getStatusCodeValue() == 200) {
+					try {
+						Operation operation = operationService.transfer
+						(Double.valueOf(params.get("amount")), params.get("action"), currency, id, 
+								target, params.get("bank"));
+						billService.outward(operation);
+						log.info("{} has been sent to bill {} in bank {}", params.get("amount"), 
+								target, params.get("bank"));
+						redirectAttributes.addFlashAttribute("message", result.getBody());
+					}
+					catch (Exception exc) {
+						log.warn(exc.getMessage(), exc);
+						modelMap.addAttribute("id", id);
+						modelMap.addAttribute("action", params.get("action"));
+						modelMap.addAttribute("balance", params.get("balance"));
+						modelMap.addAttribute("message", exc.getMessage());
+						response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+						return "bill/external";
+					}
 				}
-				catch (Exception exc) {
-					log.warn(exc.getMessage(), exc);
+				else {
+					log.warn(result.getBody());
 					modelMap.addAttribute("id", id);
 					modelMap.addAttribute("action", params.get("action"));
 					modelMap.addAttribute("balance", params.get("balance"));
-					modelMap.addAttribute("message", exc.getMessage());
-					response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+					modelMap.addAttribute("message", result.getBody());
+					response.setStatus(result.getStatusCodeValue());
 					return "bill/external";
 				}
 			}
-			else if(result.getStatusCodeValue() == 503) {
-				log.warn(result.getBody());
+/*			catch(HttpClientErrorException | HttpServerErrorException | 
+					UnknownHttpStatusCodeException exc) {
+				log.warn(exc.getResponseBodyAsString());
+				modelMap.addAttribute("id", id);
+				modelMap.addAttribute("action", params.get("action"));
+				modelMap.addAttribute("balance", params.get("balance"));
+				modelMap.addAttribute("message", exc.getResponseBodyAsString());
+				response.setStatus(exc.getRawStatusCode());
+				return "bill/external";
+			}*/
+			catch(ResourceAccessException exc) {
+				log.error(exc.getMessage());
 				modelMap.addAttribute("id", id);
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", "Service is temporary unavailable");
-				response.setStatus(result.getStatusCodeValue());
-				return "bill/external";
-			}
-			else {
-				log.warn(result.getBody());
-				modelMap.addAttribute("id", id);
-				modelMap.addAttribute("action", params.get("action"));
-				modelMap.addAttribute("balance", params.get("balance"));
-				modelMap.addAttribute("message", result.getBody());
-				response.setStatus(result.getStatusCodeValue());
+				response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 				return "bill/external";
 			}
 			break;

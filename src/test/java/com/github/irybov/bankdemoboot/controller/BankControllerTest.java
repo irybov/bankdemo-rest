@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -476,7 +477,7 @@ class BankControllerTest {
 		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
 		when(restTemplate.postForEntity(anyString(), anyString(), 
 				org.mockito.ArgumentMatchers.any(Class.class)))
-			.thenReturn(new ResponseEntity<>(new String(), HttpStatus.SERVICE_UNAVAILABLE));
+			.thenReturn(new ResponseEntity<>("Service is temporary unavailable", HttpStatus.SERVICE_UNAVAILABLE));
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
 //														.param("id", "0")
@@ -522,7 +523,7 @@ class BankControllerTest {
 		
 		when(restTemplate.postForEntity(anyString(), anyString(), 
 				org.mockito.ArgumentMatchers.any(Class.class)))
-			.thenReturn(new ResponseEntity<>(new String(), HttpStatus.OK));
+			.thenReturn(new ResponseEntity<>("Data has been verified", HttpStatus.OK));
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
 //													    .param("id", "0")
@@ -547,6 +548,7 @@ class BankControllerTest {
 														.param("action", "transfer")
 														.param("balance", "0.00")
 														.param("amount", "0.00")
+														.param("recipient", "22")
 						)
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/accounts/show/" + phone));
@@ -560,6 +562,7 @@ class BankControllerTest {
 													    .param("recipient", "22")
 						)
 			.andExpect(status().is3xxRedirection())
+			.andExpect(flash().attribute("message", "Data has been verified"))
 			.andExpect(redirectedUrl("/accounts/show/" + phone));
 		
 		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01, "Demo");
@@ -570,7 +573,7 @@ class BankControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("Successfully received")));
 		
-		verify(billService, times(4)).getBillDTO(anyInt());
+		verify(billService, times(5)).getBillDTO(anyInt());
 		verify(billService).deposit(operation);
 		verify(billService).withdraw(operation);
 		verify(billService).transfer(operation);
@@ -645,6 +648,7 @@ class BankControllerTest {
 														.param("action", "transfer")
 														.param("balance", "0.00")
 														.param("amount", "0.00")
+														.param("recipient", "22")
 						)
 				.andExpect(status().isInternalServerError())
 				.andExpect(model().size(4))
@@ -684,7 +688,7 @@ class BankControllerTest {
 				anyString());
 		verify(operationService, times(2)).transfer(anyDouble(), anyString(), anyString(), 
 				anyInt(), anyInt(), anyString());
-		verify(billService, times(4)).getBillDTO(anyInt());
+		verify(billService, times(5)).getBillDTO(anyInt());
 		verify(billService).deposit(operation);
 		verify(billService).withdraw(operation);
 		verify(billService).transfer(operation);
@@ -734,6 +738,7 @@ class BankControllerTest {
 														.param("action", "transfer")
 														.param("balance", "0.00")
 														.param("amount", "0.01")
+														.param("recipient", "22")
 						)
 				.andExpect(status().isInternalServerError())
 				.andExpect(model().size(4))
@@ -763,7 +768,7 @@ class BankControllerTest {
 				anyString());
 		verify(operationService, times(2)).transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt(), 
 				anyString());
-		verify(billService, times(3)).getBillDTO(anyInt());
+		verify(billService, times(4)).getBillDTO(anyInt());
 		verify(billService).withdraw(operation);
 		verify(billService).transfer(operation);
 		verify(billService).outward(operation);
@@ -796,6 +801,7 @@ class BankControllerTest {
 													    .param("action", "transfer")
 													    .param("balance", "0.00")
 													    .param("amount", "0.00")
+													    .param("recipient", "0")
 						)
 				.andExpect(status().isInternalServerError())
 				.andExpect(model().size(4))
@@ -831,7 +837,7 @@ class BankControllerTest {
 
 		verify(operationService, times(3)).transfer(anyDouble(), anyString(), anyString(), 
 				anyInt(), anyInt(), anyString());
-		verify(billService, times(2)).getBillDTO(anyInt());
+		verify(billService, times(3)).getBillDTO(anyInt());
 		verify(billService).transfer(operation);
 		verify(billService).external(operation);
 		verify(billService).outward(operation);
@@ -859,7 +865,7 @@ class BankControllerTest {
 					("Wrong currency type SEA for the target bill 22"), HttpStatus.BAD_REQUEST));
 				
 		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-														.param("recipient", "1")
+														.param("recipient", "22")
 //														.param("id", "0")
 														.param("action", "transfer")
 														.param("balance", "0.01")

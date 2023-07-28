@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.github.irybov.bankdemoboot.controller.dto.AccountRequest;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
@@ -65,7 +66,7 @@ public class AuthController extends BaseController {
 	
 	@ApiOperation("Returns welcome html-page")
 	@GetMapping("/success")
-	public String getRegistrationForm(Model model) {
+	public String getRegistrationForm(Model model, RedirectAttributes redirectAttributes) {
 		
 		AccountResponse account;
 		try {
@@ -76,6 +77,7 @@ public class AuthController extends BaseController {
 		}
 		catch (PersistenceException exc) {
 			log.error(exc.getMessage(), exc);
+			redirectAttributes.addFlashAttribute("message", exc.getMessage());
 			return "redirect:/home";
 		}
 	}
@@ -94,12 +96,13 @@ public class AuthController extends BaseController {
 		try {
 			accountService.saveAccount(accountRequest);
 			response.setStatus(HttpServletResponse.SC_CREATED);
+			model.addAttribute("message", "Your account has been created");
 			return "auth/login";
 		}
 		catch (Exception exc) {
-			model.addAttribute("message", exc.getMessage());
 			log.error(exc.getMessage(), exc);
 			response.setStatus(HttpServletResponse.SC_CONFLICT);
+			model.addAttribute("message", exc.getMessage());
 			return "auth/register";
 		}
 	}

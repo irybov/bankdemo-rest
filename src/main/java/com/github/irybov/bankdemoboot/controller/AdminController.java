@@ -143,7 +143,7 @@ public class AdminController extends BaseController {
 					json = mapper.writeValueAsString(map);
 				}
 				catch (JsonProcessingException jpe) {
-					jpe.printStackTrace();
+					log.error(jpe.getMessage(), jpe);
 				}
 				return new ResponseEntity<String>(json, HttpStatus.BAD_REQUEST);
 			}
@@ -169,7 +169,7 @@ public class AdminController extends BaseController {
 				json = mapper.writeValueAsString(map);
 			}
 			catch (JsonProcessingException jpe) {
-				jpe.printStackTrace();
+				log.error(jpe.getMessage(), jpe);
 			}
 			return new ResponseEntity<String>(json, HttpStatus.NOT_FOUND);
 //			return new ResponseEntity<String>(message, HttpStatus.NOT_FOUND);

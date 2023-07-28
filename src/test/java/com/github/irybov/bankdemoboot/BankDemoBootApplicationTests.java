@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -296,6 +297,8 @@ public class BankDemoBootApplicationTests {
 										 .param("surname", "Nacci")
 						)
 				.andExpect(status().isCreated())
+		        .andExpect(model().size(2))
+		        .andExpect(model().attribute("message", "Your account has been created"))
 				.andExpect(view().name("auth/login"));
 		}
 		
@@ -522,7 +525,7 @@ public class BankDemoBootApplicationTests {
 	}
 	
 	@Sql(statements = "INSERT INTO bankdemo.bills(id, is_active, balance, currency, account_id)"
-				 +" "+"VALUES('2', '1', '10.00', 'USD', '2');")
+				 +" "+"VALUES('2', '1', '10.00', 'USD', '1');")
 	@WithMockUser(username = "1111111111", roles = "CLIENT")
 	@Nested
 	class BankControllerTest{
@@ -827,7 +830,8 @@ public class BankDemoBootApplicationTests {
 			
 			wireMockServer.stubFor(WireMock.post(WireMock.urlEqualTo("/verify"))
 					.willReturn(WireMock.aResponse()
-					.withStatus(HttpStatus.SERVICE_UNAVAILABLE_503)));
+					.withStatus(HttpStatus.SERVICE_UNAVAILABLE_503)
+					.withBody("Service is temporary unavailable")));
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 //										.param("id", "1")
@@ -860,8 +864,8 @@ public class BankDemoBootApplicationTests {
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 //									    .param("id", "1")
 									    .param("action", "deposit")
-									    .param("balance", "10.00")
-									    .param("amount", "10.00")
+									    .param("balance", "100.00")
+									    .param("amount", "100.00")
 					)
 					.andExpect(status().is3xxRedirection())
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
@@ -876,6 +880,16 @@ public class BankDemoBootApplicationTests {
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+//										.param("id", "0")
+										.param("action", "transfer")
+										.param("balance", "10.00")
+										.param("amount", "10.00")
+										.param("recipient", "2")
+					)
+					.andExpect(status().is3xxRedirection())
+					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
 //				    					.param("id", "1")
 									    .param("action", "external")
 									    .param("balance", "10.00")
@@ -884,6 +898,7 @@ public class BankDemoBootApplicationTests {
 									    .param("recipient", "22")
 					)
 					.andExpect(status().is3xxRedirection())
+					.andExpect(flash().attribute("message", "Data has been verified"))
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
 			OperationRequest dto = new OperationRequest(777, 2, "USD", 0.01, "Demo");
@@ -1072,7 +1087,7 @@ public class BankDemoBootApplicationTests {
 					.withBody("Wrong currency type NOK for the target bill 22")));
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
-										.param("recipient", "2")
+										.param("recipient", "3")
 //										.param("id", "1")
 										.param("action", "transfer")
 										.param("balance", "10.00")
@@ -1142,7 +1157,7 @@ public class BankDemoBootApplicationTests {
 		}
 		
 		@Test
-		void establish_emitter_connection() throws Exception {			
+		void establish_emitter_connection() throws Exception {
 			mockMVC.perform(get("/bills/notify")).andExpect(status().isCreated());
 /*			ResponseBodyEmitter emitter = testRestTemplate.getForObject(("/bills/notify"), 
 					ResponseBodyEmitter.class);

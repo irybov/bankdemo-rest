@@ -29,7 +29,7 @@
  target="_blank">Change password</a>
 </div> 
 <br>
-<p th:text="${message}" class="error" id="message"/>
+
 <div sec:authorize="hasRole('ADMIN')">
 	<a th:href="@{/accounts/search}">
 	<button type="button">Admin's</button></a>
@@ -86,6 +86,8 @@
 </table>
 </div>
 <br>
+
+<p th:text="${message}" class="error" id="message"/>
 
 <script th:inline="javascript">
     var data = [[${bills}]];
