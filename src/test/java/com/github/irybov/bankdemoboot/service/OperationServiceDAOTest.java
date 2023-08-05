@@ -28,6 +28,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +43,8 @@ import com.github.irybov.bankdemoboot.page.OperationPage;
 
 class OperationServiceDAOTest {
 
+	@Spy
+	private ModelMapper modelMapper;
 	@Mock
 	private OperationDAO operationDAO;
 	@InjectMocks
@@ -62,6 +66,7 @@ class OperationServiceDAOTest {
 		autoClosable = MockitoAnnotations.openMocks(this);
 		operationService = new OperationServiceDAO();
 		ReflectionTestUtils.setField(operationService, "operationDAO", operationDAO);
+		ReflectionTestUtils.setField(operationService, "modelMapper", modelMapper);
 	}
 	
 	@Test
@@ -82,7 +87,7 @@ class OperationServiceDAOTest {
 	@Test
 	void can_get_single_entity() {
 		when(operationDAO.getById(anyLong())).thenReturn(operation);
-		assertThat(operationService.getOne(anyLong())).isExactlyInstanceOf(Operation.class);
+		assertThat(operationService.getOne(anyLong())).isExactlyInstanceOf(OperationResponse.class);
 		verify(operationDAO).getById(anyLong());
 	}
 	

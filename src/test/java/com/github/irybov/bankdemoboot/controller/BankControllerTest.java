@@ -47,6 +47,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -113,6 +114,8 @@ class BankControllerTest {
 	private static Operation.OperationBuilder builder;
 	private static Bill bill;
 	
+	private static ModelMapper modelMapper;
+	
 	@BeforeAll
 	static void prepare() {
 		
@@ -136,6 +139,8 @@ class BankControllerTest {
 		operation = new Operation();
 		builder = mock(Operation.OperationBuilder.class, Mockito.RETURNS_SELF);
 		bill = new Bill("SEA", true, new Account());
+		
+		modelMapper = new ModelMapper();
 	}
 	
 	@BeforeEach
@@ -186,7 +191,8 @@ class BankControllerTest {
 		bill.setCreatedAt(OffsetDateTime.now());
 		bill.setUpdatedAt(OffsetDateTime.now());
 		bill.setId(0);
-		when(accountService.addBill(anyString(), anyString())).thenReturn(new BillResponse(bill));
+		when(accountService.addBill(anyString(), anyString()))
+			.thenReturn(modelMapper.map(bill, BillResponse.class));
 		
 		mockMVC.perform(post("/bills/add").with(csrf())
 									   .param("phone", anyString())
@@ -281,7 +287,8 @@ class BankControllerTest {
 		Bill bill = new Bill();
 		bill.setOwner(entity);
 		
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
+		when(billService.getBillDTO(anyInt()))
+			.thenReturn(modelMapper.map(bill, BillResponse.class));
 		
 		mockMVC.perform(get("/bills/validate/{id}", "4"))
 			.andExpect(status().isOk())
@@ -416,7 +423,8 @@ class BankControllerTest {
 	@Test
 	void wrong_bill_serial() throws Exception {
 		
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
+		when(billService.getBillDTO(anyInt()))
+			.thenReturn(modelMapper.map(bill, BillResponse.class));
 		when(restTemplate.postForEntity(anyString(), anyString(), 
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>("No bill with serial 33 found", HttpStatus.NOT_FOUND));
@@ -445,7 +453,8 @@ class BankControllerTest {
 	@Test
 	void wrong_bank_name() throws Exception {
 		
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
+		when(billService.getBillDTO(anyInt()))
+			.thenReturn(modelMapper.map(bill, BillResponse.class));
 		when(restTemplate.postForEntity(anyString(), anyString(), 
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>("No bank with name Demo found", HttpStatus.NOT_FOUND));
@@ -474,7 +483,8 @@ class BankControllerTest {
 	@Test
 	void connection_failure() throws Exception {
 		
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
+		when(billService.getBillDTO(anyInt()))
+			.thenReturn(modelMapper.map(bill, BillResponse.class));
 		when(restTemplate.postForEntity(anyString(), anyString(), 
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>("Service is temporary unavailable", HttpStatus.SERVICE_UNAVAILABLE));
@@ -504,7 +514,8 @@ class BankControllerTest {
 	void successful_payment() throws Exception {
 		
 		when(builder.build()).thenReturn(operation);
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
+		when(billService.getBillDTO(anyInt()))
+			.thenReturn(modelMapper.map(bill, BillResponse.class));
 		doNothing().when(executorService).execute(
 				org.mockito.ArgumentMatchers.any(Runnable.class));
 		
@@ -593,7 +604,8 @@ class BankControllerTest {
 	void zero_amount_exception() throws Exception {
 		
 		when(builder.build()).thenReturn(operation);
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
+		when(billService.getBillDTO(anyInt()))
+			.thenReturn(modelMapper.map(bill, BillResponse.class));
 		
 		when(operationService.deposit(anyDouble(), anyString(), anyString(), anyInt(), anyString()))
 			.thenReturn(operation);
@@ -701,7 +713,8 @@ class BankControllerTest {
 	void negative_balance_exception() throws Exception {
 		
 		when(builder.build()).thenReturn(operation);
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
+		when(billService.getBillDTO(anyInt()))
+			.thenReturn(modelMapper.map(bill, BillResponse.class));
 		
 		when(operationService.withdraw(anyDouble(), anyString(), anyString(), anyInt(), anyString()))
 			.thenReturn(operation);
@@ -780,7 +793,8 @@ class BankControllerTest {
 	void same_bill_id_exception() throws Exception {
 		
 		when(builder.build()).thenReturn(operation);
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
+		when(billService.getBillDTO(anyInt()))
+			.thenReturn(modelMapper.map(bill, BillResponse.class));
 
 		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt(), 
 				anyString()))
@@ -849,7 +863,8 @@ class BankControllerTest {
 	void currency_mismatch_exception() throws Exception {
 		
 		when(builder.build()).thenReturn(operation);
-		when(billService.getBillDTO(anyInt())).thenReturn(new BillResponse(bill));
+		when(billService.getBillDTO(anyInt()))
+			.thenReturn(modelMapper.map(bill, BillResponse.class));
 
 		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt(), 
 				anyString()))
@@ -1000,6 +1015,8 @@ class BankControllerTest {
     	operation = null;
     	builder = null;
 		bill = null;
+		
+		modelMapper = null;
 	}
 	
 }

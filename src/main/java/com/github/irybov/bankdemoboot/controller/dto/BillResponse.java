@@ -4,13 +4,15 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.github.irybov.bankdemoboot.entity.Bill;
+//import com.github.irybov.bankdemoboot.entity.Bill;
 
 import io.swagger.annotations.ApiModel;
 import lombok.Getter;
+import lombok.Setter;
 
 @ApiModel
 @Getter
+@Setter
 public class BillResponse {
 
 	private Integer id;
@@ -22,7 +24,7 @@ public class BillResponse {
 	@JsonBackReference
 	private AccountResponse owner;
 	
-	public BillResponse(Bill bill) {
+/*	public BillResponse(Bill bill) {
 		
 		this.id = bill.getId();
 		this.createdAt = bill.getCreatedAt();
@@ -31,6 +33,6 @@ public class BillResponse {
 		this.balance = bill.getBalance();
 		this.currency = bill.getCurrency();
 		this.owner = new AccountResponse(bill.getOwner());
-	}
+	}*/
 		
 }

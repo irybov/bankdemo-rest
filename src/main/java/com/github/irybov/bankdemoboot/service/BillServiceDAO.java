@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -21,7 +22,9 @@ import com.github.irybov.bankdemoboot.exception.PaymentException;
 @Service
 @Transactional
 public class BillServiceDAO implements BillService {
-	
+
+	@Autowired
+	private ModelMapper modelMapper;
 //	@Autowired
 //	BillServiceDAO billService;
 	@Autowired
@@ -52,7 +55,7 @@ public class BillServiceDAO implements BillService {
 	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public BillResponse getBillDTO(int id) throws EntityNotFoundException {
-		return new BillResponse(getBill(id));
+		return modelMapper.map(getBill(id), BillResponse.class);
 	}
 	
 	public void deposit(Operation operation) throws Exception {
@@ -168,7 +171,8 @@ public class BillServiceDAO implements BillService {
 	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
 	public List<BillResponse> getAll(int id) {
 		List<Bill> bills = billDAO.getByOwner(id);
-		return bills.stream().map(BillResponse::new).collect(Collectors.toList());
+		return bills.stream().map(source -> modelMapper.map(source, BillResponse.class))
+					.collect(Collectors.toList());
 	}
 	
 }

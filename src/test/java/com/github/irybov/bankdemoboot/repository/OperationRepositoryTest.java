@@ -12,6 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -57,12 +58,13 @@ class OperationRepositoryTest {
 		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
 				page.getSortDirection(), page.getSortBy());
 		
+		ModelMapper modelMapper = new ModelMapper();
 		Page<OperationResponse> resultPage = operationRepository.findAll
 				(Specification.where(OperationSpecifications.hasAction(action)
 				.and(OperationSpecifications.hasOwner(id))
 				.and(OperationSpecifications.amountBetween(minval, maxval))
 				.and(OperationSpecifications.dateBetween(mindate, maxdate))), pageable)
-				.map(OperationResponse::new);
+				.map(source -> modelMapper.map(source, OperationResponse.class));
 		
 		assertThat(resultPage.getContent().size()).isEqualTo(quantity);
 	}

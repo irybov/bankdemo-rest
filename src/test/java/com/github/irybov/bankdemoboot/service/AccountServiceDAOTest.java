@@ -34,6 +34,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 //import org.mockito.junit.jupiter.MockitoExtension;
@@ -53,6 +54,8 @@ import com.github.irybov.bankdemoboot.security.Role;
 //@Execution(ExecutionMode.CONCURRENT)
 class AccountServiceDAOTest {
 
+	@Spy
+	private ModelMapper modelMapper;
 	@Mock
 	private BillService billService;
 	@Spy
@@ -83,7 +86,8 @@ class AccountServiceDAOTest {
 		ReflectionTestUtils.setField(accountService, "accountDAO", accountDAO);
 //		ReflectionTestUtils.setField(accountService, "accountService", accountServiceDAO);
 		ReflectionTestUtils.setField(accountService, "bCryptPasswordEncoder", bCryptPasswordEncoder);
-		ReflectionTestUtils.setField(accountService, "billService", billService);		
+		ReflectionTestUtils.setField(accountService, "billService", billService);
+		ReflectionTestUtils.setField(accountService, "modelMapper", modelMapper);
     }
     
     @Test
@@ -112,9 +116,11 @@ class AccountServiceDAOTest {
     	verify(accountDAO).getAccount(phone);
     	
 //    	given(accountDAO.getById(anyInt())).willReturn(adminEntity);
-    	given(billService.getAll(anyInt())).willReturn(adminEntity.getBills().stream()
-				.map(BillResponse::new).collect(Collectors.toList()));    	
-    	then(accountService.getBills(anyInt())).hasSize(3);
+    	List<BillResponse> dtos = adminEntity.getBills().stream()
+				.map(source -> modelMapper.map(source, BillResponse.class))
+				.collect(Collectors.toList());
+    	given(billService.getAll(anyInt())).willReturn(dtos);    	
+    	org.assertj.core.api.BDDAssertions.then(accountService.getBills(anyInt())).hasSize(3);
 //    	verify(accountDAO).getById(anyInt());
     	verify(billService).getAll(anyInt());    	
     }
@@ -176,7 +182,7 @@ class AccountServiceDAOTest {
     	clients.sort((a1, a2) -> a1.getId() - a2.getId());
     	
     	given(accountDAO.getAll()).willReturn(clients);
-    	then(accountService.getAll()).hasSameSizeAs(clients)
+    	org.assertj.core.api.BDDAssertions.then(accountService.getAll()).hasSameSizeAs(clients)
 		 							 .isSortedAccordingTo((a1, a2) -> a1.getId() - a2.getId())
 		 							 .containsAll(new ArrayList<AccountResponse>());
     	org.mockito.BDDMockito.then(accountDAO).should().getAll();

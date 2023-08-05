@@ -17,9 +17,13 @@ import com.github.irybov.bankdemoboot.entity.Account;
 
 import io.swagger.annotations.ApiModel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @ApiModel
 @Getter
+@Setter
+@NoArgsConstructor
 public class AccountResponse {
 	
 	private Integer id;

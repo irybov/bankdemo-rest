@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
@@ -31,6 +32,8 @@ import com.github.irybov.bankdemoboot.entity.Account;
 @Transactional
 public class AccountServiceJPA implements AccountService {
 
+	@Autowired
+	private ModelMapper modelMapper;
 //	@Autowired
 //	AccountServiceJPA accountService;
 	@Autowired
@@ -69,7 +72,9 @@ public class AccountServiceJPA implements AccountService {
 			throw new EntityNotFoundException("Account with phone " + phone + " not found");
 		}
 		AccountResponse dto = new AccountResponse(account);
-		dto.setBills(account.getBills().stream().map(BillResponse::new).collect(Collectors.toList()));
+		dto.setBills(account.getBills().stream()
+				.map(source -> modelMapper.map(source, BillResponse.class))
+				.collect(Collectors.toList()));
 		return dto;
 	}	
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
@@ -122,7 +127,7 @@ public class AccountServiceJPA implements AccountService {
 		billService.saveBill(bill);
 		account.addBill(bill);
 		updateAccount(account);
-		return new BillResponse(bill);
+		return modelMapper.map(bill, BillResponse.class);
 	}
 	
 /*	public void changeStatus(String phone) throws Exception {

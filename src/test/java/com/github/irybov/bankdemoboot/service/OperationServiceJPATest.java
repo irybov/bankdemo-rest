@@ -26,6 +26,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +42,8 @@ import com.github.irybov.bankdemoboot.repository.OperationRepository;
 
 class OperationServiceJPATest {
 	
+	@Spy
+	private ModelMapper modelMapper;
 	@Mock
 	private OperationRepository operationRepository;
 	@InjectMocks
@@ -61,6 +65,7 @@ class OperationServiceJPATest {
 		autoClosable = MockitoAnnotations.openMocks(this);
 		operationService = new OperationServiceJPA();
 		ReflectionTestUtils.setField(operationService, "operationRepository", operationRepository);
+		ReflectionTestUtils.setField(operationService, "modelMapper", modelMapper);
 	}
 
 	@Test
@@ -81,7 +86,7 @@ class OperationServiceJPATest {
 	@Test
 	void can_get_single_entity() {
 		when(operationRepository.getById(anyLong())).thenReturn(operation);
-		assertThat(operationService.getOne(anyLong())).isExactlyInstanceOf(Operation.class);
+		assertThat(operationService.getOne(anyLong())).isExactlyInstanceOf(OperationResponse.class);
 		verify(operationRepository).getById(anyLong());
 	}
 	

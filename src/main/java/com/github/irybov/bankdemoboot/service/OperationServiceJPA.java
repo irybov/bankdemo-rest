@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 //import org.springframework.data.domain.PageRequest;
@@ -23,16 +24,19 @@ import com.github.irybov.bankdemoboot.util.OperationSpecifications;
 public class OperationServiceJPA implements OperationService {
 
 	@Autowired
+	private ModelMapper modelMapper;
+	
+	@Autowired
 	private OperationRepository operationRepository;
 	
-	public Operation getOne(long id) {
-		return operationRepository.getById(id);
+	public OperationResponse getOne(long id) {
+		return modelMapper.map(operationRepository.getById(id), OperationResponse.class);
 	}
 	public List<OperationResponse> getAll(int id) {
 
 		return operationRepository.findBySenderOrRecipientOrderByIdDesc(id, id)
 				.stream()
-				.map(OperationResponse::new)
+				.map(source -> modelMapper.map(source, OperationResponse.class))
 				.collect(Collectors.toList());
 	}
 /*	@Transactional(readOnly = true, noRollbackFor = Exception.class)
@@ -52,7 +56,7 @@ public class OperationServiceJPA implements OperationService {
 		return operationRepository.findAll(Specification.where(OperationSpecifications.hasAction(action)
 				.and(OperationSpecifications.hasOwner(id)).and(OperationSpecifications.amountBetween(minval, maxval))
 				.and(OperationSpecifications.dateBetween(mindate, maxdate))), pageable)
-				.map(OperationResponse::new);
+				.map(source -> modelMapper.map(source, OperationResponse.class));
 	}
 	
 }

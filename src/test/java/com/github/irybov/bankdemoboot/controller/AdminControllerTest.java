@@ -44,6 +44,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -104,6 +105,8 @@ class AdminControllerTest {
 	
 	private static Account entity;
 	
+	private static ModelMapper modelMapper;
+	
 	@TestConfiguration
 	static class TestConfig {
 		
@@ -129,6 +132,8 @@ class AdminControllerTest {
 		entity.setCreatedAt(OffsetDateTime.now());
 		entity.setUpdatedAt(OffsetDateTime.now());
 		entity.setId(0);
+		
+		modelMapper = new ModelMapper();
 	}
 	
 	@BeforeEach
@@ -308,7 +313,7 @@ class AdminControllerTest {
 		List<BillResponse> bills = new ArrayList<>();
 		Bill bill = new Bill();
 		bill.setOwner(entity);
-		bills.add(new BillResponse(bill));
+		bills.add(modelMapper.map(bill, BillResponse.class));
 		account.setBills(bills);
 //		when(accountService.getAccountDTO(phone)).thenReturn(account);
 		when(accountService.getFullDTO(phone)).thenReturn(account);
@@ -336,7 +341,7 @@ class AdminControllerTest {
 	void can_get_operations_page() throws Exception {
 		
 		List<OperationResponse> operations = new ArrayList<>();
-		operations.add(new OperationResponse(new Operation()));
+		operations.add(modelMapper.map(new Operation(), OperationResponse.class));
 //		OperationPage page = new OperationPage();
 //		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
 //										   page.getSortDirection(), page.getSortBy());
@@ -369,12 +374,12 @@ class AdminControllerTest {
 				.createdAt(OffsetDateTime.now())
 				.bank("Demo")
 				.build();
-		operations.add(new OperationResponse(operation));
+		operations.add(modelMapper.map(operation, OperationResponse.class));
 
 		Bill fake = new Bill("SEA", true, entity);
 		fake.setBalance(BigDecimal.valueOf(9.99));
 		fake.setCreatedAt(OffsetDateTime.now());
-		BillResponse bill = new BillResponse(fake);
+		BillResponse bill = modelMapper.map(fake, BillResponse.class);
 		
 		CompletableFuture<List<OperationResponse>> futureOperations =
 				CompletableFuture.completedFuture(operations);
@@ -473,6 +478,7 @@ class AdminControllerTest {
 	@AfterAll
 	static void clear() {
 		entity = null;
+		modelMapper = null;
 	}
 	
 }
