@@ -50,6 +50,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
@@ -105,7 +106,8 @@ class AdminControllerTest {
 	
 	private static Account entity;
 	
-	private static ModelMapper modelMapper;
+	@SpyBean
+	private ModelMapper modelMapper;
 	
 	@TestConfiguration
 	static class TestConfig {
@@ -133,7 +135,7 @@ class AdminControllerTest {
 		entity.setUpdatedAt(OffsetDateTime.now());
 		entity.setId(0);
 		
-		modelMapper = new ModelMapper();
+//		modelMapper = new ModelMapper();
 	}
 	
 	@BeforeEach
@@ -144,7 +146,7 @@ class AdminControllerTest {
     @Test
 	void can_get_admin_html() throws Exception {
 
-		AccountResponse admin = new AccountResponse(new Account());		
+		AccountResponse admin = modelMapper.map(new Account(), AccountResponse.class);		
 		when(accountService.getAccountDTO(anyString())).thenReturn(admin);
 		
 		mockMVC.perform(get("/accounts/search"))
@@ -181,7 +183,7 @@ class AdminControllerTest {
 		List<AccountResponse> clients = new ArrayList<>();
 		Account entity = new Account("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
 				 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
-		clients.add(new AccountResponse(entity));
+		clients.add(modelMapper.map(entity, AccountResponse.class));
 		when(accountService.getAll()).thenReturn(clients);
 		
 		byte[] output = data_2_gzip_converter(clients);
@@ -309,7 +311,7 @@ class AdminControllerTest {
 	@Test
 	void can_get_account_info() throws Exception {
 		
-		AccountResponse account = new AccountResponse(entity);
+		AccountResponse account = modelMapper.map(entity, AccountResponse.class);
 		List<BillResponse> bills = new ArrayList<>();
 		Bill bill = new Bill();
 		bill.setOwner(entity);
@@ -478,7 +480,7 @@ class AdminControllerTest {
 	@AfterAll
 	static void clear() {
 		entity = null;
-		modelMapper = null;
+//		modelMapper = null;
 	}
 	
 }

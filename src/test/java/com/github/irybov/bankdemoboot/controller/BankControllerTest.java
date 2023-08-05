@@ -151,7 +151,7 @@ class BankControllerTest {
 	@Test
 	void can_get_client_html() throws Exception {
 
-		AccountResponse account = new AccountResponse(entity);		
+		AccountResponse account = modelMapper.map(entity, AccountResponse.class);		
 //		List<BillResponseDTO> bills = new ArrayList<>();
 		
 //		when(accountService.getAccountDTO(phone)).thenReturn(account);

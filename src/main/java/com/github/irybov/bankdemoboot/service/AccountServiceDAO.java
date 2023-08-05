@@ -43,16 +43,16 @@ public class AccountServiceDAO implements AccountService {
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
 	
-	public void saveAccount(AccountRequest accountRequestDTO) throws Exception {
+	public void saveAccount(AccountRequest accountRequest) throws Exception {
 		
 //		LocalDate birthday = LocalDate.parse(accountRequestDTO.getBirthday());
-		if (accountRequestDTO.getBirthday().until(LocalDate.now(), ChronoUnit.YEARS) < 18) {
+		if (accountRequest.getBirthday().until(LocalDate.now(), ChronoUnit.YEARS) < 18) {
 			throw new RegistrationException("You must be 18+ to register");
 		}
 		
-		Account account = new Account(accountRequestDTO.getName(), accountRequestDTO.getSurname(),
-				accountRequestDTO.getPhone(), accountRequestDTO.getBirthday(),
-				bCryptPasswordEncoder.encode(accountRequestDTO.getPassword()), true);
+		Account account = new Account(accountRequest.getName(), accountRequest.getSurname(),
+				accountRequest.getPhone(), accountRequest.getBirthday(),
+				bCryptPasswordEncoder.encode(accountRequest.getPassword()), true);
 		account.addRole(Role.CLIENT);
 		try {
 			accountDAO.saveAccount(account);
@@ -68,15 +68,15 @@ public class AccountServiceDAO implements AccountService {
 		if(account == null) {
 			throw new NoResultException("Account with phone " + phone + " not found");
 		}
-		AccountResponse dto = new AccountResponse(account);
-		dto.setBills(account.getBills().stream()
+		AccountResponse dto = modelMapper.map(account, AccountResponse.class);
+/*		dto.setBills(account.getBills().stream()
 				.map(source -> modelMapper.map(source, BillResponse.class))
-				.collect(Collectors.toList()));
+				.collect(Collectors.toList()));*/
 		return dto;
 	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public AccountResponse getAccountDTO(String phone) throws NoResultException {
-		return new AccountResponse(getAccount(phone));
+		return modelMapper.map(getAccount(phone), AccountResponse.class);
 	}
 	@Transactional(propagation = Propagation.MANDATORY, readOnly = true)
 	Account getAccount(String phone) throws NoResultException {
@@ -163,7 +163,7 @@ public class AccountServiceDAO implements AccountService {
 		return accountDAO.getAll()
 				.stream()
 //				.sorted((a1, a2) -> a1.getId() - a2.getId())
-				.map(AccountResponse::new)
+				.map(source -> modelMapper.map(source, AccountResponse.class))
 				.collect(Collectors.toList());
 	}
 	

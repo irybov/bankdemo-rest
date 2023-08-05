@@ -41,7 +41,7 @@ public class AccountResponse {
 	private List<BillResponse> bills;
 //	private Set<Role> roles;
 
-	public AccountResponse(Account account) {
+/*	public AccountResponse(Account account) {
 		
 		this.id = account.getId();
 		this.createdAt = account.getCreatedAt();
@@ -52,13 +52,13 @@ public class AccountResponse {
 		this.phone = account.getPhone();
 		this.birthday = account.getBirthday();
 //		this.password = account.getPassword();
-/*		this.bills = account.getBills()
+		this.bills = account.getBills()
 				.stream()
 //				.filter(Bill::isActive)
 				.map(BillResponseDTO::new)
-				.collect(Collectors.toList());*/
+				.collect(Collectors.toList());
 //		this.roles = account.getRoles();
-	}	
+	}*/	
 	public void setBills(List<BillResponse> bills) {
 		this.bills = bills;
 	}

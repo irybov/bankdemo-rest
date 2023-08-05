@@ -27,6 +27,7 @@ import javax.persistence.EntityNotFoundException;
 //import java.nio.file.Files;
 
 import org.junit.jupiter.api.Test;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -109,8 +110,10 @@ class AuthControllerTest {
 	@Test
 	void can_get_menu_html() throws Exception {
 
-		AccountResponse accountResponse = new AccountResponse(new Account
-				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true));
+		ModelMapper modelMapper = new ModelMapper();
+		AccountResponse accountResponse = modelMapper.map(new Account
+				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true), 
+				AccountResponse.class);
 		
 		when(accountService.getAccountDTO(anyString())).thenReturn(accountResponse);
 		

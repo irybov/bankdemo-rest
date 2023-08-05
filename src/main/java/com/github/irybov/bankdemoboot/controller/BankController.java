@@ -65,6 +65,7 @@ import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
 import com.github.irybov.bankdemoboot.controller.dto.OperationRequest;
 import com.github.irybov.bankdemoboot.controller.dto.PasswordRequest;
 import com.github.irybov.bankdemoboot.entity.Operation;
+import com.github.irybov.bankdemoboot.misc.Action;
 import com.github.irybov.bankdemoboot.misc.EmitterPayload;
 import com.github.irybov.bankdemoboot.service.OperationService;
 
@@ -314,9 +315,10 @@ public class BankController extends BaseController {
 		}		
 		log.info("User {} performs {} operation with bill {}", phone, params.get("action"), id);
 		
-		String currency = billService.getBillDTO(id).getCurrency();
-		switch(params.get("action")) {		
-		case "deposit":
+		final String currency = billService.getBillDTO(id).getCurrency();
+		final Action action = Action.valueOf(params.get("action").toUpperCase());
+		switch(action) {		
+		case DEPOSIT:
 			try {
 				Operation operation = operationService.deposit
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, "Demo");
@@ -334,7 +336,7 @@ public class BankController extends BaseController {
 			}
 			break;
 			
-		case "withdraw":
+		case WITHDRAW:
 			try {
 				Operation operation = operationService.withdraw
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, "Demo");
@@ -352,7 +354,7 @@ public class BankController extends BaseController {
 			}
 			break;
 			
-		case "transfer":						
+		case TRANSFER:						
 			try {
 				Operation operation = operationService.transfer
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, target, 
@@ -375,7 +377,7 @@ public class BankController extends BaseController {
 			}
 			break;
 			
-		case "external":
+		case EXTERNAL:
 			OperationRequest request = new OperationRequest(id, target, currency, 
 					Double.valueOf(params.get("amount")), params.get("bank"));
 			String json = null;
@@ -470,8 +472,8 @@ public class BankController extends BaseController {
 		
 		try {
 			Operation operation = operationService.transfer
-			(dto.getAmount(), "external", dto.getCurrency(), dto.getSender(), dto.getRecipient(), 
-					dto.getBank());
+			(dto.getAmount(), Action.EXTERNAL.name().toLowerCase(), dto.getCurrency(), 
+					dto.getSender(), dto.getRecipient(), dto.getBank());
 			billService.external(operation);
 			log.info("{} has been recieved to bill {}", operation.getAmount(), 
 					operation.getRecipient());
