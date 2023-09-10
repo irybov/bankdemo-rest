@@ -17,6 +17,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 //import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 //import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -111,6 +114,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
+		
+		CsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
 
 		http
 //			.sessionManagement()
@@ -126,7 +131,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			.anyRequest().authenticated()
 				.and()
 		    .csrf()
-//		    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+		    .csrfTokenRepository(csrfTokenRepository)
+		    .sessionAuthenticationStrategy(new CsrfAuthenticationStrategy(csrfTokenRepository))
 		    .ignoringAntMatchers("/control", "/bills/external", "/actuator/**")
 		        .and()
 			.formLogin()

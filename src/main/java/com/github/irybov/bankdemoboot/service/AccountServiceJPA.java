@@ -58,7 +58,7 @@ public class AccountServiceJPA implements AccountService {
 				bCryptPasswordEncoder.encode(accountRequest.getPassword()), true);
 		account.addRole(Role.CLIENT);
 		try {
-			accountRepository.save(account);
+			accountRepository.saveAndFlush(account);
 		}
 		catch (RuntimeException exc) {
 			throw new DataIntegrityViolationException("This number is already in use.");

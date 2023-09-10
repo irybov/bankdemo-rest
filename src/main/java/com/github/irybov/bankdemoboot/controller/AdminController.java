@@ -422,7 +422,7 @@ public class AdminController extends BaseController {
 		
 		String[] header = {"Action", "Amount", "When", "Recipient", "Sender", "Bank"};
 		data.add(header);
-		data.add(new String[0]);		
+//		data.add(new String[0]);		
 		
 		for(OperationResponse operation : operations) {
 			String[] row = {operation.getAction(),

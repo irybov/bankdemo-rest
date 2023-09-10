@@ -78,7 +78,7 @@ class BillServiceJPATest {
 	@Test
 	void can_save_new_bill() {		
 		billService.saveBill(bill);
-		verify(billRepository).save(bill);
+		verify(billRepository).saveAndFlush(bill);
 	}
 	
 	@Test
@@ -174,7 +174,7 @@ class BillServiceJPATest {
 		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), amount, 0.00);
 		verify(billRepository).findById(anyInt());
 		
-		verify(operationRepository).save(operation);
+		verify(operationRepository).saveAndFlush(operation);
 	}
 	
 	@Test
@@ -218,7 +218,7 @@ class BillServiceJPATest {
 		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(0.5);
 		verify(billRepository).findById(anyInt());
 		
-		verify(operationRepository).save(operation);
+		verify(operationRepository).saveAndFlush(operation);
 	}
 
 	@Test
@@ -265,7 +265,7 @@ class BillServiceJPATest {
 		}
 		verify(billRepository, times(2)).findById(anyInt());
 		
-		verify(operationRepository).save(operation);
+		verify(operationRepository).saveAndFlush(operation);
 	}
 	
 	@AfterEach

@@ -249,7 +249,7 @@ class AccountServiceJPATest {
 			exc.printStackTrace();
 		}		
 		ArgumentCaptor<Account> argumentCaptor = ArgumentCaptor.forClass(Account.class);
-		org.mockito.BDDMockito.then(accountRepository).should().save(argumentCaptor.capture());
+		org.mockito.BDDMockito.then(accountRepository).should().saveAndFlush(argumentCaptor.capture());
         
 		given(accountRepository.findByPhone(phone)).willReturn(adminEntity);
 		try {
@@ -275,11 +275,11 @@ class AccountServiceJPATest {
 		.isThrownBy(() -> {accountService.saveAccount(accountRequestDTO);});
 		
 		accountRequestDTO.setBirthday(LocalDate.now().minusYears(20L));		
-		doThrow(new DataIntegrityViolationException(null)).when(accountRepository).save(adminEntity);
+		doThrow(new DataIntegrityViolationException(null)).when(accountRepository).saveAndFlush(adminEntity);
 		
 		assertThatExceptionOfType(DataIntegrityViolationException.class)
 		.isThrownBy(() -> {accountService.saveAccount(accountRequestDTO);});
-		org.mockito.BDDMockito.then(accountRepository).should().save(adminEntity);
+		org.mockito.BDDMockito.then(accountRepository).should().saveAndFlush(adminEntity);
 	}
     
     @AfterEach

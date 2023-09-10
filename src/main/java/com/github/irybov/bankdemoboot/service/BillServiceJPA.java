@@ -34,7 +34,7 @@ public class BillServiceJPA implements BillService {
 	
 	@Transactional(propagation = Propagation.MANDATORY)
 	public void saveBill(Bill bill) {
-		billRepository.save(bill);
+		billRepository.saveAndFlush(bill);
 	}
 	
 	@Transactional(propagation = Propagation.MANDATORY)
@@ -65,7 +65,7 @@ public class BillServiceJPA implements BillService {
 		Bill bill = getBill(id);
 		bill.setBalance(bill.getBalance().add(BigDecimal.valueOf(amount)));
 		updateBill(bill);
-		operationRepository.save(operation);
+		operationRepository.saveAndFlush(operation);
 	}
 	
 	public void withdraw(Operation operation) throws Exception {
@@ -80,7 +80,7 @@ public class BillServiceJPA implements BillService {
 		}
 		bill.setBalance(bill.getBalance().subtract(BigDecimal.valueOf(amount)));
 		updateBill(bill);
-		operationRepository.save(operation);
+		operationRepository.saveAndFlush(operation);
 	}
 	
 	public void transfer(Operation operation) throws Exception {
@@ -108,7 +108,7 @@ public class BillServiceJPA implements BillService {
 		sender.setBalance(sender.getBalance().subtract(BigDecimal.valueOf(amount)));
 		updateBill(target);
 		updateBill(sender);
-		operationRepository.save(operation);
+		operationRepository.saveAndFlush(operation);
 	}
 	
 	public void external(Operation operation) throws Exception {
@@ -126,7 +126,7 @@ public class BillServiceJPA implements BillService {
 		}
 		target.setBalance(target.getBalance().add(BigDecimal.valueOf(amount)));
 		updateBill(target);
-		operationRepository.save(operation);
+		operationRepository.saveAndFlush(operation);
 	}
 	
 	public void outward(Operation operation) throws Exception {
@@ -144,7 +144,7 @@ public class BillServiceJPA implements BillService {
 		}
 		sender.setBalance(sender.getBalance().subtract(BigDecimal.valueOf(amount)));
 		updateBill(sender);
-		operationRepository.save(operation);
+		operationRepository.saveAndFlush(operation);
 	}
 	
 	public boolean changeStatus(int id) {
