@@ -31,7 +31,7 @@ class MegaControllerTest {
 	@Autowired
 	private MockMvc mockMVC;
 	
-	@WithMockUser(username = "0000000000", roles = "ADMIN")
+	@WithMockUser(username = "remote", roles = "REMOTE")
 	@Test
 	void can_change_implementations() throws Exception {
 
@@ -54,7 +54,7 @@ class MegaControllerTest {
 					.string(containsString("Services impementation has been switched to " + bean)));
 	}
 	
-	@WithMockUser(username = "0000000000", roles = "ADMIN")
+	@WithMockUser(username = "remote", roles = "REMOTE")
 	@Test
 	void wrong_implementation_type() throws Exception {
 		

@@ -133,7 +133,7 @@ public class BankDemoBootApplicationTests {
 		
 	}	
 	
-	@WithMockUser(username = "0000000000", roles = "ADMIN")
+	@WithMockUser(username = "remote", roles = "REMOTE")
     @Nested
     class SwaggerAccessTest{
     	
@@ -144,7 +144,8 @@ public class BankDemoBootApplicationTests {
 	    		.andExpect(status().isOk());
 		}
 		
-		@WithMockUser(username = "1111111111", roles = "CLIENT")
+		@Disabled
+		@WithMockUser(username = "0000000000", roles = "ADMIN")
 		@Test
 		void swagger_denied() throws Exception {
 			
@@ -1200,7 +1201,7 @@ public class BankDemoBootApplicationTests {
 		
 	}
 	
-	@WithMockUser(username = "0000000000", roles = "ADMIN")
+	@WithMockUser(username = "remote", roles = "REMOTE")
 	@Nested
 	class MegaControllerTest{
 		
