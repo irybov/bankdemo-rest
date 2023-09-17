@@ -7,14 +7,14 @@ import javax.validation.ConstraintViolationException;
 
 //import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
+//import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-//@ControllerAdvice
+//@ControllerAdvice(basePackages = "com.github.irybov.bankdemoboot.controller")
 public class ConstraintViolationExceptionHandler {
 
 	@ExceptionHandler(ConstraintViolationException.class)
-	@ResponseBody
+//	@ResponseBody
 //	ValidationErrorResponse onConstraintValidationException(ConstraintViolationException e) {
 	ModelAndView onConstraintValidationException(ConstraintViolationException e) {		
 				
@@ -22,7 +22,7 @@ public class ConstraintViolationExceptionHandler {
 	    for (ConstraintViolation<?> violation : e.getConstraintViolations()) {
 	      error.getViolations().add(new Violation(violation.getMessage()));
 	    }		
-		ModelAndView mav = new ModelAndView("errors");
+		ModelAndView mav = new ModelAndView("error");
 		List<Violation> violations = error.getViolations();
 		mav.addObject("violations", violations);
 //	    return error;

@@ -78,6 +78,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 //@Validated
 @Controller
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController extends BaseController {
 
 	@Autowired
@@ -96,7 +97,6 @@ public class AdminController extends BaseController {
 	}
 	
 	@ApiOperation("Returns admin's working html-page")
-	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search")
 	public String getAdminPage(@RequestParam(required = false) String phone, Model model) {
 		
@@ -126,7 +126,6 @@ public class AdminController extends BaseController {
 	}
 	
 	@ApiOperation("Returns information about client")
-	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/search/{phone}")
 	public ResponseEntity<?> searchAccount(@PathVariable String phone) {
 		
@@ -185,7 +184,6 @@ public class AdminController extends BaseController {
 	}
 
 	@ApiOperation("Returns clients html-page")
-	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/list")
 	public String getClientsPage(){
 //	public String getClients(Model model){
@@ -194,7 +192,6 @@ public class AdminController extends BaseController {
 		return "account/clients";
 	}
 	@ApiOperation("Returns list of all clients")
-	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/list/all")
 	public CompletableFuture<ResponseEntity<byte[]>> getClientsList(){
 		
@@ -254,7 +251,6 @@ public class AdminController extends BaseController {
 		return searchAccount(phone, modelMap);
 	}*/
 	@ApiOperation("Changes client status")
-	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/accounts/status/{id}")
 	@ResponseBody
 	public String changeAccountStatus(@PathVariable int id) {		
@@ -278,7 +274,6 @@ public class AdminController extends BaseController {
 		return searchAccount(phone, modelMap);
 	}*/	
 	@ApiOperation("Changes bill status")
-	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/bills/status/{id}")
 	@ResponseBody
 	public String changeBillStatus(@PathVariable int id) {
@@ -309,13 +304,11 @@ public class AdminController extends BaseController {
 	}*/
 	
 	@ApiOperation("Returns bill's operations history html-page")
-	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/list")
 	public String getOperationsPage() {
 		return "account/history";
 	}
 	@ApiOperation("Returns filtered pageable list of bill's operations")
-	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/operations/list/{id}")
 	@ResponseBody
 	public Page<OperationResponse> getOperationsList(@PathVariable int id,
@@ -343,7 +336,6 @@ public class AdminController extends BaseController {
 	}
 	
 	@ApiOperation("Exports bill's operations list to CSV file")
-	@PreAuthorize("hasRole('ADMIN')")
 //	@GetMapping("/operations/print/{id}")
 	@GetMapping(value = "/operations/print/{id}", 
 				produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)

@@ -18,7 +18,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
 @Api(description = "Special controller for runtime switch of model's layer type")
-@CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
+//@CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 @Slf4j
 @RestController
 public class MegaController {
@@ -41,7 +41,7 @@ public class MegaController {
 	}
 	
 	@ApiOperation("Switchs model's layer type wired to defined controllers")
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasRole('REMOTE')")
 	@PutMapping("/control")
 	public String changeServiceImpl(@RequestParam String impl, HttpServletResponse response) {
 		

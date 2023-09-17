@@ -8,11 +8,14 @@ import org.springframework.beans.factory.annotation.Value;
 
 //import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-//import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 //import org.springframework.security.config.http.SessionCreationPolicy;
@@ -63,37 +66,36 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
     		"/accounts/search", 
     		"/accounts/status", 
     		"/accounts/list/**", 
-			"/control", 
-			"/h2-console/**", 
 			"/operations/**", 
-			"/**/swagger*/**", 
-			"/**/api-docs/**"
+			"/h2-console/**"
     };
     private static final String[] REMOTE_LIST_URLS = {
-    		"/actuator/**"	
+			"/control", 
+			"/**/swagger*/**", 
+			"/**/api-docs/**", 
+    		"/actuator/**"
     };
-	
-	@Bean
-	protected BCryptPasswordEncoder passwordEncoder() {
-	    return new BCryptPasswordEncoder(4);
-	}
 	
     private final AccountDetailsService accountDetailsService;
     public SecurityConfig(AccountDetailsService accountDetailsService) {
         this.accountDetailsService = accountDetailsService;
     }	
+	@Bean
+	protected BCryptPasswordEncoder passwordEncoder() {
+	    return new BCryptPasswordEncoder(4);
+	}    
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
     	
+		auth.inMemoryAuthentication()
+			.withUser("remote")
+			.password(passwordEncoder().encode("remote"))
+			.roles("REMOTE");
+		
         DaoAuthenticationProvider dao = new DaoAuthenticationProvider();
         dao.setUserDetailsService(accountDetailsService);
         dao.setPasswordEncoder(passwordEncoder());
         auth.authenticationProvider(dao);
-            	
-    	auth.inMemoryAuthentication()
-    		.withUser("remote")
-    		.password(passwordEncoder().encode("remote"))
-    		.roles("REMOTE");
     	
 //        auth.userDetailsService(accountDetailsService)
 //            .passwordEncoder(passwordEncoder());
@@ -133,7 +135,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		    .csrf()
 		    .csrfTokenRepository(csrfTokenRepository)
 		    .sessionAuthenticationStrategy(new CsrfAuthenticationStrategy(csrfTokenRepository))
-		    .ignoringAntMatchers("/control", "/bills/external", "/actuator/**")
+		    .ignoringAntMatchers("/bills/external")
+		    .ignoringAntMatchers(REMOTE_LIST_URLS)
 		        .and()
 			.formLogin()
 			.usernameParameter("phone")
@@ -156,7 +159,29 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 //			.and().cors().configurationSource(corsConfigurationSource());
 //		http.headers().frameOptions().disable();
 	}
+	
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().antMatchers("/**/swagger*/**", "/**/api-docs/**");
+    }
     
+//    @Configuration
+//    @Order(Ordered.HIGHEST_PRECEDENCE)
+//    public static class RemoteSecurityConfig extends WebSecurityConfigurerAdapter {
+//    	
+//    	@Override
+//        protected void configure(HttpSecurity http) throws Exception {
+//    		
+//            http
+//            	.csrf().disable()
+//                .antMatcher("/**/swagger*/**")
+//                .authorizeRequests()
+//                .anyRequest().hasRole("REMOTE")
+//        			.and()
+//                .httpBasic();
+//        }
+//    	
+//    }
 	
 /*    @Override
     public void addCorsMappings(CorsRegistry registry) {
