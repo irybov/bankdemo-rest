@@ -133,7 +133,7 @@ public class BankDemoBootApplicationTests {
 		
 	}	
 	
-	@WithMockUser(username = "remote", roles = "REMOTE")
+	@WithMockUser(username = "3333333333", roles = {"ADMIN", "CLIENT"})
     @Nested
     class SwaggerAccessTest{
     	
@@ -144,15 +144,15 @@ public class BankDemoBootApplicationTests {
 	    		.andExpect(status().isOk());
 		}
 		
-		@Disabled
-		@WithMockUser(username = "0000000000", roles = "ADMIN")
+		@WithMockUser(username = "1111111111", roles = "CLIENT")
 		@Test
 		void swagger_denied() throws Exception {
 			
 	        mockMVC.perform(get("/swagger-ui/"))
 				.andExpect(status().isForbidden());
 		}
-		
+
+	    @Disabled
 	    @Test
 	    void can_get_swagger_html() throws Exception {
 
@@ -163,7 +163,7 @@ public class BankDemoBootApplicationTests {
 	    @Test
 	    void can_get_api_docs() throws Exception {
 
-	        mockMVC.perform(get("/v2/api-docs/"))
+	        mockMVC.perform(get("/v2/api-docs"))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));		
 		}
@@ -1201,7 +1201,7 @@ public class BankDemoBootApplicationTests {
 		
 	}
 	
-	@WithMockUser(username = "remote", roles = "REMOTE")
+	@WithMockUser(username = "0000000000", roles = "ADMIN")
 	@Nested
 	class MegaControllerTest{
 		
@@ -1224,8 +1224,7 @@ public class BankDemoBootApplicationTests {
 				.andExpect(content()
 					.string(containsString("Services impementation has been switched to " + bean)));
 		}
-		
-		
+				
 		@Test
 		void wrong_implementation_type() throws Exception {
 			
@@ -1234,6 +1233,14 @@ public class BankDemoBootApplicationTests {
 					.andExpect(status().isBadRequest())
 					.andExpect(content()
 						.string(containsString("Wrong implementation type specified, retry")));
+		}
+		
+		@WithMockUser(username = "1111111111", roles = "CLIENT")
+		@Test
+		void credentials_forbidden() throws Exception {
+			
+	        mockMVC.perform(get("/control"))
+				.andExpect(status().isForbidden());
 		}
 		
 	}

@@ -35,7 +35,7 @@ import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfig extends WebSecurityConfigurerAdapter{
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Value("${server.address}")
 	private String uri;
@@ -63,18 +63,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
     		"/accounts/password"
     };
     private static final String[] ADMIN_LIST_URLS = {
+			"/**/swagger*/**", 
+			"/**/api-docs/**", 
+			"/control", 
     		"/accounts/search", 
     		"/accounts/status", 
     		"/accounts/list/**", 
 			"/operations/**", 
 			"/h2-console/**"
     };
-    private static final String[] REMOTE_LIST_URLS = {
-			"/control", 
-			"/**/swagger*/**", 
-			"/**/api-docs/**", 
-    		"/actuator/**"
-    };
+//    private static final String[] REMOTE_LIST_URLS = {
+//    		"/actuator/**"
+//    };
 	
     private final AccountDetailsService accountDetailsService;
     public SecurityConfig(AccountDetailsService accountDetailsService) {
@@ -129,14 +129,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			.antMatchers(WHITE_LIST_URLS).permitAll()
 			.antMatchers(SHARED_LIST_URLS).hasAnyRole("ADMIN", "CLIENT")
 			.antMatchers(ADMIN_LIST_URLS).hasRole("ADMIN")
-			.antMatchers(REMOTE_LIST_URLS).hasRole("REMOTE")
+			.antMatchers("/actuator/**").hasRole("REMOTE")
 			.anyRequest().authenticated()
 				.and()
 		    .csrf()
 		    .csrfTokenRepository(csrfTokenRepository)
 		    .sessionAuthenticationStrategy(new CsrfAuthenticationStrategy(csrfTokenRepository))
-		    .ignoringAntMatchers("/bills/external")
-		    .ignoringAntMatchers(REMOTE_LIST_URLS)
+		    .ignoringAntMatchers("/bills/external", "/actuator/**")
+//		    .ignoringAntMatchers(REMOTE_LIST_URLS)
 		        .and()
 			.formLogin()
 			.usernameParameter("phone")
@@ -160,10 +160,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 //		http.headers().frameOptions().disable();
 	}
 	
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/**/swagger*/**", "/**/api-docs/**");
-    }
+//    @Override
+//    public void configure(WebSecurity web) throws Exception {
+//        web.ignoring().antMatchers("/**/swagger*/**", "/**/api-docs/**");
+//    }
     
 //    @Configuration
 //    @Order(Ordered.HIGHEST_PRECEDENCE)

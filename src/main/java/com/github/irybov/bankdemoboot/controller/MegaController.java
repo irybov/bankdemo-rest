@@ -41,7 +41,7 @@ public class MegaController {
 	}
 	
 	@ApiOperation("Switchs model's layer type wired to defined controllers")
-	@PreAuthorize("hasRole('REMOTE')")
+	@PreAuthorize("hasRole('ADMIN')")
 	@PutMapping("/control")
 	public String changeServiceImpl(@RequestParam String impl, HttpServletResponse response) {
 		
