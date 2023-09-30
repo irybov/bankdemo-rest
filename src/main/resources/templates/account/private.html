@@ -90,7 +90,7 @@
 <p th:text="${message}" class="error" id="message"/>
 
 <script th:inline="javascript">
-    var data = [[${bills}]];
+    var bills = [[${bills}]];
 </script>
 <!-- <form th:action="@{/accounts/show}" method="post">
         <select class="form-control" id="currency" th:name="currency" style="width:auto" required>

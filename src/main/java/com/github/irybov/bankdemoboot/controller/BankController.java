@@ -448,8 +448,8 @@ public class BankController extends BaseController {
 	}
 	
 	@ApiOperation(value = "Recieves incoming payment from external systems")
-	@ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully received", 
-							response = String.class), 
+	@ApiResponses(value = 
+		{@ApiResponse(code = 200, message = "Successfully received", response = String.class), 
 		@ApiResponse(code = 404, message = "", responseContainer = "List", response = String.class),
 		@ApiResponse(code = 500, message = "", response = String.class)})
 	@CrossOrigin(originPatterns = "*", methods = {RequestMethod.OPTIONS, RequestMethod.POST})
@@ -496,10 +496,11 @@ public class BankController extends BaseController {
 	@GetMapping(path = "/bills/notify")
 	public ResponseBodyEmitter registerEmitter(HttpServletResponse response) {
 		
-		ResponseBodyEmitter emitter = new ResponseBodyEmitter(0L);
 		String phone = authentication().getName();
+		ResponseBodyEmitter emitter = new ResponseBodyEmitter(0L);
 		emitters.putIfAbsent(phone, emitter);	
 		
+		emitter.onCompletion(()-> emitters.remove(phone, emitter));
 		emitter.onTimeout(()-> emitters.remove(phone, emitter));
 		emitter.onError((e)-> emitters.remove(phone, emitter));
 		
