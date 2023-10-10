@@ -10,10 +10,10 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.github.irybov</groupId>
-	<artifactId>bank-demo-boot</artifactId>
+	<artifactId>bank-demo-ssr</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Bank demo</name>
-	<description>Demo project for Spring Boot monolyth</description>
+	<description>Demo project for Spring Boot monolith</description>
 	<contributors>
 		<contributor>
 			<name>Ivan Ryabov</name>

@@ -497,14 +497,19 @@ public class BankController extends BaseController {
 	public ResponseBodyEmitter registerEmitter(HttpServletResponse response) {
 		
 		String phone = authentication().getName();
-		ResponseBodyEmitter emitter = new ResponseBodyEmitter(0L);
-		emitters.putIfAbsent(phone, emitter);	
-		
+		ResponseBodyEmitter emitter;
+		if(emitters.containsKey(phone)) {
+			emitter = emitters.get(phone);
+			response.setStatus(HttpServletResponse.SC_OK);
+		}
+		else {
+			emitter = new ResponseBodyEmitter(0L);
+			emitters.putIfAbsent(phone, emitter);				
+			response.setStatus(HttpServletResponse.SC_CREATED);
+		}		
 		emitter.onCompletion(()-> emitters.remove(phone, emitter));
 		emitter.onTimeout(()-> emitters.remove(phone, emitter));
 		emitter.onError((e)-> emitters.remove(phone, emitter));
-		
-		response.setStatus(HttpServletResponse.SC_CREATED);
 		return emitter;
 	}
 	private void activateEmitter(int id, double amount) {

@@ -136,7 +136,7 @@ $(document).ready(function(){
 		xhr.open('GET', '/bankdemo/bills/notify');
 		xhr.send();
 		xhr.onload = function() {
-			if (xhr.status == 201) {
+			if (xhr.status >= 200 && xhr.status < 300) {
 				const json = JSON.parse(xhr.responseText);
 				var cell = '#balance'+json.id;
 				var total = parseFloat($(cell).html(), 2) + json.income;
