@@ -79,7 +79,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 //@Sql("/test-data-h2.sql")
 @AutoConfigureMockMvc
 @Transactional
-public class BankDemoBootApplicationTests {
+public class BankDemoBootApplicationIT {
 
 	@Autowired
 	private MockMvc mockMVC;

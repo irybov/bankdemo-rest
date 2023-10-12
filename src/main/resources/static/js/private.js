@@ -61,7 +61,6 @@ $(document).ready(function(){
 		});		
 	});
 	$('#bills_table tbody').hide().fadeIn('slow');
-
 	
     $('#currency_form').submit(function (ev) {
         ev.preventDefault();
@@ -129,27 +128,35 @@ $(document).ready(function(){
             }
         });
     });
-	
-			
+				
 	function connect(){
 		let xhr = new XMLHttpRequest();
 		xhr.open('GET', '/bankdemo/bills/notify');
 		xhr.send();
 		xhr.onload = function() {
 			if (xhr.status >= 200 && xhr.status < 300) {
-				const json = JSON.parse(xhr.responseText);
-				var cell = '#balance'+json.id;
-				var total = parseFloat($(cell).html(), 2) + json.income;
+/*				let json = JSON.parse(xhr.responseText);
+				let cell = '#balance'+json.id;
+				let total = parseFloat($(cell).html(), 2) + json.income;
 				$(cell).text(total.toFixed(2));
 				alert('+ ' + json.income);
-				connect();
+				connect();*/
 			}
 			else {
 				alert('Request failed: ' + xhr.status + ', ' + xhr.statusText);
-			}			
+			}
 		};
 		xhr.onerror = function() {
 			alert('Request failed: ' + xhr.status + ', ' + xhr.statusText);
+		};
+		xhr.onprogress = function() {
+			let json = JSON.parse(xhr.responseText);
+			let cell = '#balance'+json.id;
+			let total = parseFloat($(cell).html(), 2) + json.income;
+			$(cell).text(total.toFixed(2));
+			alert('+ ' + json.income);
+			xhr.abort();
+			connect();
 		};
 	};
 	(function(){

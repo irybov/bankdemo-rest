@@ -503,7 +503,7 @@ public class BankController extends BaseController {
 			response.setStatus(HttpServletResponse.SC_OK);
 		}
 		else {
-			emitter = new ResponseBodyEmitter(0L);
+			emitter = new ResponseBodyEmitter();
 			emitters.putIfAbsent(phone, emitter);				
 			response.setStatus(HttpServletResponse.SC_CREATED);
 		}		
@@ -522,7 +522,7 @@ public class BankController extends BaseController {
 			try {
 				String load = mapper.writeValueAsString(new EmitterPayload(id, amount));
 				emitter.send(load);
-				emitter.complete();
+//				emitter.complete();
 			}
 			catch (Exception exc) {
 				log.warn(exc.getMessage(), exc);
