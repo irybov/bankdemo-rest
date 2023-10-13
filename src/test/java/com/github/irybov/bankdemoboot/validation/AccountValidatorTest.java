@@ -82,7 +82,7 @@ class AccountValidatorTest {
 		assertTrue(errors.hasFieldErrors("phone"));
 		
 		
-		accountRequestDTO.setBirthday(null);
+		accountRequestDTO.setBirthday(LocalDate.now().minusYears(17L));
 		accountRequestDTO.setName("i");
 		accountRequestDTO.setPassword("superb");
 		accountRequestDTO.setSurname("a");

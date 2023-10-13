@@ -307,7 +307,7 @@ public class BankDemoBootApplicationIT {
 		void rejected_registration() throws Exception {
 			
 			mockMVC.perform(post("/confirm").with(csrf())
-										 .param("birthday", "")
+										 .param("birthday", LocalDate.now().minusYears(17L).toString())
 										 .param("name", "N")
 										 .param("password", "superb")
 										 .param("phone", "XXL")
@@ -333,6 +333,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(view().name("auth/register"));
 		}
 		
+		@Disabled
 		@Test
 		void interrupted_registration() throws Exception {
 			

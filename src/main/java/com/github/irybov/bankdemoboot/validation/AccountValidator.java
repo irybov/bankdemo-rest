@@ -1,5 +1,7 @@
 package com.github.irybov.bankdemoboot.validation;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
@@ -44,8 +46,11 @@ public class AccountValidator implements org.springframework.validation.Validato
 	    }
 		
 		AccountRequest account = (AccountRequest) target;
+		if(account.getBirthday().until(LocalDate.now(), ChronoUnit.YEARS) < 18) {
+			errors.rejectValue("birthday", "", "Validator in action!");
+		}
 		if(accountService.getPhone(account.getPhone()) == null) return;
-		errors.rejectValue("phone", "", "Validator in action!");
+			errors.rejectValue("phone", "", "Validator in action!");
 	}
 
 }

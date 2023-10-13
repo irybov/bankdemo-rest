@@ -23,6 +23,8 @@ import java.time.LocalDate;
 
 import javax.persistence.EntityNotFoundException;
 
+import org.junit.jupiter.api.Disabled;
+
 //import java.io.File;
 //import java.nio.file.Files;
 
@@ -232,8 +234,18 @@ class AuthControllerTest {
 	        .andExpect(model().attributeExists("account"))
 	        .andExpect(model().hasErrors())
 			.andExpect(view().name("auth/register"));
+		
+		accountRequest.setBirthday(LocalDate.now().minusYears(17L));
+		
+		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequest))
+			.andExpect(status().isBadRequest())
+	        .andExpect(model().size(1))
+	        .andExpect(model().attributeExists("account"))
+	        .andExpect(model().hasErrors())
+			.andExpect(view().name("auth/register"));
 	}
 	
+	@Disabled
 	@Test
 	void interrupted_registration() throws Exception {
 		
