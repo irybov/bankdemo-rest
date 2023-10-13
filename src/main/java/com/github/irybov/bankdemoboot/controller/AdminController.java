@@ -329,7 +329,7 @@ public class AdminController extends BaseController {
 //		page.setPageSize(pageable.getPageSize());
 		
 		log.info("Admin {} requests list of operations with bill {}",
-		authentication().getName(), id);
+									 authentication().getName(), id);
 		
 		return operationService.getPage(id, action.orElse("_"),
 				minval.orElse(0.01), maxval.orElse(10000.00), dateFrom, dateTo, pageable);

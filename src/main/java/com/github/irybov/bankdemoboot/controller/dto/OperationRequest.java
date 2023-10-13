@@ -32,7 +32,7 @@ public class OperationRequest {
 	@JsonProperty("recipient")
 	@NotNull(message = "Recepient must not be null")
 	@Max(value = 999_999_999, message = "Recepient's bill number should be less than 10 digits length")
-	@Positive(message = "Recepient's bill number should be positive number")
+	@Positive(message = "Recepient's bill number should be positive")
 	private Integer recipient;
 	
 	@ApiModelProperty(value = "Currency's standard name", required = true, example = "USD")

@@ -938,7 +938,7 @@ class BankControllerTest {
 						)
 			.andExpect(status().isBadRequest())
 			.andExpect(content().string(containsString("Sender's bill number should be less than 10 digits length")))
-			.andExpect(content().string(containsString("Recepient's bill number should be positive number")))
+			.andExpect(content().string(containsString("Recepient's bill number should be positive")))
 			.andExpect(content().string(containsString("Currency code should be 3 capital characters length")))
 			.andExpect(content().string(containsString("Amount of money should be higher than zero")));
 		
@@ -958,6 +958,7 @@ class BankControllerTest {
 	@Test
 	void establish_emitter_connection() throws Exception {		
 		mockMVC.perform(get("/bills/notify")).andExpect(status().isCreated());
+		mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
 	}
 	
 	@WithMockUser
