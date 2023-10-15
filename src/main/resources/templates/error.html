@@ -10,13 +10,13 @@
 </head>
 <body>
 
+	<h3>Generic error</h3>
+	<hr>
+	<br>
 	<div class="container pt-5">
-		<h3>Generic error</h3>
-		<hr>
-		<br>
 		<div th:each="violation: ${violations}">
 			<ul>
-				<li th:text="${violation.message}" class="error" />
+				<li th:text="${violation.message}" class="error"/>
 			</ul>
 		</div>
 	</div>

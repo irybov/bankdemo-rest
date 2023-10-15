@@ -100,11 +100,11 @@ public class AdminController extends BaseController {
 	@GetMapping("/accounts/search")
 	public String getAdminPage(@RequestParam(required = false) String phone, Model model) {
 		
-		AccountResponse admin;
+		AccountResponse account;
 		try {
-			admin = accountService.getAccountDTO(authentication().getName());
-			model.addAttribute("admin", admin);
-			log.info("Admin {} has enter admin's zone", admin.getPhone());
+			account = accountService.getAccountDTO(authentication().getName());
+			model.addAttribute("account", account);
+			log.info("Admin {} has enter admin's zone", account.getPhone());
 		}
 		catch (PersistenceException exc) {
 			log.error(exc.getMessage(), exc);

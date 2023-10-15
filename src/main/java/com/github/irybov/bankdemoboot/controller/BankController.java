@@ -503,7 +503,7 @@ public class BankController extends BaseController {
 			response.setStatus(HttpServletResponse.SC_OK);
 		}
 		else {
-			emitter = new ResponseBodyEmitter();
+			emitter = new ResponseBodyEmitter(0L);
 			emitters.putIfAbsent(phone, emitter);				
 			response.setStatus(HttpServletResponse.SC_CREATED);
 		}		

@@ -146,13 +146,13 @@ class AdminControllerTest {
     @Test
 	void can_get_admin_html() throws Exception {
 
-		AccountResponse admin = modelMapper.map(new Account(), AccountResponse.class);		
-		when(accountService.getAccountDTO(anyString())).thenReturn(admin);
+		AccountResponse account = modelMapper.map(new Account(), AccountResponse.class);		
+		when(accountService.getAccountDTO(anyString())).thenReturn(account);
 		
 		mockMVC.perform(get("/accounts/search"))
 			.andExpect(status().isOk())
 			.andExpect(model().size(1))
-	        .andExpect(model().attribute("admin", admin))
+	        .andExpect(model().attribute("account", account))
 			.andExpect(content().string(containsString("Admin's area")))
 	        .andExpect(view().name("account/search"));
 		

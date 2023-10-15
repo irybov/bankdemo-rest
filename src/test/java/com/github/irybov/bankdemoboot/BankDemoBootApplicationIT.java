@@ -299,7 +299,7 @@ public class BankDemoBootApplicationIT {
 						)
 				.andExpect(status().isCreated())
 		        .andExpect(model().size(2))
-		        .andExpect(model().attribute("message", "Your account has been created"))
+		        .andExpect(model().attribute("success", "Your account has been created"))
 				.andExpect(view().name("auth/login"));
 		}
 		
@@ -381,7 +381,7 @@ public class BankDemoBootApplicationIT {
 			mockMVC.perform(get("/accounts/search"))
 				.andExpect(status().isOk())
 				.andExpect(model().size(1))
-		        .andExpect(model().attribute("admin", any(AccountResponse.class)))
+		        .andExpect(model().attribute("account", any(AccountResponse.class)))
 				.andExpect(content().string(containsString("Admin's area")))
 		        .andExpect(view().name("account/search"));
 	    }

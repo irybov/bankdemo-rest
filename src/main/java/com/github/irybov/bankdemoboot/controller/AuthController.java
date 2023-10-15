@@ -96,7 +96,7 @@ public class AuthController extends BaseController {
 		try {
 			accountService.saveAccount(accountRequest);
 			response.setStatus(HttpServletResponse.SC_CREATED);
-			model.addAttribute("message", "Your account has been created");
+			model.addAttribute("success", "Your account has been created");
 			return "auth/login";
 		}
 		catch (Exception exc) {

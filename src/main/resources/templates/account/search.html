@@ -22,20 +22,12 @@
 <h3>Admin's area</h3>
 <hr>
 <br>
-	<p th:text="${admin.name} + ' ' + ${admin.surname}"/>
-	<p sec:authentication="principal.authorities"/>
-<!-- <form th:action="@{/accounts/password/{phone}(phone=${admin.phone})}" method="get">
-	<button type="submit" class="btn btn-secondary">Change password</button>
-</form> -->
-<div>
-<a class="btn btn-secondary" th:href="@{/accounts/password/{phone}(phone=${admin.phone})}"
- target="_blank">Change password</a>
-</div>
+	<div th:insert="~{commons :: header}"></div>
 <br>
 
 
 <div sec:authorize="hasRole('CLIENT')">
-	<a th:href="@{/accounts/show/{phone}(phone=${admin.phone})}">
+	<a th:href="@{/accounts/show/{phone}(phone=${account.phone})}">
 	<button type="button">Private</button></a>
 </div>
 <br>
@@ -214,9 +206,7 @@
 </div> -->
 <br>
 
-<form th:action="@{/logout}" method="post">
-	<input type="submit" th:value="LogOut" class="btn btn-warning"/>
-</form>
+	<div th:insert="~{commons :: footer}"></div>
 </div>
 
 </body>

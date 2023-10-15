@@ -205,7 +205,7 @@ class AuthControllerTest {
 		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequest))
 			.andExpect(status().isCreated())
 	        .andExpect(model().size(2))
-	        .andExpect(model().attribute("message", "Your account has been created"))
+	        .andExpect(model().attribute("success", "Your account has been created"))
 			.andExpect(view().name("auth/login"));
 	}
 	

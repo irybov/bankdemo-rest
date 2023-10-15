@@ -163,4 +163,13 @@ $(document).ready(function(){
 		connect();
     })();
     
+/*	window.onbeforeunload = closingCode;
+	function closingCode(){
+		xhr.abort();
+		return null;
+	}*/
+	$(window).on("beforeunload", function(){
+		xhr.abort();
+	});
+	
 });
