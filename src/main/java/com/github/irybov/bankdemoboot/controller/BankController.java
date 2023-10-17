@@ -457,9 +457,9 @@ public class BankController extends BaseController {
 					consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
 					produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
 	@ResponseBody
-	public ResponseEntity<?> receiveMoney(@RequestBody OperationRequest dto) {	
+	public ResponseEntity<String> receiveMoney(@Valid @RequestBody OperationRequest dto) {	
 		
-		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+/*		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 		Validator validator = factory.getValidator();
 		Set<ConstraintViolation<OperationRequest>> violations = validator.validate(dto);		
 		if(!violations.isEmpty()) {
@@ -468,7 +468,7 @@ public class BankController extends BaseController {
 				messages.add(violation.getMessage());
 			}			
 			return new ResponseEntity<List<String>>(messages, HttpStatus.BAD_REQUEST);
-		}
+		}*/
 		
 		try {
 			Operation operation = operationService.transfer

@@ -46,7 +46,7 @@ public class BillServiceDAO implements BillService {
 		billDAO.deleteBill(id);
 	}
 	
-	@Transactional(propagation = Propagation.MANDATORY, readOnly = true)
+	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
 	Bill getBill(int id) throws EntityNotFoundException {
 		Bill bill = billDAO.getBill(id);
 		if(bill == null)

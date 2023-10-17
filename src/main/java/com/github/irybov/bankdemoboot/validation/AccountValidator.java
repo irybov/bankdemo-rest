@@ -38,10 +38,10 @@ public class AccountValidator implements org.springframework.validation.Validato
 	@Override
 	public void validate(Object target, Errors errors) {
 		
-	    Set<ConstraintViolation<Object>> validates = validator.validate(target);
-	    for (ConstraintViolation<Object> constraintViolation : validates) {
-	        String propertyPath = constraintViolation.getPropertyPath().toString();
-	        String message = constraintViolation.getMessage();
+	    Set<ConstraintViolation<Object>> violations = validator.validate(target);
+	    for (ConstraintViolation<Object> violation : violations) {
+	        String propertyPath = violation.getPropertyPath().toString();
+	        String message = violation.getMessage();
 	        errors.rejectValue(propertyPath, "", message);
 	    }
 		

@@ -106,7 +106,7 @@ public class BankDemoBootApplicationIT {
 	}
 	
     @Nested
-    class ActuatorAccessTest{
+    class ActuatorAccessIT{
 	
 		@WithMockUser(username = "remote", roles = "REMOTE")
 		@Test
@@ -135,7 +135,7 @@ public class BankDemoBootApplicationIT {
 	
 	@WithMockUser(username = "3333333333", roles = {"ADMIN", "CLIENT"})
     @Nested
-    class SwaggerAccessTest{
+    class SwaggerAccessIT{
     	
 		@Test
 		void swagger_allowed() throws Exception {
@@ -180,7 +180,7 @@ public class BankDemoBootApplicationIT {
     }	
 
 	@Nested
-	class AuthControllerTest{
+	class AuthControllerIT{
 		
 		@Autowired
 		private AccountService accountService;
@@ -373,7 +373,7 @@ public class BankDemoBootApplicationIT {
 	@WithMockUser(username = "0000000000", roles = "ADMIN")
 	@Nested
 	@Sql("/test-operations-h2.sql")
-	class AdminControllerTest{
+	class AdminControllerIT{
 		
 	    @Test
 		void can_get_admin_html() throws Exception {
@@ -530,7 +530,7 @@ public class BankDemoBootApplicationIT {
 				 +" "+"VALUES('2', '1', '10.00', 'USD', '1');")
 	@WithMockUser(username = "1111111111", roles = "CLIENT")
 	@Nested
-	class BankControllerTest{
+	class BankControllerIT{
 		
 		@Autowired
 		private ObjectMapper mapper;
@@ -1205,7 +1205,7 @@ public class BankDemoBootApplicationIT {
 	
 	@WithMockUser(username = "0000000000", roles = "ADMIN")
 	@Nested
-	class MegaControllerTest{
+	class MegaControllerIT{
 		
 		@Test
 		void can_change_implementations() throws Exception {

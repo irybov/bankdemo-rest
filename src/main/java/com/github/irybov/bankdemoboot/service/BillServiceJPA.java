@@ -46,7 +46,7 @@ public class BillServiceJPA implements BillService {
 		billRepository.deleteById(id);
 	}
 	
-	@Transactional(propagation = Propagation.MANDATORY, readOnly = true)
+	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
 	Bill getBill(int id) throws EntityNotFoundException {
 		return billRepository.findById(id).orElseThrow
 				(()-> new EntityNotFoundException("Target bill with id: " + id + " not found"));
