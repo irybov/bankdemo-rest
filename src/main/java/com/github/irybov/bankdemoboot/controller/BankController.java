@@ -203,6 +203,7 @@ public class BankController extends BaseController {
 		return "redirect:/accounts/show/{phone}";
 	}*/
 	@ApiOperation("Creates a new bill in database")
+	@ApiResponse(code = 201, message = "", response = BillResponse.class)
 	@PreAuthorize("hasRole('CLIENT')")
 	@PostMapping("/bills/add")
 	@ResponseBody
@@ -258,6 +259,10 @@ public class BankController extends BaseController {
 	}
 	
 	@ApiOperation("Checks recipient's name and surename")
+	@ApiResponses(value = 
+		{@ApiResponse(code = 200, message = "", response = String.class), 
+		 @ApiResponse(code = 404, message = "", response = String.class)})
+	@CrossOrigin(originPatterns = "*", methods = {RequestMethod.OPTIONS, RequestMethod.POST})
 	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping(value = "/bills/validate/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
 	@ResponseBody
@@ -450,8 +455,8 @@ public class BankController extends BaseController {
 	@ApiOperation(value = "Recieves incoming payment from external systems")
 	@ApiResponses(value = 
 		{@ApiResponse(code = 200, message = "Successfully received", response = String.class), 
-		@ApiResponse(code = 404, message = "", responseContainer = "List", response = String.class),
-		@ApiResponse(code = 500, message = "", response = String.class)})
+		 @ApiResponse(code = 404, message = "", responseContainer = "List", response = String.class),
+		 @ApiResponse(code = 500, message = "", response = String.class)})
 	@CrossOrigin(originPatterns = "*", methods = {RequestMethod.OPTIONS, RequestMethod.POST})
 	@PostMapping(path = "/bills/external",
 					consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},

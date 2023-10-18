@@ -4,19 +4,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+//import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-//@Configuration
+@Configuration
 public class JacksonConfig {
 
-/*    @Bean
+    @Bean
     @Primary
     public ObjectMapper objectMapper() {
         return JsonMapper.builder()
-            .addModule(new JavaTimeModule())
+        	.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
+        	.configure(Feature.ALLOW_SINGLE_QUOTES, true)
+//            .addModule(new JavaTimeModule())
             .build();
-    }*/
+    }
     
 }
