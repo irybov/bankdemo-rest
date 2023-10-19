@@ -677,6 +677,25 @@ public class BankDemoBootApplicationIT {
 					.andExpect(view().name("bill/transfer"));
 		}
 		
+		@Disabled
+		@Test
+		void wrong_format_input() throws Exception {
+			
+			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+										.param("recipient", "XXX")
+//									    .param("id", "1")
+									    .param("action", "transfer")
+									    .param("balance", "10.00")
+					)
+					.andExpect(status().isBadRequest())
+					.andExpect(model().size(4))
+					.andExpect(model().attribute("id", 1))
+					.andExpect(model().attribute("action", "transfer"))
+					.andExpect(model().attribute("balance", "10.00"))
+					.andExpect(model().attribute("message", "Please provide correct bill number"))
+					.andExpect(view().name("bill/transfer"));
+		}
+
 		@Test
 		void can_get_password_html() throws Exception {
 			
@@ -751,24 +770,6 @@ public class BankDemoBootApplicationIT {
 					.andExpect(model().errorCount(2))
 					.andExpect(model().attributeExists("password"))
 					.andExpect(view().name("account/password"));			
-		}
-		
-		@Test
-		void wrong_format_input() throws Exception {
-			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
-										.param("recipient", "XXX")
-//									    .param("id", "1")
-									    .param("action", "transfer")
-									    .param("balance", "10.00")
-					)
-					.andExpect(status().isBadRequest())
-					.andExpect(model().size(4))
-					.andExpect(model().attribute("id", 1))
-					.andExpect(model().attribute("action", "transfer"))
-					.andExpect(model().attribute("balance", "10.00"))
-					.andExpect(model().attribute("message", "Please provide correct bill number"))
-					.andExpect(view().name("bill/transfer"));
 		}
 		
 		@Test

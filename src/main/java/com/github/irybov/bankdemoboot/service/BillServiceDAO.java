@@ -46,24 +46,21 @@ public class BillServiceDAO implements BillService {
 		billDAO.deleteBill(id);
 	}
 	
-	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
-	Bill getBill(int id) throws EntityNotFoundException {
-		Bill bill = billDAO.getBill(id);
-		if(bill == null)
-			throw new EntityNotFoundException("Target bill with id: " + id + " not found");
-		else return bill;
-	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public BillResponse getBillDTO(int id) throws EntityNotFoundException {
 		return modelMapper.map(getBill(id), BillResponse.class);
 	}
+	//	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
+	Bill getBill(int id) throws EntityNotFoundException {
+		Bill bill = billDAO.getBill(id);
+		if(bill == null) throw new EntityNotFoundException("Target bill with id: " + id + " not found");
+		else return bill;
+	}
 	
-	public void deposit(Operation operation) throws Exception {
+	public void deposit(Operation operation) throws PaymentException {
 
 		double amount = operation.getAmount();
-		if(amount < 0.01) {
-			throw new PaymentException("Amount of money should be higher than zero");
-		}		
+		if(amount < 0.01) throw new PaymentException("Amount of money should be higher than zero");		
 		
 		int id = operation.getRecipient();
 		Bill bill = getBill(id);
@@ -72,7 +69,7 @@ public class BillServiceDAO implements BillService {
 		operationDAO.save(operation);
 	}
 	
-	public void withdraw(Operation operation) throws Exception {
+	public void withdraw(Operation operation) throws PaymentException {
 		
 		double amount = operation.getAmount();
 		if(amount < 0.01) {
@@ -89,7 +86,7 @@ public class BillServiceDAO implements BillService {
 		operationDAO.save(operation);
 	}
 	
-	public void transfer(Operation operation) throws Exception {
+	public void transfer(Operation operation) throws PaymentException {
 
 		double amount = operation.getAmount();
 		if(amount < 0.01) {
@@ -98,7 +95,7 @@ public class BillServiceDAO implements BillService {
 		
 		int from = operation.getSender();
 		int to = operation.getRecipient();
-		if(from == to) throw new PaymentException("Source and target bills should not be the same");		
+		if(from == to) throw new PaymentException("Source and target bills should not be the same");
 		Bill target = getBill(to);
 /*		if(target == null) {
 			throw new PaymentException("Target bill with id: " + to + " not found");
@@ -119,7 +116,7 @@ public class BillServiceDAO implements BillService {
 		operationDAO.save(operation);
 	}
 	
-	public void external(Operation operation) throws Exception {
+	public void external(Operation operation) throws PaymentException {
 		
 		double amount = operation.getAmount();
 		if(amount < 0.01) throw new PaymentException("Amount of money should be higher than zero");
@@ -137,7 +134,7 @@ public class BillServiceDAO implements BillService {
 		operationDAO.save(operation);
 	}
 	
-	public void outward(Operation operation) throws Exception {
+	public void outward(Operation operation) throws PaymentException {
 		
 		double amount = operation.getAmount();
 		if(amount < 0.01) throw new PaymentException("Amount of money should be higher than zero");

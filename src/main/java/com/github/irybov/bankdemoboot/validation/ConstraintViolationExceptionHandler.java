@@ -2,7 +2,10 @@ package com.github.irybov.bankdemoboot.validation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
@@ -13,9 +16,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.github.irybov.bankdemoboot.controller.BankController;
+import com.github.irybov.bankdemoboot.exception.PaymentException;
 
 //@ControllerAdvice(basePackages = "com.github.irybov.bankdemoboot.controller")
 @ControllerAdvice(basePackageClasses = BankController.class)
@@ -46,6 +51,32 @@ public class ConstraintViolationExceptionHandler {
 	        errors.add(error.getDefaultMessage());
 	    }
 		return new ResponseEntity<List<String>>(errors, HttpStatus.BAD_REQUEST);
+	}
+	
+	@ExceptionHandler(PaymentException.class)
+	ModelAndView handlePaymentException(HttpServletRequest request, HttpServletResponse response, 
+			PaymentException exc) {
+		
+		Map pathVariables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+		String id = (String) pathVariables.get("id");
+		
+		ModelAndView mav;
+		
+		if(request.getParameter("action").equals("transfer")) {
+			mav = new ModelAndView("bill/transfer");
+		}
+		else if(request.getParameter("action").equals("external")) {
+			mav = new ModelAndView("bill/external");
+		}
+		else {
+			mav = new ModelAndView("bill/payment");
+		}
+		mav.addObject("id", Integer.parseInt(id));
+		mav.addObject("action", request.getParameter("action"));
+		mav.addObject("balance", request.getParameter("balance"));
+		mav.addObject("message", exc.getMessage());
+		response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		return mav;		
 	}
 	
 }

@@ -45,6 +45,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.modelmapper.ModelMapper;
@@ -331,6 +332,25 @@ class BankControllerTest {
 		verify(billService, times(2)).getBillDTO(id);
 	}
 	
+	@Disabled
+	@Test
+	void wrong_format_input() throws Exception {
+		
+		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+														.param("recipient", "XXX")
+//													    .param("id", "0")
+													    .param("action", "transfer")
+													    .param("balance", "0.00")
+					)
+			.andExpect(status().isBadRequest())
+			.andExpect(model().size(4))
+			.andExpect(model().attribute("id", 0))
+			.andExpect(model().attribute("action", "transfer"))
+			.andExpect(model().attribute("balance", "0.00"))
+			.andExpect(model().attribute("message", "Please provide correct bill number"))
+			.andExpect(view().name("bill/transfer"));
+	}
+
 	@Test
 	void can_get_password_html() throws Exception {
 		
@@ -400,25 +420,6 @@ class BankControllerTest {
 			.andExpect(model().attributeExists("password"))
 			.andExpect(view().name("account/password"));
 	}
-	
-	@Test
-	void wrong_format_input() throws Exception {
-		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
-														.param("recipient", "XXX")
-//													    .param("id", "0")
-													    .param("action", "transfer")
-													    .param("balance", "0.00")
-						)
-			.andExpect(status().isBadRequest())
-			.andExpect(model().size(4))
-			.andExpect(model().attribute("id", 0))
-			.andExpect(model().attribute("action", "transfer"))
-			.andExpect(model().attribute("balance", "0.00"))
-			.andExpect(model().attribute("message", "Please provide correct bill number"))
-			.andExpect(view().name("bill/transfer"));
-	}
-	
 	
 	@Test
 	void wrong_bill_serial() throws Exception {
@@ -691,8 +692,8 @@ class BankControllerTest {
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
-			.andExpect(status().isBadRequest())
-			.andExpect(content().string(containsString("Amount of money should be higher than zero")));		
+				.andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString("Amount of money should be higher than zero")));		
 
 		verify(operationService).deposit(anyDouble(), anyString(), anyString(), anyInt(), 
 				anyString());

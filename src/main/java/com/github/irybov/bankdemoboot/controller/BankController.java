@@ -18,6 +18,7 @@ import java.util.concurrent.Executor;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
@@ -41,6 +42,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
 //import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -55,6 +57,8 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.UnknownHttpStatusCodeException;
+import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -272,7 +276,7 @@ public class BankController extends BaseController {
 		try {
 			bill = billService.getBillDTO(id);
 		}
-		catch (Exception exc) {
+		catch (EntityNotFoundException exc) {
 			log.error(exc.getMessage(), exc);
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return exc.getMessage();
@@ -288,33 +292,21 @@ public class BankController extends BaseController {
 			RedirectAttributes redirectAttributes, HttpServletResponse response) {
 		
 		String phone = authentication().getName();
-		int target = 0;
+		int target = -1;
 		if(recipient != null) {
-			if(!recipient.matches("^\\d{1,9}$")) {
-				log.warn("Sender {} types recipient's bill number {} in a wrong format",
-																		phone, recipient);
-				modelMap.addAttribute("id", id);
-				modelMap.addAttribute("action", params.get("action"));
-				modelMap.addAttribute("balance", params.get("balance"));
-				modelMap.addAttribute("message", "Please provide correct bill number");
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				return "bill/transfer";
-			}
-			else {
-				target = Integer.parseInt(recipient);
-				if(params.get("action").equals("transfer")) {
-					try {
-						billService.getBillDTO(target);
-					}
-					catch (Exception exc) {
-						log.error(exc.getMessage(), exc);
-						modelMap.addAttribute("id", id);
-						modelMap.addAttribute("action", params.get("action"));
-						modelMap.addAttribute("balance", params.get("balance"));
-						modelMap.addAttribute("message", exc.getMessage());
-						response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-						return "bill/transfer";
-					}
+			target = Integer.parseInt(recipient);
+			if(params.get("action").equals("transfer")) {
+				try {
+					billService.getBillDTO(target);
+				}
+				catch (EntityNotFoundException exc) {
+					log.error(exc.getMessage(), exc);
+					modelMap.addAttribute("id", id);
+					modelMap.addAttribute("action", params.get("action"));
+					modelMap.addAttribute("balance", params.get("balance"));
+					modelMap.addAttribute("message", exc.getMessage());
+					response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+					return "bill/transfer";
 				}
 			}
 		}		
@@ -322,46 +314,47 @@ public class BankController extends BaseController {
 		
 		final String currency = billService.getBillDTO(id).getCurrency();
 		final Action action = Action.valueOf(params.get("action").toUpperCase());
+		Operation operation;
 		switch(action) {		
 		case DEPOSIT:
-			try {
-				Operation operation = operationService.deposit
+//			try {
+				operation = operationService.deposit
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, "Demo");
 				billService.deposit(operation);
 				log.info("{} has been added to bill {}", params.get("amount"), id);
-			}
-			catch (Exception exc) {
-				log.warn(exc.getMessage(), exc);
+//			}
+//			catch (PaymentException exc) {
+/*				log.warn(exc.getMessage(), exc);
 				modelMap.addAttribute("id", id);
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", exc.getMessage());
 				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				return "bill/payment";
-			}
+				return "bill/payment";*/
+//			}
 			break;
 			
 		case WITHDRAW:
-			try {
-				Operation operation = operationService.withdraw
+//			try {
+				operation = operationService.withdraw
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, "Demo");
 				billService.withdraw(operation);
 				log.info("{} has been taken from bill {}", params.get("amount"), id);
-			}
-			catch (Exception exc) {
-				log.warn(exc.getMessage(), exc);
+//			}
+//			catch (PaymentException exc) {
+/*				log.warn(exc.getMessage(), exc);
 				modelMap.addAttribute("id", id);
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", exc.getMessage());
 				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				return "bill/payment";
-			}
+				return "bill/payment";*/
+//			}
 			break;
 			
 		case TRANSFER:						
-			try {
-				Operation operation = operationService.transfer
+//			try {
+				operation = operationService.transfer
 				(Double.valueOf(params.get("amount")), params.get("action"), currency, id, target, 
 						"Demo");
 				billService.transfer(operation);
@@ -370,16 +363,16 @@ public class BankController extends BaseController {
 				executorService.execute(() -> {
 					activateEmitter(operation.getRecipient(), operation.getAmount());
 				});
-			}
-			catch (Exception exc) {
-				log.warn(exc.getMessage(), exc);
+//			}
+//			catch (PaymentException exc) {
+/*				log.warn(exc.getMessage(), exc);
 				modelMap.addAttribute("id", id);
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
 				modelMap.addAttribute("message", exc.getMessage());
 				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				return "bill/transfer";
-			}
+				return "bill/transfer";*/
+//			}
 			break;
 			
 		case EXTERNAL:
@@ -399,24 +392,24 @@ public class BankController extends BaseController {
 						json, String.class);
 				
 				if(result.getStatusCodeValue() == 200) {
-					try {
-						Operation operation = operationService.transfer
+//					try {
+						operation = operationService.transfer
 						(Double.valueOf(params.get("amount")), params.get("action"), currency, id, 
 								target, params.get("bank"));
 						billService.outward(operation);
 						log.info("{} has been sent to bill {} in bank {}", params.get("amount"), 
 								target, params.get("bank"));
 						redirectAttributes.addFlashAttribute("message", result.getBody());
-					}
-					catch (Exception exc) {
-						log.warn(exc.getMessage(), exc);
+//					}
+//					catch (PaymentException exc) {
+/*						log.warn(exc.getMessage(), exc);
 						modelMap.addAttribute("id", id);
 						modelMap.addAttribute("action", params.get("action"));
 						modelMap.addAttribute("balance", params.get("balance"));
 						modelMap.addAttribute("message", exc.getMessage());
 						response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-						return "bill/external";
-					}
+						return "bill/external";*/
+//					}
 				}
 				else {
 					log.warn(result.getBody());
@@ -480,8 +473,7 @@ public class BankController extends BaseController {
 			(dto.getAmount(), Action.EXTERNAL.name().toLowerCase(), dto.getCurrency(), 
 					dto.getSender(), dto.getRecipient(), dto.getBank());
 			billService.external(operation);
-			log.info("{} has been recieved to bill {}", operation.getAmount(), 
-					operation.getRecipient());
+			log.info("{} has been recieved to bill {}", operation.getAmount(), operation.getRecipient());
 		}
 		catch (Exception exc) {
 			log.warn(exc.getMessage(), exc);

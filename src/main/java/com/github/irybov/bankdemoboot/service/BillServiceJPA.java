@@ -46,20 +46,20 @@ public class BillServiceJPA implements BillService {
 		billRepository.deleteById(id);
 	}
 	
-	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
-	Bill getBill(int id) throws EntityNotFoundException {
-		return billRepository.findById(id).orElseThrow
-				(()-> new EntityNotFoundException("Target bill with id: " + id + " not found"));
-	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public BillResponse getBillDTO(int id) throws EntityNotFoundException {
 		return modelMapper.map(getBill(id), BillResponse.class);
 	}
+	//	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
+	Bill getBill(int id) throws EntityNotFoundException {
+		return billRepository.findById(id).orElseThrow
+				(()-> new EntityNotFoundException("Target bill with id: " + id + " not found"));
+	}
 	
-	public void deposit(Operation operation) throws Exception {
+	public void deposit(Operation operation) throws PaymentException {
 		
 		double amount = operation.getAmount();
-		if(amount < 0.01) throw new PaymentException("Amount of money should be higher than zero");		
+		if(amount < 0.01) throw new PaymentException("Amount of money should be higher than zero");
 
 		int id = operation.getRecipient();
 		Bill bill = getBill(id);
@@ -68,7 +68,7 @@ public class BillServiceJPA implements BillService {
 		operationRepository.saveAndFlush(operation);
 	}
 	
-	public void withdraw(Operation operation) throws Exception {
+	public void withdraw(Operation operation) throws PaymentException {
 		
 		double amount = operation.getAmount();
 		if(amount < 0.01) throw new PaymentException("Amount of money should be higher than zero");
@@ -83,14 +83,14 @@ public class BillServiceJPA implements BillService {
 		operationRepository.saveAndFlush(operation);
 	}
 	
-	public void transfer(Operation operation) throws Exception {
+	public void transfer(Operation operation) throws PaymentException {
 
 		double amount = operation.getAmount();
 		if(amount < 0.01) throw new PaymentException("Amount of money should be higher than zero");
 		
 		int from = operation.getSender();
 		int to = operation.getRecipient();
-		if(from == to) throw new PaymentException("Source and target bills should not be the same");		
+		if(from == to) throw new PaymentException("Source and target bills should not be the same");
 		Bill target = getBill(to);
 /*		if(target == null) {
 			throw new PaymentException("Target bill with id: " + to + " not found");
@@ -111,7 +111,7 @@ public class BillServiceJPA implements BillService {
 		operationRepository.saveAndFlush(operation);
 	}
 	
-	public void external(Operation operation) throws Exception {
+	public void external(Operation operation) throws PaymentException {
 		
 		double amount = operation.getAmount();
 		if(amount < 0.01) throw new PaymentException("Amount of money should be higher than zero");
@@ -129,7 +129,7 @@ public class BillServiceJPA implements BillService {
 		operationRepository.saveAndFlush(operation);
 	}
 	
-	public void outward(Operation operation) throws Exception {
+	public void outward(Operation operation) throws PaymentException {
 		
 		double amount = operation.getAmount();
 		if(amount < 0.01) throw new PaymentException("Amount of money should be higher than zero");
@@ -160,8 +160,7 @@ public class BillServiceJPA implements BillService {
 		return bill.isActive();
 	}
 	
-	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, 
-			noRollbackFor = Exception.class)
+	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
 	public List<BillResponse> getAll(int id) {		
 //		List<Bill> bills = billRepository.getAll(id);
 		List<Bill> bills = billRepository.findByOwnerId(id);
