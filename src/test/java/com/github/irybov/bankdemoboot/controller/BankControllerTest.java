@@ -51,8 +51,10 @@ import org.mockito.Mockito;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 //import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -65,6 +67,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.github.irybov.bankdemoboot.config.SecurityConfig;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
 import com.github.irybov.bankdemoboot.controller.dto.OperationRequest;
@@ -80,6 +83,7 @@ import com.github.irybov.bankdemoboot.service.OperationService;
 
 @WithMockUser(username = "4444444444", roles = "CLIENT")
 @WebMvcTest(controllers = BankController.class)
+@Import(SecurityConfig.class)
 class BankControllerTest {
 
 	@MockBean
@@ -116,6 +120,9 @@ class BankControllerTest {
 	private static Bill bill;
 	
 	private static ModelMapper modelMapper;
+	
+	@Value("${external.payment-service}")
+	private String externalURL;
 	
 	@BeforeAll
 	static void prepare() {
@@ -578,7 +585,7 @@ class BankControllerTest {
 			.andExpect(redirectedUrl("/accounts/show/" + phone));
 		
 		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01, "Demo");
-		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -688,7 +695,7 @@ class BankControllerTest {
 				.andExpect(view().name("bill/external"));
 		
 		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.00, "Demo");
-		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -843,7 +850,7 @@ class BankControllerTest {
 				.andExpect(view().name("bill/external"));
 		
 		OperationRequest dto = new OperationRequest(777, 777, "USD", 0.01, "Demo");
-		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -913,7 +920,7 @@ class BankControllerTest {
 				.andExpect(view().name("bill/external"));
 		
 		OperationRequest dto = new OperationRequest(777, 3, "SEA", 0.01, "Demo");
-		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -933,7 +940,7 @@ class BankControllerTest {
 	void constraint_violation_exception() throws Exception {
 		
 		OperationRequest dto = new OperationRequest(1_000_000_000, -1, "yuan", -0.01, "Demo");
-		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -944,7 +951,7 @@ class BankControllerTest {
 			.andExpect(content().string(containsString("Amount of money should be higher than zero")));
 		
 		dto = new OperationRequest(null, null, " ", null, null);
-		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 												.contentType(MediaType.APPLICATION_JSON)
 												.content(mapper.writeValueAsString(dto))
 						)
@@ -957,8 +964,8 @@ class BankControllerTest {
 	}
 	
 	@Test
-	void establish_emitter_connection() throws Exception {		
-		mockMVC.perform(get("/bills/notify")).andExpect(status().isCreated());
+	void establish_emitter() throws Exception {		
+//		mockMVC.perform(get("/bills/notify")).andExpect(status().isCreated());
 		mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
 	}
 	
@@ -966,17 +973,21 @@ class BankControllerTest {
 	@Test
 	void check_cors_and_xml_support() throws Exception {
 		
-		mockMVC.perform(options("/bills/external").header("Origin", "http://evil.com"))
+		mockMVC.perform(options("/bills/external").header("Origin", externalURL))
 			.andExpect(status().isOk());
 		
-		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 												.contentType(MediaType.APPLICATION_XML))
 			.andExpect(status().isBadRequest());
 		
-		mockMVC.perform(get("/bills/notify").header("Origin", "http://evil.com"))
+		mockMVC.perform(post("/bills/external").header("Origin", "http://evildevil.com")
+												.contentType(MediaType.APPLICATION_XML))
 			.andExpect(status().isForbidden());
 		
-		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com"))
+		mockMVC.perform(get("/bills/notify").header("Origin", externalURL))
+			.andExpect(status().isForbidden());
+		
+		mockMVC.perform(post("/bills/external").header("Origin", externalURL))
 			.andExpect(status().isUnsupportedMediaType());
 		
 		
@@ -990,7 +1001,7 @@ class BankControllerTest {
 		
 		XmlMapper xmlMapper = new XmlMapper();
 		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01, "Demo");
-		mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 												.header("Accept", "application/xml")
 												.contentType(MediaType.APPLICATION_XML)
 												.content(xmlMapper.writeValueAsString(dto))

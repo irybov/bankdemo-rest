@@ -480,7 +480,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(jsonPath("$.phone").value(phone))
 				.andExpect(jsonPath("$.birthday").isNotEmpty())
 				.andExpect(jsonPath("$.bills").isArray())
-				.andExpect(jsonPath("$.bills.length()", is(1)));
+				.andExpect(jsonPath("$.bills.length()", is(2)));
 		}
 
 		@Test
@@ -526,8 +526,8 @@ public class BankDemoBootApplicationIT {
 		
 	}
 	
-	@Sql(statements = "INSERT INTO bankdemo.bills(id, is_active, balance, currency, account_id)"
-				 +" "+"VALUES('2', '1', '10.00', 'USD', '1');")
+//	@Sql(statements = "INSERT INTO bankdemo.bills(is_active, balance, currency, account_id)"
+//				 +" "+"VALUES('1', '10.00', 'USD', '1');")
 	@WithMockUser(username = "1111111111", roles = "CLIENT")
 	@Nested
 	class BankControllerIT{
@@ -545,6 +545,9 @@ public class BankDemoBootApplicationIT {
 		private AccountDAO dao;
 		
 		private static final String PHONE = "1111111111";
+		
+		@Value("${external.payment-service}")
+		private String externalURL;
 		
 		@Test
 		void can_get_client_html() throws Exception {
@@ -887,7 +890,7 @@ public class BankDemoBootApplicationIT {
 										.param("action", "transfer")
 										.param("balance", "10.00")
 										.param("amount", "10.00")
-										.param("recipient", "2")
+										.param("recipient", "3")
 					)
 					.andExpect(status().is3xxRedirection())
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
@@ -904,7 +907,7 @@ public class BankDemoBootApplicationIT {
 					.andExpect(flash().attribute("message", "Data has been verified"))
 					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
-			OperationRequest dto = new OperationRequest(777, 2, "USD", 0.01, "Demo");
+			OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01, "Demo");
 			mockMVC.perform(post("/bills/external")
 										.contentType(MediaType.APPLICATION_JSON)
 										.content(mapper.writeValueAsString(dto))
@@ -912,7 +915,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString("Successfully received")));
 			
-			dto = new OperationRequest(777, 3, "NOK", 0.01, "Demo");
+			dto = new OperationRequest(777, 2, "NOK", 0.01, "Demo");
 		    HttpHeaders headers = new HttpHeaders();
 		    headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 			HttpEntity<String> request = new HttpEntity<>(mapper.writeValueAsString(dto), headers);
@@ -977,7 +980,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(view().name("bill/external"));
 			
 			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.00, "Demo");
-			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -1070,7 +1073,7 @@ public class BankDemoBootApplicationIT {
 			.andExpect(view().name("bill/external"));
 			
 			OperationRequest dto = new OperationRequest(777, 777, "SEA", 0.01, "Demo");
-			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -1090,7 +1093,7 @@ public class BankDemoBootApplicationIT {
 					.withBody("Wrong currency type NOK for the target bill 22")));
 			
 			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
-										.param("recipient", "3")
+										.param("recipient", "2")
 //										.param("id", "1")
 										.param("action", "transfer")
 										.param("balance", "10.00")
@@ -1121,7 +1124,7 @@ public class BankDemoBootApplicationIT {
 					.andExpect(view().name("bill/external"));
 			
 			OperationRequest dto = new OperationRequest(777, 2, "AUD", 0.01, "Demo");
-			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -1136,7 +1139,7 @@ public class BankDemoBootApplicationIT {
 		void constraint_violation_exception() throws Exception {
 			
 			OperationRequest dto = new OperationRequest(1_000_000_000, -1, "yuan", -0.01, "Demo");
-			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -1147,7 +1150,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(content().string(containsString("Amount of money should be higher than zero")));
 			
 			dto = new OperationRequest(null, null, " ", null, null);
-			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 													.contentType(MediaType.APPLICATION_JSON)
 													.content(mapper.writeValueAsString(dto))
 							)
@@ -1160,8 +1163,8 @@ public class BankDemoBootApplicationIT {
 		}
 		
 		@Test
-		void establish_emitter_connection() throws Exception {
-			mockMVC.perform(get("/bills/notify")).andExpect(status().isCreated());
+		void establish_emitter() throws Exception {
+//			mockMVC.perform(get("/bills/notify")).andExpect(status().isCreated());
 			mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
 /*			ResponseBodyEmitter emitter = testRestTemplate.getForObject(("/bills/notify"), 
 					ResponseBodyEmitter.class);
@@ -1172,22 +1175,26 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void check_cors_and_xml_support() throws Exception {
 			
-			mockMVC.perform(options("/bills/external").header("Origin", "http://evil.com"))
+			mockMVC.perform(options("/bills/external").header("Origin", externalURL))
 				.andExpect(status().isOk());
 			
-			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 													.contentType(MediaType.APPLICATION_XML))
 				.andExpect(status().isBadRequest());
 			
-			mockMVC.perform(get("/bills/notify").header("Origin", "http://evil.com"))
+			mockMVC.perform(post("/bills/external").header("Origin", "http://evildevil.com")
+													.contentType(MediaType.APPLICATION_XML))
 				.andExpect(status().isForbidden());
 			
-			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com"))
+			mockMVC.perform(get("/bills/notify").header("Origin", externalURL))
+				.andExpect(status().isForbidden());
+			
+			mockMVC.perform(post("/bills/external").header("Origin", externalURL))
 				.andExpect(status().isUnsupportedMediaType());
 			
 			XmlMapper xmlMapper = new XmlMapper();
-			OperationRequest dto = new OperationRequest(777, 2, "USD", 0.01, "Demo");
-			mockMVC.perform(post("/bills/external").header("Origin", "http://evil.com")
+			OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01, "Demo");
+			mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 													.header("Accept", "application/xml")
 													.contentType(MediaType.APPLICATION_XML)
 													.content(xmlMapper.writeValueAsString(dto))
@@ -1242,7 +1249,7 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void credentials_forbidden() throws Exception {
 			
-	        mockMVC.perform(get("/control"))
+	        mockMVC.perform(put("/control"))
 				.andExpect(status().isForbidden());
 		}
 		

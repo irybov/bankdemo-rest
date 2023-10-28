@@ -52,6 +52,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -67,6 +68,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.irybov.bankdemoboot.config.SecurityConfig;
 import com.github.irybov.bankdemoboot.controller.dto.AccountResponse;
 import com.github.irybov.bankdemoboot.controller.dto.BillResponse;
 import com.github.irybov.bankdemoboot.controller.dto.OperationResponse;
@@ -81,6 +83,7 @@ import com.opencsv.CSVWriter;
 
 @WithMockUser(username = "0000000000", roles = "ADMIN")
 @WebMvcTest(controllers = AdminController.class)
+@Import(SecurityConfig.class)
 class AdminControllerTest {
 
 	@MockBean

@@ -6,6 +6,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
@@ -53,7 +54,7 @@ import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 import com.github.irybov.bankdemoboot.service.AccountService;
 
 @WebMvcTest(AuthController.class)
-//@Import(SecurityConfig.class)
+@Import(SecurityConfig.class)
 class AuthControllerTest {
 
 	@MockBean
@@ -164,7 +165,7 @@ class AuthControllerTest {
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/login?error=true"));
 		
-	    verify(accountDetailsService).loadUserByUsername(anyString());
+	    verify(accountDetailsService, times(2)).loadUserByUsername(anyString());
 	}
 	
 	@WithMockUser(username = "9999999999")

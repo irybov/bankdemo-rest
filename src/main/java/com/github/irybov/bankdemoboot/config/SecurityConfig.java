@@ -11,15 +11,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 //import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
@@ -35,7 +39,12 @@ import com.github.irybov.bankdemoboot.security.AccountDetailsService;
 
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
+		
+    private final AccountDetailsService accountDetailsService;
+    public SecurityConfig(AccountDetailsService accountDetailsService) {
+        this.accountDetailsService = accountDetailsService;
+    }
 
 	@Value("${server.address}")
 	private String uri;
@@ -52,10 +61,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     		"/login", 
     		"/register", 
     		"/confirm", 
-    		"/webjars/**", 
+			"/bills/external", 
     		"/css/**", 
     		"/js/**", 
-			"/bills/external"
+    		"/webjars/**"
     };
     private static final String[] SHARED_LIST_URLS = {
     		"/bills/**", 
@@ -76,30 +85,26 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //    		"/actuator/**"
 //    };
 	
-    private final AccountDetailsService accountDetailsService;
-    public SecurityConfig(AccountDetailsService accountDetailsService) {
-        this.accountDetailsService = accountDetailsService;
-    }	
 	@Bean
 	protected BCryptPasswordEncoder passwordEncoder() {
 	    return new BCryptPasswordEncoder(4);
-	}    
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-    	
+	}
+/*	@Bean
+	public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+		
+        AuthenticationManagerBuilder auth = http.getSharedObject(AuthenticationManagerBuilder.class);
 		auth.inMemoryAuthentication()
 			.withUser("remote")
 			.password(passwordEncoder().encode("remote"))
 			.roles("REMOTE");
-		
-        DaoAuthenticationProvider dao = new DaoAuthenticationProvider();
-        dao.setUserDetailsService(accountDetailsService);
-        dao.setPasswordEncoder(passwordEncoder());
-        auth.authenticationProvider(dao);
-    	
-//        auth.userDetailsService(accountDetailsService)
-//            .passwordEncoder(passwordEncoder());
-    }
+        
+	    DaoAuthenticationProvider dao = new DaoAuthenticationProvider();
+	    dao.setUserDetailsService(accountDetailsService);
+	    dao.setPasswordEncoder(passwordEncoder());
+	    
+	    auth.authenticationProvider(dao);        
+	    return auth.build();
+	}*/	
 	
 /*	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -114,12 +119,37 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		    .rolePrefix("ROLE_");
 	}*/
 	
-	@Override
-	protected void configure(HttpSecurity http) throws Exception {
+/*	@Bean
+	public AuthenticationProvider authenticationProvider() {
 		
-		CsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
+	    DaoAuthenticationProvider dao = new DaoAuthenticationProvider();
+	    dao.setUserDetailsService(accountDetailsService);
+	    dao.setPasswordEncoder(passwordEncoder());
+	 
+	    return dao;
+	}*/
+	
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    	        
+   		CsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
+    	
+    	AuthenticationManagerBuilder auth = http.getSharedObject(AuthenticationManagerBuilder.class);
+		auth.inMemoryAuthentication()
+			.withUser("remote")
+			.password(passwordEncoder().encode("remote"))
+			.roles("REMOTE");		
+        
+	    DaoAuthenticationProvider dao = new DaoAuthenticationProvider();
+	    dao.setUserDetailsService(accountDetailsService);
+	    dao.setPasswordEncoder(passwordEncoder());
+	    
+	    auth.authenticationProvider(dao);
+//	    auth.build();
 
 		http
+			.authenticationProvider(dao)
+			.authenticationManager(auth.build())
 //			.sessionManagement()
 //	        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 //			.cors(Customizer.withDefaults())
@@ -158,7 +188,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.httpBasic();
 //			.and().cors().configurationSource(corsConfigurationSource());
 //		http.headers().frameOptions().disable();
-	}
+
+        return http.build();
+    }
+    
+/*	@Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().antMatchers("/css/**", "/js/**", "/webjars/**");
+    }*/
 	
 //    @Override
 //    public void configure(WebSecurity web) throws Exception {
