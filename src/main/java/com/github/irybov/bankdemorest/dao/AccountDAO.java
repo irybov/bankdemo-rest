@@ -74,8 +74,8 @@ public class AccountDAO {
 		Account account = entityManager.createQuery("SELECT a FROM Account a WHERE a.phone=:phone",
 				Account.class)
 				.setParameter("phone", phone)
-				.getResultStream().findFirst().orElse(null);
-//				.getSingleResult();
+//				.getResultStream().findFirst().orElse(null);
+				.getSingleResult();
 		Hibernate.initialize(account.getRoles());		
 		return account;
 	}

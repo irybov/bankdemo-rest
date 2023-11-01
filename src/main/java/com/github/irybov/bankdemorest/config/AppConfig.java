@@ -27,7 +27,7 @@ import com.github.irybov.bankdemorest.service.OperationService;
 import com.github.irybov.bankdemorest.validation.AccountValidator;
 
 @Configuration
-@ComponentScan(basePackages="bankdemoboot")
+@ComponentScan(basePackages="bankdemorest")
 public class AppConfig {
 
     @Autowired
