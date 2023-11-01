@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,13 +43,15 @@ public class MegaController {
 	
 	@ApiOperation("Switchs model's layer type wired to defined controllers")
 	@PreAuthorize("hasRole('ADMIN')")
+	@CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", 
+		methods = {RequestMethod.OPTIONS, RequestMethod.POST}, allowCredentials="true")
 	@PutMapping("/control")
 	public String changeServiceImpl(@RequestParam String impl, HttpServletResponse response) {
 		
 		if(impl.equals("JPA") || impl.equals("DAO")) {
 		
-			details.setServiceImpl(impl);
-			String bean = auth.setServiceImpl(impl);
+			String bean = details.setServiceImpl(impl);
+//			auth.setServiceImpl(impl);
 			log.info("Admin {} has switched services impementation to {}",
 					authentication().getName(), impl);
 			return "Services impementation has been switched to " + bean;

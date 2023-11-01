@@ -11,7 +11,6 @@ import javax.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,6 @@ import com.github.irybov.bankdemorest.exception.RegistrationException;
 import com.github.irybov.bankdemorest.repository.AccountRepository;
 import com.github.irybov.bankdemorest.security.Role;
 
-@Primary
 @Service
 @Transactional
 public class AccountServiceJPA implements AccountService {

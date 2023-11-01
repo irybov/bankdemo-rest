@@ -74,7 +74,6 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
 @Api(description = "Controller for admin's actions ")
-@CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 @Slf4j
 //@Validated
 @Controller
@@ -444,9 +443,9 @@ public class AdminController extends BaseController {
 	}
 
 	@Override
-	String setServiceImpl(String impl) {
+	void setServiceImpl(String impl) {
 		// TODO Auto-generated method stub
-		return null;
+//		return null;
 	}
 	
 }

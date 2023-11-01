@@ -585,9 +585,9 @@ public class BankController extends BaseController {
 	}
 
 	@Override
-	String setServiceImpl(String impl) {
+	void setServiceImpl(String impl) {
 		// TODO Auto-generated method stub
-		return null;
+//		return null;
 	}
 	
 /*	@GetMapping("/operations/list")

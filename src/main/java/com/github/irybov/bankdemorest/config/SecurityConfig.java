@@ -2,11 +2,11 @@ package com.github.irybov.bankdemorest.config;
 
 import java.util.Arrays;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 //import javax.sql.DataSource;
 
-//import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -40,11 +40,6 @@ import com.github.irybov.bankdemorest.security.AccountDetailsService;
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-		
-    private final AccountDetailsService accountDetailsService;
-    public SecurityConfig(AccountDetailsService accountDetailsService) {
-        this.accountDetailsService = accountDetailsService;
-    }
 
 	@Value("${server.address}")
 	private String uri;
@@ -55,16 +50,20 @@ public class SecurityConfig {
 	
 //	@Autowired
 //	private DataSource dataSource;
+	@Autowired
+	private BCryptPasswordEncoder bCryptPasswordEncoder;
+	@Autowired
+	private AccountDetailsService accountDetailsService;
 	
     private static final String[] WHITE_LIST_URLS = { 
     		"/home", 
     		"/login", 
     		"/register", 
     		"/confirm", 
-			"/bills/external", 
+    		"/webjars/**", 
     		"/css/**", 
     		"/js/**", 
-    		"/webjars/**"
+			"/bills/external"
     };
     private static final String[] SHARED_LIST_URLS = {
     		"/bills/**", 
@@ -82,13 +81,11 @@ public class SecurityConfig {
 			"/h2-console/**"
     };
 //    private static final String[] REMOTE_LIST_URLS = {
+//			"/*swagger*/**", 
+//			"/**/api-docs/**", 
 //    		"/actuator/**"
 //    };
-	
-	@Bean
-	protected BCryptPasswordEncoder passwordEncoder() {
-	    return new BCryptPasswordEncoder(4);
-	}
+
 /*	@Bean
 	public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
 		
@@ -132,17 +129,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     	        
-//   		CsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
+   		CsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
     	
     	AuthenticationManagerBuilder auth = http.getSharedObject(AuthenticationManagerBuilder.class);
 		auth.inMemoryAuthentication()
 			.withUser("remote")
-			.password(passwordEncoder().encode("remote"))
+			.password(bCryptPasswordEncoder.encode("remote"))
 			.roles("REMOTE");		
         
 	    DaoAuthenticationProvider dao = new DaoAuthenticationProvider();
 	    dao.setUserDetailsService(accountDetailsService);
-	    dao.setPasswordEncoder(passwordEncoder());
+	    dao.setPasswordEncoder(bCryptPasswordEncoder);
 	    
 	    auth.authenticationProvider(dao);
 //	    auth.build();
@@ -162,12 +159,12 @@ public class SecurityConfig {
 			.antMatchers("/actuator/**").hasRole("REMOTE")
 			.anyRequest().authenticated()
 				.and()
-		    .csrf().disable()
-/*		    .csrfTokenRepository(csrfTokenRepository)
+//		    .csrf().disable()
+		    .csrf().csrfTokenRepository(csrfTokenRepository)
 		    .sessionAuthenticationStrategy(new CsrfAuthenticationStrategy(csrfTokenRepository))
-		    .ignoringAntMatchers("/bills/external", "/actuator/**")*/
+		    .ignoringAntMatchers("/bills/external", "/actuator/**", "/**/swagger*/**")
 //		    .ignoringAntMatchers(REMOTE_LIST_URLS)
-//		        .and()
+		        .and()
 			.formLogin()
 			.usernameParameter("phone")
 			.loginPage("/home")

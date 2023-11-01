@@ -1,6 +1,7 @@
 package com.github.irybov.bankdemorest.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,29 +24,31 @@ public class AccountDetailsService implements UserDetailsService {
 	private AccountDAO dao;
 	@Autowired
 	private ApplicationContext context;
-	
+	@Autowired
+	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 		
+//	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	@Override
 	public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
 		
-		accountService = context.getBean(AccountService.class);
+//		accountService = (AccountService) context.getBean("accountServiceAlias");
 		Account account = null;
 		if(accountService instanceof AccountServiceJPA) {
 			account = repository.findByPhone(phone);			
 		}
 		else if(accountService instanceof AccountServiceDAO) {
-			account = dao.getAccount(phone);
+			account = dao.getWithRoles(phone);
 		}
-		if(account == null) throw new UsernameNotFoundException("User " + phone + " not found");		
+		if(account == null) throw new UsernameNotFoundException("User " + phone + " not found");	
 		return new AccountDetails(account);
 	}
 
-	public void setServiceImpl(String impl) {
+	public String setServiceImpl(String impl) {
 		
-		if(impl.equals("JPA")) accountService = context.getBean(AccountServiceJPA.class);
-		else if(impl.equals("DAO")) accountService = context.getBean(AccountServiceDAO.class);
-//		return accountService.getClass().getSimpleName();
+		if(impl.equals("JPA")) accountService = (AccountService) context.getBean("accountServiceJPA");
+		else if(impl.equals("DAO")) accountService = (AccountService) context.getBean("accountServiceDAO");
+		return accountService.getClass().getSimpleName();
 	}
 	
 }

@@ -29,14 +29,13 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
 @Api(description = "Controller for users authorization and registration")
-@CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 @Slf4j
 //@Validated
 @Controller
 public class AuthController extends BaseController {
 	
 	@Autowired
-//	@Qualifier("accountServiceAlias")
+	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 	
 	@Qualifier("beforeCreateAccountValidator")
@@ -108,11 +107,11 @@ public class AuthController extends BaseController {
 	}
 
 	@Override
-	String setServiceImpl(String impl) {
+	void setServiceImpl(String impl) {
 		
 		if(impl.equals("JPA")) accountService = context.getBean(AccountServiceJPA.class);
 		else if(impl.equals("DAO")) accountService = context.getBean(AccountServiceDAO.class);
-		return accountService.getClass().getSimpleName();
+//		return accountService.getClass().getSimpleName();
 	}
 	
 }

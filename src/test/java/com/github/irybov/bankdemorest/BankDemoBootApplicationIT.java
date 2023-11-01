@@ -39,6 +39,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -183,6 +184,7 @@ public class BankDemoBootApplicationIT {
 	class AuthControllerIT{
 		
 		@Autowired
+		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
 		@Autowired
 		private AccountRepository repository;
@@ -343,10 +345,10 @@ public class BankDemoBootApplicationIT {
 										 .param("phone", "4444444444")
 										 .param("surname", "Nacci")
 						)
-				.andExpect(status().isConflict())
-				.andExpect(model().size(2))
+				.andExpect(status().isBadRequest())
+				.andExpect(model().size(1))
 				.andExpect(model().attribute("account", any(AccountRequest.class)))
-				.andExpect(model().attribute("message", "You must be 18+ to register"))
+				.andExpect(content().string(containsString("Validator in action!")))
 				.andExpect(view().name("auth/register"));
 		}
 		
@@ -537,6 +539,7 @@ public class BankDemoBootApplicationIT {
 		private TestRestTemplate testRestTemplate;
 		
 		@Autowired
+		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
 		@Autowired
 		private AccountRepository repository;

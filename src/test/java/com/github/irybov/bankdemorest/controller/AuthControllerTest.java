@@ -34,12 +34,16 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.Validator;
@@ -62,7 +66,7 @@ class AuthControllerTest {
 	@Qualifier("beforeCreateAccountValidator")
 	private Validator accountValidator;
 	@MockBean
-//	@Qualifier("accountServiceAlias")
+	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 	@MockBean
 	private AccountDetailsService accountDetailsService;
@@ -71,6 +75,17 @@ class AuthControllerTest {
 	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
+	}
+	
+	@TestConfiguration
+	static class TestConfig {
+		
+		@Bean
+		@Primary
+		public BCryptPasswordEncoder passwordEncoder() {
+		    return new BCryptPasswordEncoder(4);
+		}
+		
 	}
 	
 	@Test
@@ -187,7 +202,6 @@ class AuthControllerTest {
 	    verify(accountService).getAccountDTO(anyString());
 	}
 	
-	@Disabled
 	@Test
 	void unauthorized_denied() throws Exception {
 		mockMVC.perform(get("/success")).andExpect(status().isUnauthorized());
