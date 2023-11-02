@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.github.irybov.bankdemorest.dao.AccountDAO;
 import com.github.irybov.bankdemorest.entity.Account;
@@ -28,7 +29,7 @@ public class AccountDetailsService implements UserDetailsService {
 	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 		
-//	@Transactional(readOnly = true, noRollbackFor = Exception.class)
+	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	@Override
 	public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
 		
