@@ -33,12 +33,12 @@ public class AppConfig {
     @Autowired
     private ApplicationContext context;
 	
-	@ConfigurationProperties(prefix = "spring.datasource")
+/*	@ConfigurationProperties(prefix = "spring.datasource")
 	@Bean
 	@Primary
 	public DataSource datasource() {
 		return DataSourceBuilder.create().build();
-	}
+	}*/
 	@Bean
 	protected BCryptPasswordEncoder bCryptPasswordEncoder() {
 	    return new BCryptPasswordEncoder(4);

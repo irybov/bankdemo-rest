@@ -583,12 +583,6 @@ public class BankController extends BaseController {
 		log.info("User {} changes password to a new one", authentication().getName());
 		return "account/password";
 	}
-
-	@Override
-	void setServiceImpl(String impl) {
-		// TODO Auto-generated method stub
-//		return null;
-	}
 	
 /*	@GetMapping("/operations/list")
 	public String getOperations(@RequestParam int id, Model model) {

@@ -12,7 +12,6 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 //import org.springframework.validation.annotation.Validated;
 import org.springframework.validation.Validator;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,8 +20,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
 import com.github.irybov.bankdemorest.service.AccountService;
-import com.github.irybov.bankdemorest.service.AccountServiceDAO;
-import com.github.irybov.bankdemorest.service.AccountServiceJPA;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -106,12 +103,4 @@ public class AuthController extends BaseController {
 		}
 	}
 
-	@Override
-	void setServiceImpl(String impl) {
-		
-		if(impl.equals("JPA")) accountService = context.getBean(AccountServiceJPA.class);
-		else if(impl.equals("DAO")) accountService = context.getBean(AccountServiceDAO.class);
-//		return accountService.getClass().getSimpleName();
-	}
-	
 }
