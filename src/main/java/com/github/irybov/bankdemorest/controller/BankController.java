@@ -83,7 +83,6 @@ import lombok.extern.slf4j.Slf4j;
 import springfox.documentation.annotations.ApiIgnore;
 
 @Api(description = "Controller for client's actions")
-@CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 @Slf4j
 //@Validated
 @Controller
@@ -220,7 +219,7 @@ public class BankController extends BaseController {
 		try {
 			bill = accountService.addBill(params.get("phone"), params.get("currency"));
 		}
-		catch (Exception exc) {
+		catch (RuntimeException exc) {
 			log.error(exc.getMessage(), exc);
 		}
 		response.setStatus(HttpServletResponse.SC_CREATED);
@@ -449,7 +448,8 @@ public class BankController extends BaseController {
 		{@ApiResponse(code = 200, message = "Successfully received", response = String.class), 
 		 @ApiResponse(code = 404, message = "", responseContainer = "List", response = String.class),
 		 @ApiResponse(code = 500, message = "", response = String.class)})
-	@CrossOrigin(originPatterns = "${external.payment-service}", methods = {RequestMethod.OPTIONS, RequestMethod.POST})
+	@CrossOrigin(originPatterns = "${external.payment-service}", 
+		methods = {RequestMethod.OPTIONS, RequestMethod.POST})
 	@PostMapping(path = "/bills/external",
 					consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
 					produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -583,7 +583,7 @@ public class BankController extends BaseController {
 		log.info("User {} changes password to a new one", authentication().getName());
 		return "account/password";
 	}
-	
+
 /*	@GetMapping("/operations/list")
 	public String getOperations(@RequestParam int id, Model model) {
 		model.addAttribute("billId", id);
