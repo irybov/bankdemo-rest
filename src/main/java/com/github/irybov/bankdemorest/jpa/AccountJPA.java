@@ -1,4 +1,4 @@
-package com.github.irybov.bankdemorest.repository;
+package com.github.irybov.bankdemorest.jpa;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.github.irybov.bankdemorest.entity.Account;
 
-public interface AccountRepository extends JpaRepository<Account, Integer> {
+public interface AccountJPA extends JpaRepository<Account, Integer> {
 	
 	Optional<Account> findByPhone(String phone);
 	

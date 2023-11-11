@@ -68,7 +68,7 @@ import com.github.irybov.bankdemorest.controller.dto.OperationRequest;
 import com.github.irybov.bankdemorest.controller.dto.PasswordRequest;
 import com.github.irybov.bankdemorest.dao.AccountDAO;
 import com.github.irybov.bankdemorest.entity.Account;
-import com.github.irybov.bankdemorest.repository.AccountRepository;
+import com.github.irybov.bankdemorest.jpa.AccountJPA;
 import com.github.irybov.bankdemorest.service.AccountService;
 import com.github.irybov.bankdemorest.service.AccountServiceDAO;
 import com.github.irybov.bankdemorest.service.AccountServiceJPA;
@@ -161,7 +161,7 @@ public class BankDemoBootApplicationIT {
 	    @Test
 	    void can_get_swagger_html() throws Exception {
 
-	        mockMVC.perform(get("/swagger-ui/index.html"))
+	        mockMVC.perform(get("/swagger-ui.html"))
 	        	.andExpect(status().isOk());
 	    }
 		
@@ -191,7 +191,7 @@ public class BankDemoBootApplicationIT {
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
 		@Autowired
-		private AccountRepository repository;
+		private AccountJPA repository;
 		@Autowired
 		private AccountDAO dao;
 		
@@ -437,7 +437,7 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void can_change_account_status() throws Exception {
 			
-			mockMVC.perform(get("/accounts/status/{id}", "1"))
+			mockMVC.perform(patch("/accounts/status/{id}", "1").with(csrf()))
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString("false")));
 		}
@@ -445,7 +445,7 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void can_change_bill_status() throws Exception {
 			
-			mockMVC.perform(get("/bills/status/{id}", "1"))
+			mockMVC.perform(patch("/bills/status/{id}", "1").with(csrf()))
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString("false")));
 		}
@@ -547,7 +547,7 @@ public class BankDemoBootApplicationIT {
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
 		@Autowired
-		private AccountRepository repository;
+		private AccountJPA repository;
 		@Autowired
 		private AccountDAO dao;
 		

@@ -1,4 +1,4 @@
-package com.github.irybov.bankdemorest.repository;
+package com.github.irybov.bankdemorest.jpa;
 
 import java.util.List;
 
@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.github.irybov.bankdemorest.entity.Bill;
 
-public interface BillRepository extends JpaRepository<Bill, Integer> {
+public interface BillJPA extends JpaRepository<Bill, Integer> {
 
 //	@Query("SELECT b FROM Bill b WHERE b.owner.id=:id")
 //	List<Bill> getAll(int id);

@@ -74,7 +74,8 @@ public class SecurityConfig {
     		"/accounts/password"
     };
     private static final String[] ADMIN_LIST_URLS = {
-			"/**/swagger*/**", 
+    		"/configuration/**", 
+			"/swagger*/**", 
 			"/**/api-docs/**", 
 			"/control", 
     		"/accounts/search", 
@@ -84,7 +85,7 @@ public class SecurityConfig {
 			"/h2-console/**"
     };
 //    private static final String[] REMOTE_LIST_URLS = {
-//			"/*swagger*/**", 
+//			"**/swagger*/**", 
 //			"/**/api-docs/**", 
 //    		"/actuator/**"
 //    };
@@ -165,7 +166,12 @@ public class SecurityConfig {
 //		    .csrf().disable()
 		    .csrf().csrfTokenRepository(csrfTokenRepository)
 		    .sessionAuthenticationStrategy(new CsrfAuthenticationStrategy(csrfTokenRepository))
-		    .ignoringAntMatchers("/bills/external", "/actuator/**", "/**/swagger*/**")
+		    .ignoringAntMatchers("/bills/external", 
+		    					 "/webjars/**", 
+		    					 "/configuration/**", 
+		    					 "/actuator/**", 
+		    					 "/swagger*/**", 
+		    					 "/**/api-docs/**")
 //		    .ignoringAntMatchers(REMOTE_LIST_URLS)
 		        .and()
 			.formLogin()
