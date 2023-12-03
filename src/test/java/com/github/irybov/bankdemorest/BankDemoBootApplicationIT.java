@@ -191,7 +191,7 @@ public class BankDemoBootApplicationIT {
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
 		@Autowired
-		private AccountJPA repository;
+		private AccountJPA jpa;
 		@Autowired
 		private AccountDAO dao;
 		
@@ -250,9 +250,9 @@ public class BankDemoBootApplicationIT {
 			
 			Account account = null;
 			if(accountService instanceof AccountServiceJPA) {
-				account = repository.findByPhone(PHONE).get();
+				account = jpa.findByPhone(PHONE).get();
 				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				repository.saveAndFlush(account);
+				jpa.saveAndFlush(account);
 			}
 			else if(accountService instanceof AccountServiceDAO) {
 				account = dao.getAccount(PHONE);
@@ -547,7 +547,7 @@ public class BankDemoBootApplicationIT {
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
 		@Autowired
-		private AccountJPA repository;
+		private AccountJPA jpa;
 		@Autowired
 		private AccountDAO dao;
 		
@@ -721,9 +721,9 @@ public class BankDemoBootApplicationIT {
 			
 			Account account = null;
 			if(accountService instanceof AccountServiceJPA) {
-				account = repository.findByPhone(PHONE).get();
+				account = jpa.findByPhone(PHONE).get();
 				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				repository.saveAndFlush(account);
+				jpa.saveAndFlush(account);
 			}
 			else if(accountService instanceof AccountServiceDAO) {
 				account = dao.getAccount(PHONE);
@@ -747,9 +747,9 @@ public class BankDemoBootApplicationIT {
 			
 			Account account = null;
 			if(accountService instanceof AccountServiceJPA) {
-				account = repository.findByPhone(PHONE).get();
+				account = jpa.findByPhone(PHONE).get();
 				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				repository.saveAndFlush(account);
+				jpa.saveAndFlush(account);
 			}
 			else if(accountService instanceof AccountServiceDAO) {
 				account = dao.getAccount(PHONE);

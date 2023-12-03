@@ -41,6 +41,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -69,7 +70,7 @@ class AuthControllerTest {
 	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 	@MockBean
-	private AccountDetailsService accountDetailsService;
+	private UserDetailsService accountDetailsService;
 	@Autowired
 	private MockMvc mockMVC;
 	
@@ -181,7 +182,7 @@ class AuthControllerTest {
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/login?error=true"));
 		
-	    verify(accountDetailsService, times(2)).loadUserByUsername(anyString());
+	    verify(accountDetailsService, times(3)).loadUserByUsername(anyString());
 	}
 	
 	@WithMockUser(username = "9999999999")
@@ -222,6 +223,7 @@ class AuthControllerTest {
 		mockMVC.perform(post("/confirm").with(csrf()).flashAttr("account", accountRequest))
 			.andExpect(status().isCreated())
 	        .andExpect(model().size(2))
+	        .andExpect(model().attributeExists("account"))
 	        .andExpect(model().attribute("success", "Your account has been created"))
 			.andExpect(view().name("auth/login"));
 	}
