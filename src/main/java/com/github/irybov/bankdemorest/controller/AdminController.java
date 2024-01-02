@@ -181,14 +181,14 @@ public class AdminController extends BaseController {
 //		return new ResponseEntity<>(target, HttpStatus.OK);
 	}
 
-	@ApiOperation("Returns clients html-page")
+/*	@ApiOperation("Returns clients html-page")
 	@GetMapping("/accounts/list")
 	public String getClientsPage(){
 //	public String getClients(Model model){
 //		List<AccountResponseDTO> clients = accountService.getAll();
 //		model.addAttribute("clients", clients);
 		return "account/clients";
-	}
+	}*/
 	@ApiOperation("Returns list of all clients")
 	@GetMapping("/accounts/list/all")
 	public CompletableFuture<ResponseEntity<byte[]>> getClientsList(){
@@ -301,11 +301,11 @@ public class AdminController extends BaseController {
 		return operations;
 	}*/
 	
-	@ApiOperation("Returns bill's operations history html-page")
+/*	@ApiOperation("Returns bill's operations history html-page")
 	@GetMapping("/operations/list")
 	public String getOperationsPage() {
 		return "account/history";
-	}
+	}*/
 	@ApiOperation("Returns filtered pageable list of bill's operations")
 	@GetMapping("/operations/list/{id}")
 	@ResponseBody

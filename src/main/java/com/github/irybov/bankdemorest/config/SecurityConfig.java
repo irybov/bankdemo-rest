@@ -21,9 +21,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 //import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
@@ -51,21 +53,21 @@ public class SecurityConfig {
 	
 //	@Autowired
 //	private DataSource dataSource;
-	private final BCryptPasswordEncoder passwordEncoder;
+	private final PasswordEncoder passwordEncoder;
 	private final UserDetailsService accountDetailsService;
-	public SecurityConfig(BCryptPasswordEncoder passwordEncoder, UserDetailsService accountDetailsService) {
+	public SecurityConfig(PasswordEncoder passwordEncoder, UserDetailsService accountDetailsService) {
 		this.passwordEncoder = passwordEncoder;
 		this.accountDetailsService = accountDetailsService;
 	}
 	
-    private static final String[] WHITE_LIST_URLS = { 
+    private static final String[] WHITE_LIST_URLS = {
     		"/home", 
     		"/login", 
     		"/register", 
     		"/confirm", 
-    		"/webjars/**", 
-    		"/css/**", 
-    		"/js/**", 
+//    		"/webjars/**", 
+//    		"/css/**", 
+//    		"/js/**", 
 			"/bills/external"
     };
     private static final String[] SHARED_LIST_URLS = {
@@ -77,10 +79,11 @@ public class SecurityConfig {
     		"/configuration/**", 
 			"/swagger*/**", 
 			"/**/api-docs/**", 
+    		"/webjars/**", 
 			"/control", 
-    		"/accounts/search", 
-    		"/accounts/status", 
-    		"/accounts/list/**", 
+    		"/accounts/search/*", 
+    		"/accounts/status/{id}", 
+    		"/accounts/list/*", 
 			"/operations/**", 
 			"/h2-console/**"
     };
@@ -133,7 +136,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     	        
-   		CsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
+//    	CsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
     	
     	AuthenticationManagerBuilder auth = http.getSharedObject(AuthenticationManagerBuilder.class);
 		auth.inMemoryAuthentication()
@@ -151,11 +154,12 @@ public class SecurityConfig {
 		http
 			.authenticationProvider(dao)
 			.authenticationManager(auth.build())
-//			.sessionManagement()
-//	        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//			.sessionManagement().disable()
+			.sessionManagement()
+	        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 //			.cors(Customizer.withDefaults())
 //			.cors()
-//			.and()
+			.and()
 			.authorizeRequests()
 			.mvcMatchers(WHITE_LIST_URLS).permitAll()
 			.mvcMatchers(SHARED_LIST_URLS).hasAnyRole("ADMIN", "CLIENT")
@@ -163,33 +167,33 @@ public class SecurityConfig {
 			.antMatchers("/actuator/**").hasRole("REMOTE")
 			.anyRequest().authenticated()
 				.and()
-//		    .csrf().disable()
-		    .csrf().csrfTokenRepository(csrfTokenRepository)
+		    .csrf().disable()
+/*		    .csrf().csrfTokenRepository(csrfTokenRepository)
 		    .sessionAuthenticationStrategy(new CsrfAuthenticationStrategy(csrfTokenRepository))
-		    .ignoringAntMatchers("/bills/external", "/actuator/**")
+		    .ignoringAntMatchers("/bills/external", "/actuator/**")*/
 //		    					 "/webjars/**", 
 //		    					 "/configuration/**", 
 //		    					 "/swagger*/**", 
 //		    					 "/**/api-docs/**")
 //		    .ignoringAntMatchers(REMOTE_LIST_URLS)
-		        .and()
-			.formLogin()
+//		        .and()
+/*			.formLogin()
 			.usernameParameter("phone")
 			.loginPage("/home")
 			.loginProcessingUrl("/auth")
 //			.successHandler((request, response, authentication) ->
-//			response.sendRedirect("/accounts/show/" + authentication.getName()))
+//				response.sendRedirect("/accounts/show/" + authentication.getName()))
 			.defaultSuccessUrl("/success", true)
             .failureUrl("/login?error=true")
-				.and()
-			.logout()
+				.and()*/
+/*			.logout()
 //          .logoutUrl("/logout")
             .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "POST"))
             .invalidateHttpSession(true)
             .clearAuthentication(true)
             .deleteCookies("JSESSIONID")
 			.logoutSuccessUrl("/home")
-				.and()
+				.and()*/
 			.httpBasic();
 //			.and().cors().configurationSource(corsConfigurationSource());
 //		http.headers().frameOptions().disable();

@@ -119,7 +119,6 @@ class BankControllerTest {
 	
 //	private static Set<Currency> currencies;
 	private static Account entity;
-	private static PasswordRequest pwDTO;
 	
 	private static Operation operation;	
 	private static Operation.OperationBuilder builder;
@@ -158,8 +157,6 @@ class BankControllerTest {
 				("Nia", "Nacci", "4444444444", LocalDate.of(1998, 12, 10), "blackmamba", true);
 		entity.setCreatedAt(OffsetDateTime.now());
 		entity.setUpdatedAt(OffsetDateTime.now());
-		
-		pwDTO = new PasswordRequest();
 		
 		operation = new Operation();
 		builder = mock(Operation.OperationBuilder.class, Mockito.RETURNS_SELF);
@@ -389,8 +386,7 @@ class BankControllerTest {
 	@Test
 	void success_password_change() throws Exception {
 		
-		pwDTO.setOldPassword("blackmamba");
-		pwDTO.setNewPassword("whitecorba");
+		PasswordRequest pwDTO = new PasswordRequest("blackmamba", "whitecorba");
 		
 		when(accountService.comparePassword(pwDTO.getOldPassword(), phone)).thenReturn(true);
 		
@@ -410,8 +406,7 @@ class BankControllerTest {
 	@Test
 	void failure_password_change() throws Exception {
 		
-		pwDTO.setOldPassword("blackcorba");
-		pwDTO.setNewPassword("whitemamba");
+		PasswordRequest pwDTO = new PasswordRequest("blackcorba", "whitemamba");
 		
 		when(accountService.comparePassword(pwDTO.getOldPassword(), phone)).thenReturn(false);
 		
@@ -430,9 +425,8 @@ class BankControllerTest {
 	
 	@Test
 	void password_binding_errors() throws Exception {
-		
-		pwDTO.setOldPassword("black");
-		pwDTO.setNewPassword("white");
+
+		PasswordRequest pwDTO = new PasswordRequest("black", "white");
 		
 		mockMVC.perform(patch("/accounts/password/{phone}", phone).with(csrf())
 													.param("oldPassword", pwDTO.getOldPassword())
@@ -1041,7 +1035,6 @@ class BankControllerTest {
 	static void clear() {
 //		currencies = null;
 		entity = null;
-		pwDTO = null;
     	operation = null;
     	builder = null;
 		bill = null;

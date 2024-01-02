@@ -535,13 +535,13 @@ public class BankController extends BaseController {
 		}
 	}
 	
-	@ApiOperation("Returns password's change html-page")
+/*	@ApiOperation("Returns password's change html-page")
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
 	@GetMapping("/accounts/password/{phone}")
 	public String getPasswordForm(@PathVariable String phone, Model model) {
 		model.addAttribute("password", new PasswordRequest());
 		return "account/password";
-	}
+	}*/
 	
 	@ApiOperation("Confirms password's change web-form")
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")

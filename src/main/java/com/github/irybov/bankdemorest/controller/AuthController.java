@@ -41,7 +41,7 @@ public class AuthController extends BaseController {
 		this.accountValidator = accountValidator;
 	}
 
-	@ApiOperation("Returns apllication's start html-page")
+/*	@ApiOperation("Returns apllication's start html-page")
 	@GetMapping("/home")
 	public String getStartPage() {
 		return "auth/home";
@@ -58,7 +58,7 @@ public class AuthController extends BaseController {
 	@GetMapping("/login")
 	public String getLoginForm() {
 		return "auth/login";
-	}
+	}*/
 	
 	@ApiOperation("Returns welcome html-page")
 	@GetMapping("/success")
