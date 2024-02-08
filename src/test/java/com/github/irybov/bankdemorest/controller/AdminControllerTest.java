@@ -156,7 +156,7 @@ class AdminControllerTest {
 	void set_up() {
 		phone = authentication().getName();		
 	}
-
+/*
     @Test
 	void can_get_admin_html() throws Exception {
 
@@ -190,7 +190,7 @@ class AdminControllerTest {
 			.andExpect(content().string(containsString("Clients list")))
 	        .andExpect(view().name("account/clients"));
 	}
-	
+	*/
 	@Test
 	void can_get_clients_list() throws Exception {
 		

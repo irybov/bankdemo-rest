@@ -37,13 +37,12 @@ public class AccountRequest {
 
 	@JsonProperty("phone")
 	@NotBlank(message = "Phone number must not be blank")
-//	@Size(min=10, max=10, message = "Phone number should be 10 digits length")
 	@Pattern(regexp = "^\\d{10}$", message = "Please input phone number like a row of 10 digits")
 	private String phone;
 
 	@JsonProperty("birthday")
 	@NotNull(message = "Please select your date of birth")
-	@Past(message = "Birthday cant be future time")
+	@Past(message = "Birthday can't be future time")
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private LocalDate birthday;

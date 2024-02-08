@@ -5,9 +5,12 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -58,6 +61,7 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -92,6 +96,7 @@ public class BankDemoBootApplicationIT {
 	private static WireMockServer wireMockServer;
 	@Value("${external.payment-service}")
 	private static String externalURL;
+	
 	@BeforeAll
 	static void prepare() {
 		wireMockServer = new WireMockServer(
@@ -112,12 +117,20 @@ public class BankDemoBootApplicationIT {
 	
     @Nested
     class ActuatorAccessIT{
+    	
+		@Autowired
+		@Qualifier("accountServiceAlias")
+		private AccountService accountService;
+		@Autowired
+		private AccountJPA jpa;
+		@Autowired
+		private AccountDAO dao;
 	
-		@WithMockUser(username = "remote", roles = "REMOTE")
+//		@WithMockUser(username = "remote", roles = "REMOTE")
 		@Test
 		void actuator_allowed() throws Exception {
 			
-	        mockMVC.perform(get("/actuator/"))
+	        mockMVC.perform(get("/actuator/").with(httpBasic("remote", "remote")))
 	    		.andExpect(status().isOk());
 		}
 		
@@ -128,32 +141,78 @@ public class BankDemoBootApplicationIT {
 	    		.andExpect(status().isUnauthorized());
 		}
 		
-		@WithMockUser(username = "3333333333", roles = {"ADMIN", "CLIENT"})
+//		@WithMockUser(username = "3333333333", roles = {"ADMIN", "CLIENT"})
 		@Test
 		void actuator_forbidden() throws Exception {
 			
-	        mockMVC.perform(get("/actuator/"))
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = jpa.findByPhone("3333333333").get();
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				jpa.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount("3333333333");
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
+			
+	        mockMVC.perform(get("/actuator/").with(httpBasic("3333333333", "gingerchick")))
 	    		.andExpect(status().isForbidden());
 		}
 		
 	}	
 	
-	@WithMockUser(username = "3333333333", roles = {"ADMIN", "CLIENT"})
+//	@WithMockUser(username = "3333333333", roles = {"ADMIN", "CLIENT"})
     @Nested
     class SwaggerAccessIT{
+		
+		@Autowired
+		@Qualifier("accountServiceAlias")
+		private AccountService accountService;
+		@Autowired
+		private AccountJPA jpa;
+		@Autowired
+		private AccountDAO dao;
+		
+		private static final String PHONE = "3333333333";
     	
 		@Test
 		void swagger_allowed() throws Exception {
 			
-	        mockMVC.perform(get("/swagger-ui/"))
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = jpa.findByPhone(PHONE).get();
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				jpa.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount(PHONE);
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
+			
+	        mockMVC.perform(get("/swagger-ui/").with(httpBasic("3333333333", "gingerchick")))
 	    		.andExpect(status().isOk());
 		}
 		
-		@WithMockUser(username = "1111111111", roles = "CLIENT")
+//		@WithMockUser(username = "1111111111", roles = "CLIENT")
 		@Test
 		void swagger_denied() throws Exception {
 			
-	        mockMVC.perform(get("/swagger-ui/"))
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = jpa.findByPhone("1111111111").get();
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				jpa.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount("1111111111");
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
+			
+	        mockMVC.perform(get("/swagger-ui/").with(httpBasic("1111111111", "supervixen")))
 				.andExpect(status().isForbidden());
 		}
 
@@ -167,8 +226,20 @@ public class BankDemoBootApplicationIT {
 		
 	    @Test
 	    void can_get_api_docs() throws Exception {
+	    	
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = jpa.findByPhone(PHONE).get();
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				jpa.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount(PHONE);
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
 
-	        mockMVC.perform(get("/v2/api-docs"))
+	        mockMVC.perform(get("/v2/api-docs").with(httpBasic("3333333333", "gingerchick")))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));		
 		}
@@ -188,25 +259,28 @@ public class BankDemoBootApplicationIT {
 	class AuthControllerIT{
 		
 		@Autowired
+		private ObjectMapper mapper;
+		
+		@Autowired
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
-		@Autowired
+/*		@Autowired
 		private AccountJPA jpa;
 		@Autowired
-		private AccountDAO dao;
+		private AccountDAO dao;*/
 		
-		private static final String PHONE = "0000000000";
+//		private static final String PHONE = "0000000000";
 	
-		@Test
+/*		@Test
 		void can_get_start_html() throws Exception {
 			
 	        mockMVC.perform(get("/home"))
 	        	.andExpect(status().isOk())
 	        	.andExpect(content().string(containsString("Welcome!")))
 	        	.andExpect(view().name("auth/home"));
-		}
+		}*/
 		
-		@Test
+/*		@Test
 		void can_get_registration_form() throws Exception {
 
 	        mockMVC.perform(get("/register"))
@@ -215,18 +289,18 @@ public class BankDemoBootApplicationIT {
 		        .andExpect(model().size(1))
 		        .andExpect(model().attribute("account", any(AccountRequest.class)))
 		        .andExpect(view().name("auth/register"));
-		}
+		}*/
 	
-		@Test
+/*		@Test
 		void can_get_login_form() throws Exception {
 			
 	        mockMVC.perform(get("/login"))
 		        .andExpect(status().isOk())
 		        .andExpect(content().string(containsString("Log In")))
 		        .andExpect(view().name("auth/login"));
-		}
+		}*/
 		
-		@WithMockUser(username = "0000000000", roles = "ADMIN")
+/*		@WithMockUser(username = "0000000000", roles = "ADMIN")
 		@Test
 		void can_get_menu_html() throws Exception {
 			
@@ -243,9 +317,9 @@ public class BankDemoBootApplicationIT {
 		        .andExpect(model().size(1))
 		        .andExpect(model().attribute("account", any(AccountResponse.class)))
 		        .andExpect(view().name("auth/success"));
-		}
+		}*/
 		
-		@Test
+/*		@Test
 		void correct_user_creds() throws Exception {
 			
 			Account account = null;
@@ -264,17 +338,17 @@ public class BankDemoBootApplicationIT {
 				.andExpect(authenticated())
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/success"));
-		}
+		}*/
 		
-		@Test
+/*		@Test
 		void wrong_user_creds() throws Exception {
 			
 			mockMVC.perform(formLogin("/auth").user("phone", "9999999999").password("localadmin"))
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/login?error=true"));
-		}
+		}*/
 		
-		@WithMockUser(username = "9999999999")
+/*		@WithMockUser(username = "9999999999")
 		@Test
 		void entity_not_found() throws Exception {
 			
@@ -285,93 +359,117 @@ public class BankDemoBootApplicationIT {
 				.andExpect(authenticated())
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/home"));
-		}
+		}*/
 		
-		@Test
+/*		@Test
 		void unauthorized_denied() throws Exception {
 			mockMVC.perform(get("/success")).andExpect(status().isUnauthorized());
 			mockMVC.perform(post("/confirm")).andExpect(status().isForbidden());			
-		}
+		}*/
 		
 		@Test
 		void accepted_registration() throws Exception {
 			
-			mockMVC.perform(post("/confirm").with(csrf())
-										 .param("birthday", "1998-12-10")
-										 .param("name", "Nia")
-										 .param("password", "blackmamba")
-										 .param("phone", "4444444444")
-										 .param("surname", "Nacci")
-						)
+			AccountRequest accountRequest = new AccountRequest();
+//			accountRequestDTO.setBirthday("2001-01-01");
+			accountRequest.setBirthday(LocalDate.of(1989, 01, 30));
+			accountRequest.setName("Kylie");
+			accountRequest.setPassword("blackmamba");
+			accountRequest.setPhone("4444444444");
+			accountRequest.setSurname("Bunbury");
+			
+			mockMVC.perform(post("/confirm")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(accountRequest)))
 				.andExpect(status().isCreated())
-		        .andExpect(model().size(2))
+/*		        .andExpect(model().size(2))
 		        .andExpect(model().attribute("account", any(AccountRequest.class)))
 		        .andExpect(model().attribute("success", "Your account has been created"))
-				.andExpect(view().name("auth/login"));
+				.andExpect(view().name("auth/login"));*/
+				.andExpect(content().string("Your account has been created"));
 		}
 		
 		@Test
 		void rejected_registration() throws Exception {
 			
-			mockMVC.perform(post("/confirm").with(csrf())
-										 .param("birthday", LocalDate.now().minusYears(17L).toString())
-										 .param("name", "N")
-										 .param("password", "superb")
-										 .param("phone", "XXL")
-										 .param("surname", "N")
-						)
+			AccountRequest accountRequest = new AccountRequest();
+			accountRequest.setBirthday(null);
+			accountRequest.setName("i");
+			accountRequest.setPassword("superb");
+			accountRequest.setPhone("xxx");
+			accountRequest.setSurname("a");
+						
+			mockMVC.perform(post("/confirm")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(accountRequest)))
 				.andExpect(status().isBadRequest())
-				.andExpect(model().size(1))
+				.andExpect(jsonPath("$", hasItem("Please select your date of birth")))
+				.andExpect(jsonPath("$.length()", equalTo(7)))
+				.andExpect(jsonPath("$").isArray());
+/*				.andExpect(model().size(1))
 				.andExpect(model().attribute("account", any(AccountRequest.class)))
 				.andExpect(model().hasErrors())
-				.andExpect(view().name("auth/register"));
-			
-			mockMVC.perform(post("/confirm").with(csrf())
-										 .param("birthday", LocalDate.now().plusYears(10L).toString())
-										 .param("name", "N")
-										 .param("password", "superb")
-										 .param("phone", "XXL")
-										 .param("surname", "N")
-						)
+				.andExpect(view().name("auth/register"));*/
+
+			accountRequest.setBirthday(LocalDate.now().plusYears(10L));			
+			mockMVC.perform(post("/confirm")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(accountRequest)))
 				.andExpect(status().isBadRequest())
-				.andExpect(model().size(1))
+				.andExpect(jsonPath("$", hasItem("Birthday can't be future time")))
+				.andExpect(jsonPath("$.length()", equalTo(7)))
+				.andExpect(jsonPath("$").isArray());
+/*				.andExpect(model().size(1))
 				.andExpect(model().attribute("account", any(AccountRequest.class)))
 				.andExpect(model().hasErrors())
-				.andExpect(view().name("auth/register"));
+				.andExpect(view().name("auth/register"));*/
 		}
 		
+		@Disabled
 		@Test
 		void interrupted_registration() throws Exception {
 			
-			mockMVC.perform(post("/confirm").with(csrf())
-										 .param("birthday", LocalDate.now().minusYears(10L).toString())
-										 .param("name", "Nia")
-										 .param("password", "blackmamba")
-										 .param("phone", "4444444444")
-										 .param("surname", "Nacci")
-						)
+			AccountRequest accountRequest = new AccountRequest();
+			accountRequest.setBirthday(LocalDate.now().minusYears(17L));
+			accountRequest.setName("Kylie");
+			accountRequest.setPassword("blackmamba");
+			accountRequest.setPhone("4444444444");
+			accountRequest.setSurname("Bunbury");
+			
+			mockMVC.perform(post("/confirm")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(accountRequest)))
 				.andExpect(status().isBadRequest())
-				.andExpect(model().size(1))
-				.andExpect(model().attribute("account", any(AccountRequest.class)))
-				.andExpect(content().string(containsString("Validator in action!")))
-				.andExpect(view().name("auth/register"));
+//				.andExpect(model().size(1))
+//				.andExpect(model().attribute("account", any(AccountRequest.class)))
+				.andExpect(jsonPath("$", hasItem("You must be 18+ to register")))
+				.andExpect(jsonPath("$.length()", equalTo(1)))
+				.andExpect(jsonPath("$").isArray());
+//				.andExpect(view().name("auth/register"));
 		}
 		
 		@Test
 		void violated_registration() throws Exception {
 			
-			mockMVC.perform(post("/confirm").with(csrf())
-										 .param("birthday", "1998-12-10")
-										 .param("name", "Nia")
-										 .param("password", "blackmamba")
-										 .param("phone", "0000000000")
-										 .param("surname", "Nacci")
-						)
+			AccountRequest accountRequest = new AccountRequest();
+//			accountRequestDTO.setBirthday("2001-01-01");
+			accountRequest.setBirthday(LocalDate.now().minusYears(17L));
+			accountRequest.setName("Admin");
+			accountRequest.setPassword("superadmin");
+			accountRequest.setPhone("0000000000");
+			accountRequest.setSurname("Adminov");
+			
+			mockMVC.perform(post("/confirm")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(accountRequest)))
 				.andExpect(status().isBadRequest())
-				.andExpect(model().size(1))
-				.andExpect(model().attribute("account", any(AccountRequest.class)))
-				.andExpect(content().string(containsString("Validator in action!")))
-				.andExpect(view().name("auth/register"));
+//				.andExpect(model().size(1))
+//				.andExpect(model().attribute("account", any(AccountRequest.class)))
+				.andExpect(jsonPath("$", hasItem("You must be 18+ to register")))
+				.andExpect(jsonPath("$", hasItem("This number is already in use")))
+				.andExpect(jsonPath("$.length()", equalTo(2)))
+				.andExpect(jsonPath("$").isArray());
+//				.andExpect(view().name("auth/register"));
 		}
 		
 	}
@@ -380,7 +478,7 @@ public class BankDemoBootApplicationIT {
 	@Nested
 	@Sql("/test-operations-h2.sql")
 	class AdminControllerIT{
-		
+/*		
 	    @Test
 		void can_get_admin_html() throws Exception {
 	    	
@@ -409,7 +507,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(content().string(containsString("Clients list")))
 		        .andExpect(view().name("account/clients"));
 		}
-		
+*/		
 		@Test
 		void can_get_clients_list() throws Exception {
 			
@@ -557,32 +655,36 @@ public class BankDemoBootApplicationIT {
 		private String externalURL;
 		
 		@Test
-		void can_get_client_html() throws Exception {
+		void can_get_client_info() throws Exception {
 			
 			mockMVC.perform(get("/accounts/show/{phone}", PHONE))
 			.andExpect(status().isOk())
-			.andExpect(content().string(containsString("Private area")))
-			.andExpect(model().size(3))
-			.andExpect(model().attribute("account", any(AccountResponse.class)))
-			.andExpect(model().attribute("bills", any(List.class)))
-			.andExpect(model().attribute("currencies", any(Set.class)))
-			.andExpect(view().name("account/private"));
+			.andExpect(jsonPath("$.id").isNumber())
+			.andExpect(jsonPath("$.createdAt").isNotEmpty())
+			.andExpect(jsonPath("$.updatedAt").isNotEmpty())
+			.andExpect(jsonPath("$.active").isBoolean())
+			.andExpect(jsonPath("$.name").value("Kae"))
+			.andExpect(jsonPath("$.surname").value("Yukawa"))
+			.andExpect(jsonPath("$.phone").value(PHONE))
+			.andExpect(jsonPath("$.birthday").isNotEmpty())
+			.andExpect(jsonPath("$.bills").isArray())
+			.andExpect(jsonPath("$.bills.length()", is(0)));
 		}
 		
 		@Test
 		void check_security_restriction() throws Exception {
 			
 			mockMVC.perform(get("/accounts/show/{phone}", "5555555555"))
-			.andExpect(status().isForbidden())
-			.andExpect(model().size(1))
+			.andExpect(status().isForbidden());
+/*			.andExpect(model().size(1))
 			.andExpect(model().attribute("message", "Security restricted information"))
-			.andExpect(forwardedUrl("/accounts/show/" + PHONE));
+			.andExpect(forwardedUrl("/accounts/show/" + PHONE));*/
 		}
 		
 		@Test
 		void can_create_new_bill() throws Exception {
 			
-			mockMVC.perform(post("/bills/add").with(csrf())
+			mockMVC.perform(post("/bills/add")
 										   .param("phone", PHONE)
 										   .param("currency", "SEA")
 							)
@@ -599,10 +701,10 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void can_delete_own_bill() throws Exception {
 			
-			mockMVC.perform(delete("/bills/delete/{id}", "1").with(csrf()))
+			mockMVC.perform(delete("/bills/delete/{id}", "1"))
 					.andExpect(status().isOk());
 		}
-		
+/*		
 		@Test
 		void can_get_payment_html() throws Exception {
 			
@@ -646,7 +748,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(view().name("bill/transfer"));
 		}
-		
+		*/
 		@Test
 		void check_bill_owner() throws Exception {
 			
@@ -670,7 +772,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(content().contentType(MediaType.valueOf("text/plain;charset=UTF-8")))
 				.andExpect(content().string(containsString("Target bill with id: 4 not found")));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 										.param("recipient", String.valueOf(777))
 //										.param("id", "1")
 										.param("action", "transfer")
@@ -678,13 +780,15 @@ public class BankDemoBootApplicationIT {
 										.param("amount", "0.00")
 					)
 					.andExpect(status().isNotFound())
-					.andExpect(model().size(4))
+					.andExpect(content().string(containsString
+							  ("Target bill with id: " + 777 + " not found")));
+/*					.andExpect(model().size(4))
 					.andExpect(model().attribute("id", 1))
 					.andExpect(model().attribute("action", "transfer"))
 					.andExpect(model().attribute("balance", "0.00"))
 					.andExpect(model().attribute("message", 
 							"Target bill with id: " + 777 + " not found"))
-					.andExpect(view().name("bill/transfer"));
+					.andExpect(view().name("bill/transfer"));*/
 		}
 		
 		@Disabled
@@ -706,7 +810,7 @@ public class BankDemoBootApplicationIT {
 					.andExpect(view().name("bill/transfer"));
 		}
 
-		@Test
+/*		@Test
 		void can_get_password_html() throws Exception {
 			
 			mockMVC.perform(get("/accounts/password/{phone}", PHONE))
@@ -714,10 +818,12 @@ public class BankDemoBootApplicationIT {
 			.andExpect(model().size(1))
 			.andExpect(model().attribute("password", any(PasswordRequest.class)))
 			.andExpect(view().name("account/password"));
-		}
+		}*/
 		
 		@Test
 		void success_password_change() throws Exception {
+			
+			PasswordRequest pwDTO = new PasswordRequest("supervixen", "japanrocks");
 			
 			Account account = null;
 			if(accountService instanceof AccountServiceJPA) {
@@ -731,20 +837,22 @@ public class BankDemoBootApplicationIT {
 				dao.updateAccount(account);
 			}
 			
-			mockMVC.perform(patch("/accounts/password/{phone}", PHONE).with(csrf())
-										.param("oldPassword", "supervixen")
-										.param("newPassword", "japanrocks")
-					)
+			mockMVC.perform(patch("/accounts/password/{phone}", PHONE)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(mapper.writeValueAsString(pwDTO)))
 					.andExpect(status().isOk())
-					.andExpect(model().size(2))
+					.andExpect(content().string(containsString("Password changed")));
+/*					.andExpect(model().size(2))
 					.andExpect(model().attributeExists("password"))
 					.andExpect(model().attribute("success", "Password changed"))
-					.andExpect(view().name("account/password"));
+					.andExpect(view().name("account/password"));*/
 		}
 		
 		@Test
 		void failure_password_change() throws Exception {
 			
+			PasswordRequest pwDTO = new PasswordRequest("superjapan", "vixenrocks");
+			
 			Account account = null;
 			if(accountService instanceof AccountServiceJPA) {
 				account = jpa.findByPhone(PHONE).get();
@@ -757,29 +865,37 @@ public class BankDemoBootApplicationIT {
 				dao.updateAccount(account);
 			}
 			
-			mockMVC.perform(patch("/accounts/password/{phone}", PHONE).with(csrf())
-										.param("oldPassword", "superjapan")
-										.param("newPassword", "vixenrocks")
-					)
-					.andExpect(status().isBadRequest())
-					.andExpect(model().size(2))
+			mockMVC.perform(patch("/accounts/password/{phone}", PHONE)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(mapper.writeValueAsString(pwDTO)))
+					.andExpect(status().isConflict())
+					.andExpect(content().string(containsString("Current password mismatch")));
+/*					.andExpect(model().size(2))
 					.andExpect(model().attributeExists("password"))
-					.andExpect(model().attribute("message", "Old password mismatch"))
-					.andExpect(view().name("account/password"));			
+					.andExpect(model().attribute("message", "Current password mismatch"))
+					.andExpect(view().name("account/password"));*/			
 		}
 		
 		@Test
 		void password_binding_errors() throws Exception {
 			
-			mockMVC.perform(patch("/accounts/password/{phone}", PHONE).with(csrf())
-										.param("oldPassword", "vixen")
-										.param("newPassword", "japan")
-					)
+			PasswordRequest pwDTO = new PasswordRequest("black", "white");
+			
+			mockMVC.perform(patch("/accounts/password/{phone}", PHONE)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(mapper.writeValueAsString(pwDTO)))
 					.andExpect(status().isBadRequest())
-					.andExpect(model().size(1))
+					.andExpect(content().string(containsString
+							("Old password should be 10-60 symbols length")))
+					.andExpect(content().string(containsString
+							("New password should be 10-60 symbols length")))
+				    .andExpect(result -> 
+				      	assertTrue(result.getResolvedException() 
+				      		instanceof MethodArgumentNotValidException));
+/*					.andExpect(model().size(1))
 					.andExpect(model().errorCount(2))
 					.andExpect(model().attributeExists("password"))
-					.andExpect(view().name("account/password"));			
+					.andExpect(view().name("account/password"));*/			
 		}
 		
 		@Test
@@ -790,7 +906,7 @@ public class BankDemoBootApplicationIT {
 					.withStatus(HttpStatus.NOT_FOUND_404)
 					.withBody("No bill with serial 33 found")));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //										.param("id", "1")
 									    .param("action", "external")
 									    .param("balance", "5.00")
@@ -799,12 +915,13 @@ public class BankDemoBootApplicationIT {
 									    .param("recipient", "33")
 					)
 					.andExpect(status().isNotFound())
-					.andExpect(model().size(4))
+					.andExpect(content().string(containsString("No bill with serial 33 found")));
+/*					.andExpect(model().size(4))
 					.andExpect(model().attribute("id", 1))
 					.andExpect(model().attribute("action", "external"))
 					.andExpect(model().attribute("balance", "5.00"))
 					.andExpect(model().attribute("message", "No bill with serial 33 found"))
-					.andExpect(view().name("bill/external"));
+					.andExpect(view().name("bill/external"));*/
 			
 			wireMockServer.verify(WireMock.exactly(1), 
 					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));			
@@ -818,7 +935,7 @@ public class BankDemoBootApplicationIT {
 					.withStatus(HttpStatus.NOT_FOUND_404)
 					.withBody("No bank with name Demo found")));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //										.param("id", "1")
 									    .param("action", "external")
 									    .param("balance", "5.00")
@@ -827,12 +944,13 @@ public class BankDemoBootApplicationIT {
 									    .param("recipient", "22")
 					)
 					.andExpect(status().isNotFound())
-					.andExpect(model().size(4))
+					.andExpect(content().string(containsString("No bank with name Demo found")));
+/*					.andExpect(model().size(4))
 					.andExpect(model().attribute("id", 1))
 					.andExpect(model().attribute("action", "external"))
 					.andExpect(model().attribute("balance", "5.00"))
 					.andExpect(model().attribute("message", "No bank with name Demo found"))
-					.andExpect(view().name("bill/external"));
+					.andExpect(view().name("bill/external"));*/
 			
 			wireMockServer.verify(WireMock.exactly(1), 
 					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));				
@@ -846,7 +964,7 @@ public class BankDemoBootApplicationIT {
 					.withStatus(HttpStatus.SERVICE_UNAVAILABLE_503)
 					.withBody("Service is temporary unavailable")));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //										.param("id", "1")
 									    .param("action", "external")
 									    .param("balance", "10.00")
@@ -855,12 +973,13 @@ public class BankDemoBootApplicationIT {
 									    .param("recipient", "22")
 					)
 					.andExpect(status().isServiceUnavailable())
-					.andExpect(model().size(4))
+					.andExpect(content().string(containsString("Service is temporary unavailable")));
+/*					.andExpect(model().size(4))
 					.andExpect(model().attribute("id", 1))
 					.andExpect(model().attribute("action", "external"))
 					.andExpect(model().attribute("balance", "10.00"))
 					.andExpect(model().attribute("message", "Service is temporary unavailable"))
-					.andExpect(view().name("bill/external"));
+					.andExpect(view().name("bill/external"));*/
 			
 			wireMockServer.verify(WireMock.exactly(1), 
 					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));				
@@ -874,35 +993,38 @@ public class BankDemoBootApplicationIT {
 					.withStatus(HttpStatus.OK_200)
 					.withBody("Data has been verified")));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //									    .param("id", "1")
 									    .param("action", "deposit")
 									    .param("balance", "100.00")
 									    .param("amount", "100.00")
 					)
-					.andExpect(status().is3xxRedirection())
-					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
+			.andExpect(status().isOk())
+			.andExpect(content().string(containsString("Done!")));
+//					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //									    .param("id", "1")
 									    .param("action", "withdraw")
 									    .param("balance", "10.00")
 									    .param("amount", "10.00")
 					)
-					.andExpect(status().is3xxRedirection())
-					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
+			.andExpect(status().isOk())
+			.andExpect(content().string(containsString("Done!")));
+//					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //										.param("id", "0")
 										.param("action", "transfer")
 										.param("balance", "10.00")
 										.param("amount", "10.00")
 										.param("recipient", "3")
 					)
-					.andExpect(status().is3xxRedirection())
-					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
+			.andExpect(status().isOk())
+			.andExpect(content().string(containsString("Done!")));
+//					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //				    					.param("id", "1")
 									    .param("action", "external")
 									    .param("balance", "10.00")
@@ -910,9 +1032,10 @@ public class BankDemoBootApplicationIT {
 									    .param("bank", "Penkov")
 									    .param("recipient", "22")
 					)
-					.andExpect(status().is3xxRedirection())
-					.andExpect(flash().attribute("message", "Data has been verified"))
-					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
+			.andExpect(status().isOk())
+			.andExpect(content().string(containsString("Done!")));
+//					.andExpect(flash().attribute("message", "Data has been verified"))
+//					.andExpect(redirectedUrl("/accounts/show/" + PHONE));
 			
 			OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01, "Demo");
 			mockMVC.perform(post("/bills/external")
@@ -943,35 +1066,39 @@ public class BankDemoBootApplicationIT {
 					.withStatus(HttpStatus.OK_200)
 					.withBody("Data has been verified")));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //								    .param("id", "1")
 								    .param("action", "deposit")
 								    .param("balance", "10.00")
 								    .param("amount", "0.00")
 				)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Amount of money should be higher than zero")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 1))
 				.andExpect(model().attribute("action", "deposit"))
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
-				.andExpect(view().name("bill/payment"));
+				.andExpect(view().name("bill/payment"));*/
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //								    .param("id", "1")
 								    .param("action", "withdraw")
 								    .param("balance", "10.00")
 								    .param("amount", "0.00")
 				)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Amount of money should be higher than zero")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 1))
 				.andExpect(model().attribute("action", "withdraw"))
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
-				.andExpect(view().name("bill/payment"));
+				.andExpect(view().name("bill/payment"));*/
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //									.param("id", "1")
 								    .param("action", "external")
 								    .param("balance", "10.00")
@@ -980,11 +1107,13 @@ public class BankDemoBootApplicationIT {
 								    .param("recipient", "22")
 				)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().attribute("id", 1))
+				.andExpect(content().string(containsString
+						("Amount of money should be higher than zero")));
+/*				.andExpect(model().attribute("id", 1))
 				.andExpect(model().attribute("action", "external"))
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
-				.andExpect(view().name("bill/external"));
+				.andExpect(view().name("bill/external"));*/
 			
 			OperationRequest dto = new OperationRequest(777, 2, "SEA", 0.00, "Demo");
 			mockMVC.perform(post("/bills/external").header("Origin", externalURL)
@@ -992,7 +1121,8 @@ public class BankDemoBootApplicationIT {
 													.content(mapper.writeValueAsString(dto))
 							)
 				.andExpect(status().isBadRequest())
-				.andExpect(content().string(containsString("Amount of money should be higher than zero")));
+				.andExpect(content().string(containsString
+						("Amount of money should be higher than zero")));
 			
 			wireMockServer.verify(WireMock.exactly(1), 
 					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));
@@ -1006,21 +1136,23 @@ public class BankDemoBootApplicationIT {
 					.withStatus(HttpStatus.OK_200)
 					.withBody("Data has been verified")));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //								    .param("id", "1")
 								    .param("action", "withdraw")
 								    .param("balance", "10.00")
 								    .param("amount", "10.01")
 				)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Not enough money to complete operation")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 1))
 				.andExpect(model().attribute("action", "withdraw"))
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Not enough money to complete operation"))
-				.andExpect(view().name("bill/payment"));
+				.andExpect(view().name("bill/payment"));*/
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //									.param("id", "1")
 								    .param("action", "external")
 								    .param("balance", "10.00")
@@ -1029,12 +1161,14 @@ public class BankDemoBootApplicationIT {
 								    .param("recipient", "22")
 				)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Not enough money to complete operation")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 1))
 				.andExpect(model().attribute("action", "external"))
 				.andExpect(model().attribute("balance", "10.00"))
 				.andExpect(model().attribute("message", "Not enough money to complete operation"))
-				.andExpect(view().name("bill/external"));
+				.andExpect(view().name("bill/external"));*/
 			
 			wireMockServer.verify(WireMock.exactly(1), 
 					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));
@@ -1048,7 +1182,7 @@ public class BankDemoBootApplicationIT {
 					.withStatus(HttpStatus.OK_200)
 					.withBody("Data has been verified")));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 				    			.param("recipient", "1")
 //							    .param("id", "1")
 							    .param("action", "transfer")
@@ -1056,14 +1190,16 @@ public class BankDemoBootApplicationIT {
 							    .param("amount", "10.00")
 			)
 			.andExpect(status().isInternalServerError())
-			.andExpect(model().size(4))
+			.andExpect(content().string(containsString
+					("Source and target bills should not be the same")));
+/*			.andExpect(model().size(4))
 			.andExpect(model().attribute("id", 1))
 			.andExpect(model().attribute("action", "transfer"))
 			.andExpect(model().attribute("balance", "10.00"))
 			.andExpect(model().attribute("message", "Source and target bills should not be the same"))
-			.andExpect(view().name("bill/transfer"));
+			.andExpect(view().name("bill/transfer"));*/
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //								.param("id", "1")
 							    .param("action", "external")
 							    .param("balance", "10.00")
@@ -1072,12 +1208,14 @@ public class BankDemoBootApplicationIT {
 							    .param("recipient", "1")
 			)
 			.andExpect(status().isInternalServerError())
-			.andExpect(model().size(4))
+			.andExpect(content().string(containsString
+					("Source and target bills should not be the same")));
+/*			.andExpect(model().size(4))
 			.andExpect(model().attribute("id", 1))
 			.andExpect(model().attribute("action", "external"))
 			.andExpect(model().attribute("balance", "10.00"))
 			.andExpect(model().attribute("message", "Source and target bills should not be the same"))
-			.andExpect(view().name("bill/external"));
+			.andExpect(view().name("bill/external"));*/
 			
 			OperationRequest dto = new OperationRequest(777, 777, "SEA", 0.01, "Demo");
 			mockMVC.perform(post("/bills/external").header("Origin", externalURL)
@@ -1085,7 +1223,8 @@ public class BankDemoBootApplicationIT {
 													.content(mapper.writeValueAsString(dto))
 							)
 				.andExpect(status().isInternalServerError())
-				.andExpect(content().string(containsString("Source and target bills should not be the same")));
+				.andExpect(content().string(containsString
+						("Source and target bills should not be the same")));
 			
 			wireMockServer.verify(WireMock.exactly(1), 
 					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));
@@ -1099,7 +1238,7 @@ public class BankDemoBootApplicationIT {
 					.withStatus(HttpStatus.BAD_REQUEST_400)
 					.withBody("Wrong currency type NOK for the target bill 22")));
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 										.param("recipient", "2")
 //										.param("id", "1")
 										.param("action", "transfer")
@@ -1107,14 +1246,16 @@ public class BankDemoBootApplicationIT {
 										.param("amount", "10.00")
 					)
 					.andExpect(status().isInternalServerError())
-					.andExpect(model().size(4))
+					.andExpect(content().string(containsString
+							("Wrong currency type of the target bill")));
+/*					.andExpect(model().size(4))
 					.andExpect(model().attribute("id", 1))
 					.andExpect(model().attribute("action", "transfer"))
 					.andExpect(model().attribute("balance", "10.00"))
 					.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
-					.andExpect(view().name("bill/transfer"));
+					.andExpect(view().name("bill/transfer"));*/
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 //										.param("id", "1")
 									    .param("action", "external")
 									    .param("balance", "10.00")
@@ -1123,12 +1264,14 @@ public class BankDemoBootApplicationIT {
 									    .param("recipient", "22")
 					)
 					.andExpect(status().isBadRequest())
-					.andExpect(model().size(4))
+					.andExpect(content().string(containsString
+							("Wrong currency type NOK for the target bill 22")));
+/*					.andExpect(model().size(4))
 					.andExpect(model().attribute("id", 1))
 					.andExpect(model().attribute("action", "external"))
 					.andExpect(model().attribute("balance", "10.00"))
 					.andExpect(model().attribute("message", "Wrong currency type NOK for the target bill 22"))
-					.andExpect(view().name("bill/external"));
+					.andExpect(view().name("bill/external"));*/
 			
 			OperationRequest dto = new OperationRequest(777, 2, "AUD", 0.01, "Demo");
 			mockMVC.perform(post("/bills/external").header("Origin", externalURL)
@@ -1136,7 +1279,8 @@ public class BankDemoBootApplicationIT {
 													.content(mapper.writeValueAsString(dto))
 							)
 				.andExpect(status().isInternalServerError())
-				.andExpect(content().string(containsString("Wrong currency type of the target bill")));
+				.andExpect(content().string(containsString
+						("Wrong currency type of the target bill")));
 			
 			wireMockServer.verify(WireMock.exactly(1), 
 					WireMock.postRequestedFor(WireMock.urlPathEqualTo("/verify")));
@@ -1218,18 +1362,40 @@ public class BankDemoBootApplicationIT {
 		
 	}
 	
-	@WithMockUser(username = "0000000000", roles = "ADMIN")
+//	@WithMockUser(username = "0000000000", roles = "ADMIN")
 	@Nested
 	class MegaControllerIT{
 		
 	    @Autowired
 	    ApplicationContext context;
+	    
+		@Autowired
+		@Qualifier("accountServiceAlias")
+		private AccountService accountService;
+		@Autowired
+		private AccountJPA jpa;
+		@Autowired
+		private AccountDAO dao;
+		
+		private static final String PHONE = "0000000000";
 		
 		@Test
 		void can_change_implementation() throws Exception {
+			
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = jpa.findByPhone(PHONE).get();
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				jpa.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount(PHONE);
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
 
 			String impl = "DAO";			
-			mockMVC.perform(put("/control").with(csrf()).param("impl", impl))
+			mockMVC.perform(put("/control").with(httpBasic("0000000000", "superadmin")).param("impl", impl))
 				.andExpect(status().isOk())
 				.andExpect(content()
 					.string(containsString("Services impementation has been switched to " + impl)));			
@@ -1238,7 +1404,7 @@ public class BankDemoBootApplicationIT {
 			assertThat(context.getBean("operationServiceAlias")).isInstanceOf(OperationServiceDAO.class);
 			
 			impl = "JPA";
-			mockMVC.perform(put("/control").with(csrf()).param("impl", impl))
+			mockMVC.perform(put("/control").with(httpBasic("0000000000", "superadmin")).param("impl", impl))
 				.andExpect(status().isOk())
 				.andExpect(content()
 					.string(containsString("Services impementation has been switched to " + impl)));
@@ -1250,18 +1416,42 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void wrong_implementation_type() throws Exception {
 			
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = jpa.findByPhone(PHONE).get();
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				jpa.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount(PHONE);
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
+			
 			String impl = "XXX";
-			mockMVC.perform(put("/control").with(csrf()).param("impl", impl))
+			mockMVC.perform(put("/control").with(httpBasic("0000000000", "superadmin")).param("impl", impl))
 					.andExpect(status().isBadRequest())
 					.andExpect(content()
 						.string(containsString("Wrong implementation type " + impl + " specified, retry")));
 		}
 		
-		@WithMockUser(username = "1111111111", roles = "CLIENT")
+//		@WithMockUser(username = "1111111111", roles = "CLIENT")
 		@Test
 		void credentials_forbidden() throws Exception {
 			
-	        mockMVC.perform(get("/control"))
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = jpa.findByPhone("1111111111").get();
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				jpa.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount("1111111111");
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
+			
+	        mockMVC.perform(get("/control").with(httpBasic("1111111111", "supervixen")))
 				.andExpect(status().isForbidden());
 		}
 		

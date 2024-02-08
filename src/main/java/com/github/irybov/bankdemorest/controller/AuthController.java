@@ -1,5 +1,8 @@
 package com.github.irybov.bankdemorest.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletResponse;
 
@@ -7,14 +10,18 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 //import org.springframework.validation.annotation.Validated;
 import org.springframework.validation.Validator;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
@@ -23,6 +30,8 @@ import com.github.irybov.bankdemorest.service.AccountService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 
 @Api(description = "Controller for users authorization and registration")
@@ -59,7 +68,7 @@ public class AuthController extends BaseController {
 	public String getLoginForm() {
 		return "auth/login";
 	}*/
-	
+/*	
 	@ApiOperation("Returns welcome html-page")
 	@GetMapping("/success")
 	public String getRegistrationForm(Model model, RedirectAttributes redirectAttributes) {
@@ -77,29 +86,34 @@ public class AuthController extends BaseController {
 			return "redirect:/home";
 		}
 	}
-	
-	@ApiOperation("Confirms registration web-form")
+*/	
+	@ApiOperation("Confirms new account's registration")
+	@ApiResponses(value = 
+		{@ApiResponse(code = 201, message = "Your account has been created", response = String.class), 
+		 @ApiResponse(code = 400, message = "", responseContainer = "List", response = String.class),
+		 @ApiResponse(code = 409, message = "", response = String.class)})
 	@PostMapping("/confirm")
-	public String confirmRegistration(@ModelAttribute("account") AccountRequest accountRequest,
-			BindingResult result, Model model, HttpServletResponse response) {
+	public ResponseEntity<?> confirmRegistration(@RequestBody AccountRequest accountRequest,
+			BindingResult result) {
 		
 		accountValidator.validate(accountRequest, result);
 		if(result.hasErrors()) {
-			log.warn("{}", result.getFieldErrors().toString());
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			return "auth/register";
+		    List<String> errors = new ArrayList<String>();
+		    List<FieldError> results = result.getFieldErrors();
+		    for(FieldError error : results) {
+		        errors.add(error.getDefaultMessage());
+		    }
+			log.warn("{}", results);
+			return ResponseEntity.badRequest().body(errors);
 		}
+		
 		try {
 			accountService.saveAccount(accountRequest);
-			response.setStatus(HttpServletResponse.SC_CREATED);
-			model.addAttribute("success", "Your account has been created");
-			return "auth/login";
+			return new ResponseEntity<String>("Your account has been created", HttpStatus.CREATED);
 		}
 		catch (RuntimeException exc) {
 			log.error(exc.getMessage(), exc);
-			response.setStatus(HttpServletResponse.SC_CONFLICT);
-			model.addAttribute("message", exc.getMessage());
-			return "auth/register";
+			return new ResponseEntity<String>(exc.getMessage(), HttpStatus.CONFLICT);
 		}
 	}
 

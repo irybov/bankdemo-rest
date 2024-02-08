@@ -47,7 +47,7 @@ public interface OperationService {
 	};
 	public OperationResponse getOne(long id);
 	public List<OperationResponse> getAll(int id);
-//	public Page<OperationResponseDTO> getPage(int id, OperationPage page);
+//	public Page<OperationResponse> getPage(int id, OperationPage page);
 	public Page<OperationResponse> getPage(int id, String action, double minval, double maxval,
 			OffsetDateTime mindate, OffsetDateTime maxdate, Pageable pageable);
 }

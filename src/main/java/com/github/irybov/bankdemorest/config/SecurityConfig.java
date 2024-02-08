@@ -16,12 +16,15 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.authentication.configurers.provisioning.InMemoryUserDetailsManagerConfigurer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 //import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -91,24 +94,7 @@ public class SecurityConfig {
 //			"**/swagger*/**", 
 //			"/**/api-docs/**", 
 //    		"/actuator/**"
-//    };
-
-/*	@Bean
-	public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-		
-        AuthenticationManagerBuilder auth = http.getSharedObject(AuthenticationManagerBuilder.class);
-		auth.inMemoryAuthentication()
-			.withUser("remote")
-			.password(passwordEncoder().encode("remote"))
-			.roles("REMOTE");
-        
-	    DaoAuthenticationProvider dao = new DaoAuthenticationProvider();
-	    dao.setUserDetailsService(accountDetailsService);
-	    dao.setPasswordEncoder(passwordEncoder());
-	    
-	    auth.authenticationProvider(dao);        
-	    return auth.build();
-	}*/	
+//    };	
 	
 /*	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -123,37 +109,65 @@ public class SecurityConfig {
 		    .rolePrefix("ROLE_");
 	}*/
 	
-/*	@Bean
-	public AuthenticationProvider authenticationProvider() {
+//	@Bean
+//	public AuthenticationManager authManager(HttpSecurity http) throws Exception {
+	@Autowired
+	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
 		
-	    DaoAuthenticationProvider dao = new DaoAuthenticationProvider();
-	    dao.setUserDetailsService(accountDetailsService);
-	    dao.setPasswordEncoder(passwordEncoder());
-	 
-	    return dao;
-	}*/
+//		AuthenticationManagerBuilder auth = http.getSharedObject(AuthenticationManagerBuilder.class);
+		
+		DaoAuthenticationProvider dao = new DaoAuthenticationProvider();
+		dao.setUserDetailsService(accountDetailsService);
+		dao.setPasswordEncoder(passwordEncoder);
+		
+        UserDetails remote = User.builder()
+                .username("remote")
+                .password(passwordEncoder.encode("remote"))
+                .roles("REMOTE")
+                .build();
+        
+//		auth.inMemoryAuthentication()
+        inMemoryConfigurer()
+			.withUser(remote)
+			.passwordEncoder(passwordEncoder)
+			.configure(auth);
+		auth.authenticationProvider(dao);
+			 
+//	    return auth.build();
+	}	
+	private InMemoryUserDetailsManagerConfigurer<AuthenticationManagerBuilder> inMemoryConfigurer() {
+		return new InMemoryUserDetailsManagerConfigurer<>();
+	}
 	
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     	        
-//    	CsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
+//    	CsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();   	
+/*        UserDetails remote = User.builder()
+			                .username("remote")
+			                .password(passwordEncoder.encode("remote"))
+			                .roles("REMOTE")
+			                .build();
     	
     	AuthenticationManagerBuilder auth = http.getSharedObject(AuthenticationManagerBuilder.class);
 		auth.inMemoryAuthentication()
-			.withUser("remote")
-			.password(passwordEncoder.encode("remote"))
-			.roles("REMOTE");		
+//			.withUser("remote")
+			.withUser(remote)
+			.passwordEncoder(passwordEncoder);
+//			.password(passwordEncoder.encode("remote"))
+//			.roles("REMOTE");		
         
 	    DaoAuthenticationProvider dao = new DaoAuthenticationProvider();
 	    dao.setUserDetailsService(accountDetailsService);
 	    dao.setPasswordEncoder(passwordEncoder);
 	    
-	    auth.authenticationProvider(dao);
+	    auth.authenticationProvider(dao);*/
 //	    auth.build();
 
 		http
-			.authenticationProvider(dao)
-			.authenticationManager(auth.build())
+			.csrf().disable()
+//			.authenticationProvider(dao)
+//			.authenticationManager(authManager)
 //			.sessionManagement().disable()
 			.sessionManagement()
 	        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -167,7 +181,7 @@ public class SecurityConfig {
 			.antMatchers("/actuator/**").hasRole("REMOTE")
 			.anyRequest().authenticated()
 				.and()
-		    .csrf().disable()
+			.httpBasic();
 /*		    .csrf().csrfTokenRepository(csrfTokenRepository)
 		    .sessionAuthenticationStrategy(new CsrfAuthenticationStrategy(csrfTokenRepository))
 		    .ignoringAntMatchers("/bills/external", "/actuator/**")*/
@@ -194,7 +208,6 @@ public class SecurityConfig {
             .deleteCookies("JSESSIONID")
 			.logoutSuccessUrl("/home")
 				.and()*/
-			.httpBasic();
 //			.and().cors().configurationSource(corsConfigurationSource());
 //		http.headers().frameOptions().disable();
 

@@ -1,5 +1,6 @@
 package com.github.irybov.bankdemorest.controller.dto;
 
+import javax.validation.constraints.Digits;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -24,15 +25,17 @@ public class OperationRequest {
 	@ApiModelProperty(value = "Sender's bill number", required = true, example = "999_999_999")
 	@JsonProperty("sender")
 	@NotNull(message = "Sender must not be null")
-	@Max(value = 999_999_999, message = "Sender's bill number should be less than 10 digits length")
-	@Positive(message = "Sender's bill number should be positive number")
+//	@Max(value = 999_999_999, message = "Sender's bill number should be less than 10 digits length")
+	@Positive(message = "Sender's bill number should be positive")
+	@Digits(fraction = 0, integer = 9, message = "Sender's bill number should be less than 10 digits length")
 	private Integer sender;
 	
 	@ApiModelProperty(value = "Recepient's bill number", required = true, example = "999_999_999")
 	@JsonProperty("recipient")
 	@NotNull(message = "Recepient must not be null")
-	@Max(value = 999_999_999, message = "Recepient's bill number should be less than 10 digits length")
+//	@Max(value = 999_999_999, message = "Recepient's bill number should be less than 10 digits length")
 	@Positive(message = "Recepient's bill number should be positive")
+	@Digits(fraction = 0, integer = 9, message = "Recepient's bill number should be less than 10 digits length")
 	private Integer recipient;
 	
 	@ApiModelProperty(value = "Currency's standard name", required = true, example = "USD")

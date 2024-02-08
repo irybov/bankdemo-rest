@@ -46,11 +46,12 @@ public class AccountValidator implements org.springframework.validation.Validato
 	    }
 		
 		AccountRequest account = (AccountRequest) target;
+		if(account.getBirthday() == null || account.getBirthday().isAfter(LocalDate.now())) return;
 		if(account.getBirthday().until(LocalDate.now(), ChronoUnit.YEARS) < 18) {
-			errors.rejectValue("birthday", "", "Validator in action!");
+			errors.rejectValue("birthday", "", "You must be 18+ to register");
 		}
 		if(!accountService.getPhone(account.getPhone()).isPresent()) return;
-			errors.rejectValue("phone", "", "Validator in action!");
+			errors.rejectValue("phone", "", "This number is already in use");
 	}
 
 }

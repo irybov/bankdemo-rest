@@ -3,6 +3,9 @@ package com.github.irybov.bankdemorest.controller;
 import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 //import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyDouble;
@@ -31,6 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 //import java.util.ArrayList;
 //import java.util.Currency;
 //import java.util.HashSet;
@@ -68,6 +73,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -154,9 +160,10 @@ class BankControllerTest {
 		currencies.add(rub);*/
 		
 		entity = new Account
-				("Nia", "Nacci", "4444444444", LocalDate.of(1998, 12, 10), "blackmamba", true);
+				("Kylie", "Bunbury", "4444444444", LocalDate.of(1989, 01, 30), "blackmamba", true);
 		entity.setCreatedAt(OffsetDateTime.now());
 		entity.setUpdatedAt(OffsetDateTime.now());
+		entity.setId(0);
 		
 		operation = new Operation();
 		builder = mock(Operation.OperationBuilder.class, Mockito.RETURNS_SELF);
@@ -171,10 +178,14 @@ class BankControllerTest {
 	}
 	
 	@Test
-	void can_get_client_html() throws Exception {
+	void can_get_client_info() throws Exception {
 
 		AccountResponse account = modelMapper.map(entity, AccountResponse.class);		
-//		List<BillResponseDTO> bills = new ArrayList<>();
+		List<BillResponse> bills = new ArrayList<>();
+		Bill bill = new Bill();
+		bill.setOwner(entity);
+		bills.add(modelMapper.map(bill, BillResponse.class));
+		account.setBills(bills);
 		
 //		when(accountService.getAccountDTO(phone)).thenReturn(account);
 //		when(accountService.getBills(account.getId())).thenReturn(bills);
@@ -182,13 +193,16 @@ class BankControllerTest {
 		
 		mockMVC.perform(get("/accounts/show/{phone}", phone))
 			.andExpect(status().isOk())
-			.andExpect(content().string(containsString("Private area")))
-			.andExpect(model().size(3))
-			.andExpect(model().attribute("account", account))
-//			.andExpect(model().attribute("bills", bills))			
-			.andExpect(model().attribute("bills", account.getBills()))
-			.andExpect(model().attribute("currencies", any(Set.class)))
-			.andExpect(view().name("account/private"));
+			.andExpect(jsonPath("$.id").isNumber())
+			.andExpect(jsonPath("$.createdAt").isNotEmpty())
+			.andExpect(jsonPath("$.updatedAt").isNotEmpty())
+			.andExpect(jsonPath("$.active").isBoolean())
+			.andExpect(jsonPath("$.name").value("Kylie"))
+			.andExpect(jsonPath("$.surname").value("Bunbury"))
+			.andExpect(jsonPath("$.phone").value(phone))
+			.andExpect(jsonPath("$.birthday").isNotEmpty())
+			.andExpect(jsonPath("$.bills").isArray())
+			.andExpect(jsonPath("$.bills.length()", is(1)));
 		
 //		verify(accountService).getAccountDTO(phone);
 //		verify(accountService).getBills(account.getId());
@@ -199,10 +213,10 @@ class BankControllerTest {
 	void check_security_restriction() throws Exception {
 		
 		mockMVC.perform(get("/accounts/show/{phone}", "5555555555"))
-			.andExpect(status().isForbidden())
-			.andExpect(model().size(1))
-			.andExpect(model().attribute("message", "Security restricted information"))
-			.andExpect(forwardedUrl("/accounts/show/" + phone));
+			.andExpect(status().isForbidden());
+//			.andExpect(model().size(1))
+//			.andExpect(model().attribute("message", "Security restricted information"));
+//			.andExpect(forwardedUrl("/accounts/show/" + phone));
 	}
 	
 	@Test
@@ -216,10 +230,10 @@ class BankControllerTest {
 		when(accountService.addBill(anyString(), anyString()))
 			.thenReturn(modelMapper.map(bill, BillResponse.class));
 		
-		mockMVC.perform(post("/bills/add").with(csrf())
-									   .param("phone", anyString())
-									   .param("currency", anyString())
-					)
+		mockMVC.perform(post("/bills/add")
+			   .param("phone", anyString())
+			   .param("currency", anyString())
+				)
 			.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.createdAt").exists())
@@ -237,12 +251,12 @@ class BankControllerTest {
 		
 		doNothing().when(billService).deleteBill(anyInt());
 		
-		mockMVC.perform(delete("/bills/delete/{id}", "0").with(csrf()))
+		mockMVC.perform(delete("/bills/delete/{id}", "0"))
 			.andExpect(status().isOk());
 		
 		verify(billService).deleteBill(anyInt());
 	}
-	
+/*	
 	@Test
 	void can_get_payment_html() throws Exception {
 		
@@ -302,7 +316,7 @@ class BankControllerTest {
 			.andExpect(model().attribute("balance", "0.00"))
 			.andExpect(view().name("bill/external"));
 	}
-	
+	*/
 	@Test
 	void check_bill_owner() throws Exception {
 		
@@ -335,7 +349,7 @@ class BankControllerTest {
 			.andExpect(content().string(containsString
 					  ("Target bill with id: " + id + " not found")));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 														.param("recipient", String.valueOf(id))
 //														.param("id", "0")
 														.param("action", "transfer")
@@ -343,12 +357,14 @@ class BankControllerTest {
 														.param("amount", "0.00")
 					)
 			.andExpect(status().isNotFound())
-			.andExpect(model().size(4))
+			.andExpect(content().string(containsString
+					  ("Target bill with id: " + id + " not found")));
+/*			.andExpect(model().size(4))
 			.andExpect(model().attribute("id", 0))
 			.andExpect(model().attribute("action", "transfer"))
 			.andExpect(model().attribute("balance", "0.00"))
 			.andExpect(model().attribute("message", "Target bill with id: " + id + " not found"))
-			.andExpect(view().name("bill/transfer"));
+			.andExpect(view().name("bill/transfer"));*/
 		
 		verify(billService, times(2)).getBillDTO(id);
 	}
@@ -357,7 +373,7 @@ class BankControllerTest {
 	@Test
 	void wrong_format_input() throws Exception {
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 														.param("recipient", "XXX")
 //													    .param("id", "0")
 													    .param("action", "transfer")
@@ -371,7 +387,7 @@ class BankControllerTest {
 			.andExpect(model().attribute("message", "Please provide correct bill number"))
 			.andExpect(view().name("bill/transfer"));
 	}
-
+/*
 	@Test
 	void can_get_password_html() throws Exception {
 		
@@ -382,7 +398,7 @@ class BankControllerTest {
 			.andExpect(model().attribute("password", any(PasswordRequest.class)))
 			.andExpect(view().name("account/password"));
 	}
-	
+	*/
 	@Test
 	void success_password_change() throws Exception {
 		
@@ -390,15 +406,15 @@ class BankControllerTest {
 		
 		when(accountService.comparePassword(pwDTO.getOldPassword(), phone)).thenReturn(true);
 		
-		mockMVC.perform(patch("/accounts/password/{phone}", phone).with(csrf())
-													.param("oldPassword", pwDTO.getOldPassword())
-													.param("newPassword", pwDTO.getNewPassword())
-					)
+		mockMVC.perform(patch("/accounts/password/{phone}", phone)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(pwDTO)))
 			.andExpect(status().isOk())
-			.andExpect(model().size(2))
+			.andExpect(content().string(containsString("Password changed")));
+/*			.andExpect(model().size(2))
 			.andExpect(model().attributeExists("password"))
 			.andExpect(model().attribute("success", "Password changed"))
-			.andExpect(view().name("account/password"));
+			.andExpect(view().name("account/password"));*/
 		
 		verify(accountService).comparePassword(pwDTO.getOldPassword(), phone);
 	}
@@ -406,19 +422,19 @@ class BankControllerTest {
 	@Test
 	void failure_password_change() throws Exception {
 		
-		PasswordRequest pwDTO = new PasswordRequest("blackcorba", "whitemamba");
+		PasswordRequest pwDTO = new PasswordRequest("blackcobra", "whitemamba");
 		
 		when(accountService.comparePassword(pwDTO.getOldPassword(), phone)).thenReturn(false);
 		
-		mockMVC.perform(patch("/accounts/password/{phone}", phone).with(csrf())
-													.param("oldPassword", pwDTO.getOldPassword())
-													.param("newPassword", pwDTO.getNewPassword())
-					)
-			.andExpect(status().isBadRequest())
-			.andExpect(model().size(2))
+		mockMVC.perform(patch("/accounts/password/{phone}", phone)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(pwDTO)))
+			.andExpect(status().isConflict())
+			.andExpect(content().string(containsString("Current password mismatch")));
+/*			.andExpect(model().size(2))
 			.andExpect(model().attributeExists("password"))
 			.andExpect(model().attribute("message", "Old password mismatch"))
-			.andExpect(view().name("account/password"));
+			.andExpect(view().name("account/password"));*/
 		
 		verify(accountService).comparePassword(pwDTO.getOldPassword(), phone);
 	}
@@ -428,15 +444,23 @@ class BankControllerTest {
 
 		PasswordRequest pwDTO = new PasswordRequest("black", "white");
 		
-		mockMVC.perform(patch("/accounts/password/{phone}", phone).with(csrf())
-													.param("oldPassword", pwDTO.getOldPassword())
-													.param("newPassword", pwDTO.getNewPassword())
-				)
+		mockMVC.perform(patch("/accounts/password/{phone}", phone)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(pwDTO)))
 			.andExpect(status().isBadRequest())
-			.andExpect(model().size(1))
+			.andExpect(content().string(containsString
+					("Old password should be 10-60 symbols length")))
+			.andExpect(content().string(containsString
+					("New password should be 10-60 symbols length")))
+		    .andExpect(result -> 
+		      	assertTrue(result.getResolvedException() 
+		      		instanceof MethodArgumentNotValidException));
+//		    .andExpect(result -> 
+//		      	assertEquals("resource not found", result.getResolvedException().getMessage()));
+/*			.andExpect(model().size(1))
 			.andExpect(model().errorCount(2))
 			.andExpect(model().attributeExists("password"))
-			.andExpect(view().name("account/password"));
+			.andExpect(view().name("account/password"));*/
 	}
 	
 	@Test
@@ -448,7 +472,7 @@ class BankControllerTest {
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>("No bill with serial 33 found", HttpStatus.NOT_FOUND));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //														.param("id", "0")
 														.param("action", "external")
 														.param("balance", "0.00")
@@ -457,12 +481,13 @@ class BankControllerTest {
 													    .param("recipient", "33")
 						)
 			.andExpect(status().isNotFound())
-			.andExpect(model().size(4))
+			.andExpect(content().string(containsString("No bill with serial 33 found")));
+/*			.andExpect(model().size(4))
 			.andExpect(model().attribute("id", 0))
 			.andExpect(model().attribute("action", "external"))
 			.andExpect(model().attribute("balance", "0.00"))
 			.andExpect(model().attribute("message", "No bill with serial 33 found"))
-			.andExpect(view().name("bill/external"));
+			.andExpect(view().name("bill/external"));*/
 		
 		verify(billService).getBillDTO(anyInt());
 		verify(restTemplate).postForEntity(anyString(), anyString(), 
@@ -478,7 +503,7 @@ class BankControllerTest {
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>("No bank with name Demo found", HttpStatus.NOT_FOUND));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //														.param("id", "0")
 														.param("action", "external")
 														.param("balance", "0.00")
@@ -487,12 +512,13 @@ class BankControllerTest {
 													    .param("recipient", "22")
 						)
 			.andExpect(status().isNotFound())
-			.andExpect(model().size(4))
+			.andExpect(content().string(containsString("No bank with name Demo found")));
+/*			.andExpect(model().size(4))
 			.andExpect(model().attribute("id", 0))
 			.andExpect(model().attribute("action", "external"))
 			.andExpect(model().attribute("balance", "0.00"))
 			.andExpect(model().attribute("message", "No bank with name Demo found"))
-			.andExpect(view().name("bill/external"));
+			.andExpect(view().name("bill/external"));*/
 		
 		verify(billService).getBillDTO(anyInt());
 		verify(restTemplate).postForEntity(anyString(), anyString(), 
@@ -508,7 +534,7 @@ class BankControllerTest {
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>("Service is temporary unavailable", HttpStatus.SERVICE_UNAVAILABLE));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //														.param("id", "0")
 														.param("action", "external")
 														.param("balance", "0.00")
@@ -517,12 +543,13 @@ class BankControllerTest {
 													    .param("recipient", "22")
 						)
 			.andExpect(status().isServiceUnavailable())
-			.andExpect(model().size(4))
+			.andExpect(content().string(containsString("Service is temporary unavailable")));
+/*			.andExpect(model().size(4))
 			.andExpect(model().attribute("id", 0))
 			.andExpect(model().attribute("action", "external"))
 			.andExpect(model().attribute("balance", "0.00"))
 			.andExpect(model().attribute("message", "Service is temporary unavailable"))
-			.andExpect(view().name("bill/external"));
+			.andExpect(view().name("bill/external"));*/
 		
 		verify(billService).getBillDTO(anyInt());
 		verify(restTemplate).postForEntity(anyString(), anyString(), 
@@ -555,35 +582,38 @@ class BankControllerTest {
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>("Data has been verified", HttpStatus.OK));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //													    .param("id", "0")
 													    .param("action", "deposit")
 													    .param("balance", "0.00")
 													    .param("amount", "0.00")
 						)
-			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/accounts/show/" + phone));
+			.andExpect(status().isOk())
+			.andExpect(content().string(containsString("Done!")));
+//			.andExpect(redirectedUrl("/accounts/show/" + phone));
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //													    .param("id", "0")
 													    .param("action", "withdraw")
 													    .param("balance", "0.00")
 													    .param("amount", "0.00")
 						)
-			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/accounts/show/" + phone));
+			.andExpect(status().isOk())
+			.andExpect(content().string(containsString("Done!")));
+//			.andExpect(redirectedUrl("/accounts/show/" + phone));
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //														.param("id", "0")
 														.param("action", "transfer")
 														.param("balance", "0.00")
 														.param("amount", "0.00")
 														.param("recipient", "22")
 						)
-			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/accounts/show/" + phone));
+			.andExpect(status().isOk())
+			.andExpect(content().string(containsString("Done!")));
+//			.andExpect(redirectedUrl("/accounts/show/" + phone));
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //														.param("id", "0")
 														.param("action", "external")
 														.param("balance", "0.00")
@@ -591,9 +621,10 @@ class BankControllerTest {
 														.param("bank", "Demo")
 													    .param("recipient", "22")
 						)
-			.andExpect(status().is3xxRedirection())
-			.andExpect(flash().attribute("message", "Data has been verified"))
-			.andExpect(redirectedUrl("/accounts/show/" + phone));
+			.andExpect(status().isOk())
+			.andExpect(content().string(containsString("Done!")));
+//			.andExpect(flash().attribute("message", "Data has been verified"))
+//			.andExpect(redirectedUrl("/accounts/show/" + phone));
 		
 		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01, "Demo");
 		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
@@ -646,35 +677,39 @@ class BankControllerTest {
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>(new String(), HttpStatus.OK));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //													    .param("id", "0")
 													    .param("action", "deposit")
 													    .param("balance", "0.00")
 													    .param("amount", "0.00")
 						)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Amount of money should be higher than zero")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 0))
 				.andExpect(model().attribute("action", "deposit"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
-				.andExpect(view().name("bill/payment"));
+				.andExpect(view().name("bill/payment"));*/
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //													    .param("id", "0")
 													    .param("action", "withdraw")
 													    .param("balance", "0.00")
 													    .param("amount", "0.00")
 						)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Amount of money should be higher than zero")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 0))
 				.andExpect(model().attribute("action", "withdraw"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
-				.andExpect(view().name("bill/payment"));
+				.andExpect(view().name("bill/payment"));*/
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //														.param("id", "0")
 														.param("action", "transfer")
 														.param("balance", "0.00")
@@ -682,14 +717,16 @@ class BankControllerTest {
 														.param("recipient", "22")
 						)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Amount of money should be higher than zero")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 0))
 				.andExpect(model().attribute("action", "transfer"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
-				.andExpect(view().name("bill/transfer"));
+				.andExpect(view().name("bill/transfer"));*/
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //														.param("id", "0")
 														.param("action", "external")
 														.param("balance", "0.00")
@@ -698,12 +735,14 @@ class BankControllerTest {
 													    .param("recipient", "22")
 						)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Amount of money should be higher than zero")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 0))
 				.andExpect(model().attribute("action", "external"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
-				.andExpect(view().name("bill/external"));
+				.andExpect(view().name("bill/external"));*/
 		
 		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.00, "Demo");
 		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
@@ -711,7 +750,8 @@ class BankControllerTest {
 												.content(mapper.writeValueAsString(dto))
 						)
 				.andExpect(status().isBadRequest())
-				.andExpect(content().string(containsString("Amount of money should be higher than zero")));		
+				.andExpect(content().string(containsString
+						("Amount of money should be higher than zero")));		
 
 		verify(operationService).deposit(anyDouble(), anyString(), anyString(), anyInt(), 
 				anyString());
@@ -751,21 +791,23 @@ class BankControllerTest {
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>(new String(), HttpStatus.OK));
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //													    .param("id", "0")
 													    .param("action", "withdraw")
 													    .param("balance", "0.00")
 													    .param("amount", "0.01")
 						)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Not enough money to complete operation")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 0))
 				.andExpect(model().attribute("action", "withdraw"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Not enough money to complete operation"))
-				.andExpect(view().name("bill/payment"));
+				.andExpect(view().name("bill/payment"));*/
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //														.param("id", "0")
 														.param("action", "transfer")
 														.param("balance", "0.00")
@@ -773,14 +815,16 @@ class BankControllerTest {
 														.param("recipient", "22")
 						)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Not enough money to complete operation")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 0))
 				.andExpect(model().attribute("action", "transfer"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Not enough money to complete operation"))
-				.andExpect(view().name("bill/transfer"));
+				.andExpect(view().name("bill/transfer"));*/
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //														.param("id", "0")
 														.param("action", "external")
 														.param("balance", "0.00")
@@ -789,12 +833,14 @@ class BankControllerTest {
 													    .param("recipient", "22")
 						)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Not enough money to complete operation")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 0))
 				.andExpect(model().attribute("action", "external"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Not enough money to complete operation"))
-				.andExpect(view().name("bill/external"));
+				.andExpect(view().name("bill/external"));*/
 
 		verify(operationService).withdraw(anyDouble(), anyString(), anyString(), anyInt(), 
 				anyString());
@@ -829,7 +875,7 @@ class BankControllerTest {
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>(new String(), HttpStatus.OK));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //													    .param("id", "0")
 													    .param("action", "transfer")
 													    .param("balance", "0.00")
@@ -837,14 +883,16 @@ class BankControllerTest {
 													    .param("recipient", "0")
 						)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Source and target bills should not be the same")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 0))
 				.andExpect(model().attribute("action", "transfer"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Source and target bills should not be the same"))
-				.andExpect(view().name("bill/transfer"));
+				.andExpect(view().name("bill/transfer"));*/
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 //			    										.param("id", "0")
 													    .param("action", "external")
 													    .param("balance", "0.00")
@@ -853,20 +901,22 @@ class BankControllerTest {
 													    .param("recipient", "0")
 						)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Source and target bills should not be the same")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 0))
 				.andExpect(model().attribute("action", "external"))
 				.andExpect(model().attribute("balance", "0.00"))
 				.andExpect(model().attribute("message", "Source and target bills should not be the same"))
-				.andExpect(view().name("bill/external"));
+				.andExpect(view().name("bill/external"));*/
 		
 		OperationRequest dto = new OperationRequest(777, 777, "USD", 0.01, "Demo");
 		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 												.contentType(MediaType.APPLICATION_JSON)
-												.content(mapper.writeValueAsString(dto))
-						)
+												.content(mapper.writeValueAsString(dto)))
 			.andExpect(status().isInternalServerError())
-			.andExpect(content().string(containsString("Source and target bills should not be the same")));	
+			.andExpect(content().string(containsString
+					("Source and target bills should not be the same")));	
 
 		verify(operationService, times(3)).transfer(anyDouble(), anyString(), anyString(), 
 				anyInt(), anyInt(), anyString());
@@ -898,7 +948,7 @@ class BankControllerTest {
 			.thenReturn(new ResponseEntity<>(new String
 					("Wrong currency type SEA for the target bill 22"), HttpStatus.BAD_REQUEST));
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 														.param("recipient", "22")
 //														.param("id", "0")
 														.param("action", "transfer")
@@ -906,14 +956,16 @@ class BankControllerTest {
 														.param("amount", "0.01")
 						)
 				.andExpect(status().isInternalServerError())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Wrong currency type of the target bill")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 0))
 				.andExpect(model().attribute("action", "transfer"))
 				.andExpect(model().attribute("balance", "0.01"))
 				.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
-				.andExpect(view().name("bill/transfer"));
+				.andExpect(view().name("bill/transfer"));*/
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0").with(csrf())
+		mockMVC.perform(patch("/bills/launch/{id}", "0")
 														.param("recipient", "22")
 														.param("bank", "Demo")
 //														.param("id", "0")
@@ -922,21 +974,23 @@ class BankControllerTest {
 														.param("amount", "0.01")
 						)
 				.andExpect(status().isBadRequest())
-				.andExpect(model().size(4))
+				.andExpect(content().string(containsString
+						("Wrong currency type SEA for the target bill 22")));
+/*				.andExpect(model().size(4))
 				.andExpect(model().attribute("id", 0))
 				.andExpect(model().attribute("action", "external"))
 				.andExpect(model().attribute("balance", "0.01"))
 				.andExpect(model().attribute("message", 
 						"Wrong currency type SEA for the target bill 22"))
-				.andExpect(view().name("bill/external"));
+				.andExpect(view().name("bill/external"));*/
 		
 		OperationRequest dto = new OperationRequest(777, 3, "SEA", 0.01, "Demo");
 		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
 												.contentType(MediaType.APPLICATION_JSON)
-												.content(mapper.writeValueAsString(dto))
-						)
+												.content(mapper.writeValueAsString(dto)))
 			.andExpect(status().isInternalServerError())
-			.andExpect(content().string(containsString("Wrong currency type of the target bill")));	
+			.andExpect(content().string(containsString
+					("Wrong currency type of the target bill")));	
 
 		verify(operationService, times(2)).transfer(anyDouble(), anyString(), anyString(), 
 				anyInt(), anyInt(), anyString());

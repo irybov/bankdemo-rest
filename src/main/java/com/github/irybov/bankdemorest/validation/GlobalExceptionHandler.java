@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
@@ -16,15 +17,20 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.github.irybov.bankdemorest.controller.AuthController;
 import com.github.irybov.bankdemorest.controller.BankController;
 import com.github.irybov.bankdemorest.exception.PaymentException;
 
-//@ControllerAdvice(basePackages = "com.github.irybov.bankdemoboot.controller")
+import lombok.extern.slf4j.Slf4j;
+
+//@ControllerAdvice(basePackages = "com.github.irybov.bankdemorest.controller")
 @ControllerAdvice(basePackageClasses = BankController.class)
-public class ConstraintViolationExceptionHandler {
+@Slf4j
+public class GlobalExceptionHandler {
 
 //	@ExceptionHandler(ConstraintViolationException.class)
 //	@ResponseBody
@@ -42,41 +48,24 @@ public class ConstraintViolationExceptionHandler {
 		return mav;
 	}
 	
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	@ResponseBody
-	ResponseEntity<List<String>> handleMethodArgumentNotValid(MethodArgumentNotValidException exc) {		
+	List<String> handleMethodArgumentNotValid(MethodArgumentNotValidException exc) {		
 				
 	    List<String> errors = new ArrayList<String>();
 	    for(FieldError error : exc.getBindingResult().getFieldErrors()) {
 	        errors.add(error.getDefaultMessage());
 	    }
-		return new ResponseEntity<List<String>>(errors, HttpStatus.BAD_REQUEST);
+		return errors;
 	}
 	
-	@ExceptionHandler(PaymentException.class)
-	ModelAndView handlePaymentException(HttpServletRequest request, HttpServletResponse response, 
-			PaymentException exc) {
-		
-		Map pathVariables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-		String id = (String) pathVariables.get("id");
-		
-		ModelAndView mav;
-		
-		if(request.getParameter("action").equals("transfer")) {
-			mav = new ModelAndView("bill/transfer");
-		}
-		else if(request.getParameter("action").equals("external")) {
-			mav = new ModelAndView("bill/external");
-		}
-		else {
-			mav = new ModelAndView("bill/payment");
-		}
-		mav.addObject("id", Integer.parseInt(id));
-		mav.addObject("action", request.getParameter("action"));
-		mav.addObject("balance", request.getParameter("balance"));
-		mav.addObject("message", exc.getMessage());
-		response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-		return mav;		
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ExceptionHandler({PaymentException.class, PersistenceException.class})
+	@ResponseBody
+	String handleRuntimeException(RuntimeException exc) {
+		log.warn(exc.getMessage(), exc);
+		return exc.getMessage();
 	}
 	
 }

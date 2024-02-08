@@ -18,6 +18,7 @@ import java.util.concurrent.Executor;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
@@ -34,6 +35,7 @@ import org.springframework.http.HttpStatus;
 //import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -69,6 +71,7 @@ import com.github.irybov.bankdemorest.controller.dto.BillResponse;
 import com.github.irybov.bankdemorest.controller.dto.OperationRequest;
 import com.github.irybov.bankdemorest.controller.dto.PasswordRequest;
 import com.github.irybov.bankdemorest.entity.Operation;
+import com.github.irybov.bankdemorest.exception.PaymentException;
 import com.github.irybov.bankdemorest.misc.Action;
 import com.github.irybov.bankdemorest.misc.EmitterPayload;
 import com.github.irybov.bankdemorest.service.AccountService;
@@ -122,23 +125,23 @@ public class BankController extends BaseController {
 		File file = new File(PATH + SLASH + "currencies.txt");
 		
 //		if(file.exists() & file.length() > 2) {			
-			try(Scanner scanner = new Scanner(new FileReader(file))) {
-				while(scanner.hasNextLine()) {
-					String line = scanner.nextLine();
-					line.trim();
-					if(line.length() == 3) {
-						Currency currency = Currency.getInstance(line.toUpperCase());
-						currencies.add(currency);
-					}
-					else if(line.length() == 0) break;					
-					else throw new UncheckedIOException(
-							new IOException("Wrong data format inside currencies.txt file"));
+		try(Scanner scanner = new Scanner(new FileReader(file))) {
+			while(scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				line.trim();
+				if(line.length() == 3) {
+					Currency currency = Currency.getInstance(line.toUpperCase());
+					currencies.add(currency);
 				}
+				else if(line.length() == 0) break;					
+				else throw new UncheckedIOException(
+						new IOException("Wrong data format inside currencies.txt file"));
 			}
-			catch (IOException exc) {
-				log.error(exc.getMessage(), exc);
-				throw new UncheckedIOException(exc);
-			}
+		}
+		catch (IOException exc) {
+			log.error(exc.getMessage(), exc);
+			throw new UncheckedIOException(exc);
+		}
 /*		}
 		else {
 			Currency usd = Currency.getInstance("USD");
@@ -152,19 +155,20 @@ public class BankController extends BaseController {
 		}*/
 	}
 	
-	@ApiOperation("Returns client's private html-page")
+	@ApiOperation("Returns client's private information")
+	@ApiResponse(code = 200, message = "", response = AccountResponse.class)
 	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping("/accounts/show/{phone}")
-	public String getClientPage(@PathVariable String phone, ModelMap modelMap,
-			HttpServletResponse response) {
+	@ResponseBody
+	public AccountResponse getClientInfo(@PathVariable String phone, HttpServletResponse response) {
 
 		String current = authentication().getName();
 		if(!current.equals(phone)) {
-			modelMap.addAttribute("message", "Security restricted information");
 			log.warn("User {} tries to get protected information about {}", current, phone);
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-			return "forward:/accounts/show/" + current;
+			throw new AccessDeniedException("Security restricted information");
 		}
+
 /*		try {
 			if(!accountService.verifyAccount(phone, current)) {
 				modelMap.addAttribute("message", "Security restricted information");
@@ -172,25 +176,21 @@ public class BankController extends BaseController {
 				return "forward:/accounts/show/" + current;
 			}
 		}
-		catch (Exception exc) {
+		catch (PersistenceException exc) {
 			log.error(exc.getMessage(), exc);
 		}*/
 		
 		AccountResponse account = null;
-		try {
+//		try {
 //			account = accountService.getAccountDTO(current);
-			account = accountService.getFullDTO(current);
-		}
-		catch (EntityNotFoundException exc) {
+			account = accountService.getFullDTO(phone);
+/*		}
+		catch (PersistenceException exc) {
 			log.error(exc.getMessage(), exc);
-		}
+		}*/
 //		List<BillResponseDTO> bills = accountService.getBills(account.getId());
-		modelMap.addAttribute("account", account);
-//		modelMap.addAttribute("bills", bills);
-		modelMap.addAttribute("bills", account.getBills());
-		modelMap.addAttribute("currencies", currencies);
 		log.info("User {} has enter own private area", account.getPhone());
-		return "account/private";
+		return account;
 	}
 	
 /*	@PostMapping("/accounts/show")
@@ -216,12 +216,12 @@ public class BankController extends BaseController {
 //		if(params.get("currency").isEmpty()) return "Please choose currency type";
 //		if(params.get("phone").isEmpty()) phone = authentication().getName();		
 		BillResponse bill = null;
-		try {
+//		try {
 			bill = accountService.addBill(params.get("phone"), params.get("currency"));
-		}
-		catch (RuntimeException exc) {
+/*		}
+		catch (PersistenceException exc) {
 			log.error(exc.getMessage(), exc);
-		}
+		}*/
 		response.setStatus(HttpServletResponse.SC_CREATED);
 		return bill;
 	}
@@ -236,12 +236,11 @@ public class BankController extends BaseController {
 	@ApiOperation("Deletes the existing bill from database")
 	@PreAuthorize("hasRole('CLIENT')")
 	@DeleteMapping("/bills/delete/{id}")
-	@ResponseBody
 	public void deleteBill(@PathVariable int id) {
 		log.info("Client {} deletes bill with id {}", authentication().getName(), id);
 		billService.deleteBill(id);
 	}
-	
+/*	
 	@ApiOperation("Returns specified operation's html-page")
 	@PreAuthorize("hasRole('CLIENT')")
 	@PostMapping("/bills/operate")
@@ -259,7 +258,7 @@ public class BankController extends BaseController {
 		}
 		return "bill/payment";
 	}
-	
+*/
 	@ApiOperation("Checks recipient's name and surename")
 	@ApiResponses(value = 
 		{@ApiResponse(code = 200, message = "", response = String.class), 
@@ -283,11 +282,15 @@ public class BankController extends BaseController {
 	}
 	
 	@ApiOperation("Operates money by specified action's type")
+	@ApiResponses(value = 
+		{@ApiResponse(code = 200, message = "", response = String.class), 
+		 @ApiResponse(code = 400, message = "", response = String.class), 
+		 @ApiResponse(code = 404, message = "", response = String.class), 
+		 @ApiResponse(code = 503, message = "", response = String.class)})
 	@PreAuthorize("hasRole('CLIENT')")
 	@PatchMapping("/bills/launch/{id}")
-	public String operateMoney(@PathVariable int id, @RequestParam(required=false) String recipient,
-			@RequestParam Map<String, String> params, ModelMap modelMap, 
-			RedirectAttributes redirectAttributes, HttpServletResponse response) {
+	public ResponseEntity<String> operateMoney(@PathVariable int id, @RequestParam(required=false) String recipient,
+			@RequestParam Map<String, String> params, HttpServletResponse response) {
 		
 		String phone = authentication().getName();
 		int target = -1;
@@ -299,15 +302,16 @@ public class BankController extends BaseController {
 				}
 				catch (EntityNotFoundException exc) {
 					log.error(exc.getMessage(), exc);
-					modelMap.addAttribute("id", id);
+/*					modelMap.addAttribute("id", id);
 					modelMap.addAttribute("action", params.get("action"));
 					modelMap.addAttribute("balance", params.get("balance"));
-					modelMap.addAttribute("message", exc.getMessage());
-					response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-					return "bill/transfer";
+					modelMap.addAttribute("message", exc.getMessage());*/
+//					response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+//					return "bill/transfer";
+					return new ResponseEntity<String>(exc.getMessage(), HttpStatus.NOT_FOUND);
 				}
 			}
-		}		
+		}
 		log.info("User {} performs {} operation with bill {}", phone, params.get("action"), id);
 		
 		final String currency = billService.getBillDTO(id).getCurrency();
@@ -397,7 +401,7 @@ public class BankController extends BaseController {
 						billService.outward(operation);
 						log.info("{} has been sent to bill {} in bank {}", params.get("amount"), 
 								target, params.get("bank"));
-						redirectAttributes.addFlashAttribute("message", result.getBody());
+//						redirectAttributes.addFlashAttribute("message", result.getBody());
 //					}
 //					catch (PaymentException exc) {
 /*						log.warn(exc.getMessage(), exc);
@@ -411,12 +415,14 @@ public class BankController extends BaseController {
 				}
 				else {
 					log.warn(result.getBody());
-					modelMap.addAttribute("id", id);
+/*					modelMap.addAttribute("id", id);
 					modelMap.addAttribute("action", params.get("action"));
 					modelMap.addAttribute("balance", params.get("balance"));
-					modelMap.addAttribute("message", result.getBody());
-					response.setStatus(result.getStatusCodeValue());
-					return "bill/external";
+					modelMap.addAttribute("message", result.getBody());*/
+//					response.setStatus(result.getStatusCodeValue());
+//					return "bill/external";
+					return new ResponseEntity<String>(result.getBody(), 
+							HttpStatus.valueOf(result.getStatusCodeValue()));
 				}
 			}
 /*			catch(HttpClientErrorException | HttpServerErrorException | 
@@ -431,29 +437,30 @@ public class BankController extends BaseController {
 			}*/
 			catch(ResourceAccessException exc) {
 				log.error(exc.getMessage());
-				modelMap.addAttribute("id", id);
+/*				modelMap.addAttribute("id", id);
 				modelMap.addAttribute("action", params.get("action"));
 				modelMap.addAttribute("balance", params.get("balance"));
-				modelMap.addAttribute("message", "Service is temporary unavailable");
-				response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-				return "bill/external";
+				modelMap.addAttribute("message", "Service is temporary unavailable");*/
+//				response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+//				return "bill/external";
+				return new ResponseEntity<String>(exc.getMessage(), HttpStatus.SERVICE_UNAVAILABLE);
 			}
 			break;
 		}
-		return "redirect:/accounts/show/" + phone;
+//		return "redirect:/accounts/show/" + phone;
+		return ResponseEntity.ok().body("Done!");
 	}
 	
-	@ApiOperation(value = "Recieves incoming payment from external systems")
+	@ApiOperation(value = "Recieves incoming payment from external system")
 	@ApiResponses(value = 
 		{@ApiResponse(code = 200, message = "Successfully received", response = String.class), 
-		 @ApiResponse(code = 404, message = "", responseContainer = "List", response = String.class),
+		 @ApiResponse(code = 400, message = "", responseContainer = "List", response = String.class),
 		 @ApiResponse(code = 500, message = "", response = String.class)})
 	@CrossOrigin(originPatterns = "${external.payment-service}", 
 		methods = {RequestMethod.OPTIONS, RequestMethod.POST})
 	@PostMapping(path = "/bills/external",
 					consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
 					produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-	@ResponseBody
 	public ResponseEntity<String> receiveMoney(@Valid @RequestBody OperationRequest dto) {	
 		
 /*		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
@@ -467,31 +474,29 @@ public class BankController extends BaseController {
 			return new ResponseEntity<List<String>>(messages, HttpStatus.BAD_REQUEST);
 		}*/
 		
-		try {
+//		try {
 			Operation operation = operationService.transfer
 			(dto.getAmount(), Action.EXTERNAL.name().toLowerCase(), dto.getCurrency(), 
 					dto.getSender(), dto.getRecipient(), dto.getBank());
 			billService.external(operation);
 			log.info("{} has been recieved to bill {}", operation.getAmount(), operation.getRecipient());
-		}
-		catch (Exception exc) {
+/*		}
+		catch (PaymentException exc) {
 			log.warn(exc.getMessage(), exc);
-			return new ResponseEntity<String>(exc.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+			return ResponseEntity.internalServerError().body(exc.getMessage());
 		}
-		
+*/		
 		executorService.execute(() -> {
 			activateEmitter(dto.getRecipient(), dto.getAmount());
 		});
-		
-//		return new ResponseEntity<String>("Successfully recieved", HttpStatus.OK);
-		return ResponseEntity.ok().body(new String("Successfully received"));
+
+		return ResponseEntity.ok().body("Successfully received");
 	}
 	
 	@ApiIgnore
 	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping(path = "/bills/notify")
 //	@GetMapping(path = "/bills/notify", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-//	@ResponseBody
 	public SseEmitter registerEmitter(HttpServletResponse response) {
 		
 		String phone = authentication().getName();
@@ -543,45 +548,41 @@ public class BankController extends BaseController {
 		return "account/password";
 	}*/
 	
-	@ApiOperation("Confirms password's change web-form")
+	@ApiOperation("Submits password's change")
+	@ApiResponses(value = 
+		{@ApiResponse(code = 200, message = "Password changed", response = String.class), 
+		 @ApiResponse(code = 400, message = "", responseContainer = "List", response = String.class),
+		 @ApiResponse(code = 409, message = "Current password mismatch", response = String.class)})
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
 	@PatchMapping("/accounts/password/{phone}")
-	public String submitPassword(@PathVariable String phone,
-			@ModelAttribute("password") @Valid PasswordRequest passwordRequest,
-			BindingResult result, Model model, HttpServletResponse response) {
-
-		if(result.hasErrors()) {
-			log.warn(result.getFieldErrors().toString());
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			return "account/password";
-		}
+	@ResponseBody
+	public String submitPassword(@PathVariable String phone, 
+			@Valid @RequestBody PasswordRequest passwordRequest, HttpServletResponse response) {
 		
-		try {
+//		try {
 			if(!accountService.comparePassword(passwordRequest.getOldPassword(), phone)) {
-				log.warn("User {} fails to confirm old password", authentication().getName());
-				model.addAttribute("message", "Old password mismatch");
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				return "account/password";
+				log.warn("User {} fails to confirm current password", authentication().getName());
+				response.setStatus(HttpServletResponse.SC_CONFLICT);
+				return "Current password mismatch";
 			}
-		}
-		catch (Exception exc) {
+/*		}
+		catch (PersistenceException exc) {
 			log.error(exc.getMessage(), exc);
 		}
-		
-		try {
+	*/	
+//		try {
 			accountService.changePassword(phone, passwordRequest.getNewPassword());
-		}
-		catch (Exception exc) {
+/*		}
+		catch (PersistenceException exc) {
 			log.error(exc.getMessage(), exc);
-		}
+		}*/
 /*		if(authentication().getAuthorities().stream()
 				.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
 			return "redirect:/accounts/search";
 		}
 		return "redirect:/accounts/show/{phone}";*/
-		model.addAttribute("success", "Password changed");
 		log.info("User {} changes password to a new one", authentication().getName());
-		return "account/password";
+		return "Password changed";
 	}
 
 /*	@GetMapping("/operations/list")

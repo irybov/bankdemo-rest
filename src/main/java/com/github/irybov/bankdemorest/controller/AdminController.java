@@ -71,6 +71,9 @@ import com.opencsv.CSVWriter;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 
 @Api(description = "Controller for admin's actions ")
@@ -94,7 +97,7 @@ public class AdminController extends BaseController {
 	public AdminController(Executor executorService) {
 		this.executorService = executorService;
 	}
-	
+/*	
 	@ApiOperation("Returns admin's working html-page")
 	@GetMapping("/accounts/search")
 	public String getAdminPage(@RequestParam(required = false) String phone, Model model) {
@@ -108,7 +111,7 @@ public class AdminController extends BaseController {
 		catch (PersistenceException exc) {
 			log.error(exc.getMessage(), exc);
 		}
-/*		AccountResponseDTO target = null;
+		AccountResponseDTO target = null;
 		try {
 			target = accountService.getAccountDTO(phone);
 		}
@@ -120,12 +123,18 @@ public class AdminController extends BaseController {
 		finally {
 			modelMap.addAttribute("admin", admin);
 			modelMap.addAttribute("target", target);
-		}*/
+		}
 		return "account/search";
 	}
-	
+*/	
 	@ApiOperation("Returns information about client")
+	@ApiResponses(value = 
+		{@ApiResponse(code = 200, message = "", response = AccountResponse.class), 
+		 @ApiResponse(code = 400, message = "", response = String.class),
+		 @ApiResponse(code = 404, message = "", response = String.class)})
+	@ApiParam(value = "Phone number should be of 10 digits", required = true, format = "^\\d{10}$")
 	@GetMapping("/accounts/search/{phone}")
+//	@ResponseBody
 	public ResponseEntity<?> searchAccount(@PathVariable String phone) {
 		
 		if(phone != null) {
@@ -157,7 +166,7 @@ public class AdminController extends BaseController {
 			return new ResponseEntity<AccountResponse>(target, HttpStatus.OK);
 		}
 		catch (PersistenceException exc) {
-			log.error("Database exception: account with phone {} not found", phone, exc);
+			log.error(exc.getMessage(), exc);
 			
 			Map<String, String> map = Stream.of(new String[][] {{"report", exc.getMessage()},})
 							.collect(Collectors.toMap(data -> data[0], data -> data[1]));
@@ -169,7 +178,6 @@ public class AdminController extends BaseController {
 				log.error(jpe.getMessage(), jpe);
 			}
 			return new ResponseEntity<String>(json, HttpStatus.NOT_FOUND);
-//			return new ResponseEntity<String>(message, HttpStatus.NOT_FOUND);
 		}
 /*		if(target == null) {
 			log.error("Database exception: " + phone + " not found");
