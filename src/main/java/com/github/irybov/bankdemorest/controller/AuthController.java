@@ -5,13 +5,20 @@ import java.util.List;
 
 import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 //import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -22,11 +29,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
+import com.github.irybov.bankdemorest.controller.dto.LoginRequest;
 import com.github.irybov.bankdemorest.service.AccountService;
+import com.github.irybov.bankdemorest.util.JWTUtility;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -43,6 +53,13 @@ public class AuthController extends BaseController {
 	@Autowired
 	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
+	
+	@Autowired
+	private JWTUtility jwtUtility;
+	@Autowired
+	private AuthenticationManager authenticationManager;
+	@Autowired
+	private UserDetailsService accountDetailsService;
 	
 	@Qualifier("beforeCreateAccountValidator")
 	private final Validator accountValidator;
@@ -86,7 +103,26 @@ public class AuthController extends BaseController {
 			return "redirect:/home";
 		}
 	}
-*/	
+*/
+	@ApiOperation("Generates JWT")
+	@PostMapping(value = "/token", produces = MediaType.TEXT_PLAIN_VALUE)
+	@ResponseBody
+	public String getToken(@Valid @RequestBody LoginRequest loginRequest, 
+			HttpServletResponse response) {
+		
+		try {
+			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken
+					(loginRequest.getPhone(), loginRequest.getPassword()));
+		}
+		catch(BadCredentialsException exc) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return exc.getMessage();
+		}
+		
+		UserDetails details = accountDetailsService.loadUserByUsername(loginRequest.getPhone());		
+		return jwtUtility.generate(details);		
+	}
+	
 	@ApiOperation("Confirms new account's registration")
 	@ApiResponses(value = 
 		{@ApiResponse(code = 201, message = "Your account has been created", response = String.class), 

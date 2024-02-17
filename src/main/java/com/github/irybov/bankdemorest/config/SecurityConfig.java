@@ -30,6 +30,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
@@ -42,6 +43,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 //import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.github.irybov.bankdemorest.security.AccountDetailsService;
+import com.github.irybov.bankdemorest.security.JWTFilter;
 
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -53,7 +55,9 @@ public class SecurityConfig {
 	private int port;
 //	@Value("${management.server.port}")
 //	private int m_port;
-	
+
+	@Autowired
+	private JWTFilter jwtFilter;
 //	@Autowired
 //	private DataSource dataSource;
 	private final PasswordEncoder passwordEncoder;
@@ -68,6 +72,7 @@ public class SecurityConfig {
     		"/login", 
     		"/register", 
     		"/confirm", 
+    		"/token", 
 //    		"/webjars/**", 
 //    		"/css/**", 
 //    		"/js/**", 
@@ -140,6 +145,29 @@ public class SecurityConfig {
 	}
 	
     @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+	
+	@Bean
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public SecurityFilterChain actuatorChain(HttpSecurity http) throws Exception {
+		
+		http
+			.csrf().disable()
+			.sessionManagement()
+	        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+			.and()
+			.authorizeRequests()
+			.antMatchers("/actuator/**").hasRole("REMOTE")
+			.anyRequest().authenticated()
+				.and()
+			.httpBasic();
+        
+		return http.build();
+	}
+	
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     	        
 //    	CsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();   	
@@ -178,10 +206,11 @@ public class SecurityConfig {
 			.mvcMatchers(WHITE_LIST_URLS).permitAll()
 			.mvcMatchers(SHARED_LIST_URLS).hasAnyRole("ADMIN", "CLIENT")
 			.mvcMatchers(ADMIN_LIST_URLS).hasRole("ADMIN")
-			.antMatchers("/actuator/**").hasRole("REMOTE")
+//			.antMatchers("/actuator/**").hasRole("REMOTE")
 			.anyRequest().authenticated()
 				.and()
-			.httpBasic();
+			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+//			.httpBasic();
 /*		    .csrf().csrfTokenRepository(csrfTokenRepository)
 		    .sessionAuthenticationStrategy(new CsrfAuthenticationStrategy(csrfTokenRepository))
 		    .ignoringAntMatchers("/bills/external", "/actuator/**")*/
