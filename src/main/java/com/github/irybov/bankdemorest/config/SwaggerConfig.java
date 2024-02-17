@@ -53,10 +53,10 @@ public class SwaggerConfig {
           .securitySchemes(Arrays.asList(basicAuthScheme()));
 	}
     
-    @Bean
+/*    @Bean
     public SecurityConfiguration security() {
     	return SecurityConfigurationBuilder.builder().enableCsrfSupport(true).build();
-    }	
+    }*/	
 	private SecurityContext mySecurityContext() {
 		return SecurityContext.builder()
 	      .securityReferences(Arrays.asList(basicAuthReference()))

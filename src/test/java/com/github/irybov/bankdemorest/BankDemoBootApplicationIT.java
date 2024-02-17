@@ -244,6 +244,25 @@ public class BankDemoBootApplicationIT {
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));		
 		}
 
+	    @Test
+	    void denied_api_docs() throws Exception {
+	    	
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = jpa.findByPhone("1111111111").get();
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				jpa.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount("1111111111");
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
+
+	        mockMVC.perform(get("/v2/api-docs").with(httpBasic("1111111111", "supervixen")))
+				.andExpect(status().isForbidden());		
+		}
+	    
 	    @Disabled
 	    @Test
 	    void can_get_swagger_config() throws Exception {

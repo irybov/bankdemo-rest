@@ -85,8 +85,8 @@ public class SecurityConfig {
     };
     private static final String[] ADMIN_LIST_URLS = {
     		"/configuration/**", 
-			"/swagger*/**", 
-			"/**/api-docs/**", 
+//			"/swagger*/**", 
+//			"/**/api-docs/**", 
     		"/webjars/**", 
 			"/control", 
     		"/accounts/search/*", 
@@ -151,7 +151,7 @@ public class SecurityConfig {
 	
 	@Bean
 	@Order(Ordered.LOWEST_PRECEDENCE)
-	public SecurityFilterChain actuatorChain(HttpSecurity http) throws Exception {
+	public SecurityFilterChain basicChain(HttpSecurity http) throws Exception {
 		
 		http
 			.csrf().disable()
@@ -160,6 +160,7 @@ public class SecurityConfig {
 			.and()
 			.authorizeRequests()
 			.antMatchers("/actuator/**").hasRole("REMOTE")
+			.antMatchers("/**/api-docs/**", "/swagger*/**").hasRole("ADMIN")
 			.anyRequest().authenticated()
 				.and()
 			.httpBasic();

@@ -60,11 +60,11 @@ public class MegaController extends BaseController {
 			return String.format("Wrong implementation type %s specified, retry", impl);
 	    }
 	}
-	
+/*	
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/csrf")
     public CsrfToken getToken(CsrfToken token) {
         return token;
     }
-	
+	*/
 }
