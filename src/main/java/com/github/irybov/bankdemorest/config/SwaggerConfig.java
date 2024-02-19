@@ -45,7 +45,7 @@ public class SwaggerConfig {
     @Bean
     public Docket api() { 
         return new Docket(DocumentationType.SWAGGER_2)
-          .select() 
+          .select()
           .apis(RequestHandlerSelectors.basePackage("com.github.irybov.bankdemorest.controller"))
           .paths(PathSelectors.any())
           .build().apiInfo(metaData())

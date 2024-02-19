@@ -37,6 +37,7 @@ public class JWTFilter extends OncePerRequestFilter {
 		
 		if(header != null && header.startsWith("Bearer ")) {
 			String jwt = header.substring(7);
+			jwt.trim();
 			
 			if(jwt.isEmpty()) {
 				response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED, 
@@ -53,6 +54,7 @@ public class JWTFilter extends OncePerRequestFilter {
 			                    username,
 			                    null,
 			                    roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList()));
+//			            token.setAuthenticated(true);
 			            SecurityContextHolder.getContext().setAuthentication(token);
 			        }
 				}

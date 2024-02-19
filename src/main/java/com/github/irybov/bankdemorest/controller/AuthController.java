@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
@@ -114,16 +115,16 @@ public class AuthController extends BaseController {
 			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken
 					(loginRequest.getPhone(), loginRequest.getPassword()));
 		}
-		catch(BadCredentialsException exc) {
+		catch(AuthenticationException exc) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			return exc.getMessage();
+			return "Wrong credentials";
 		}
 		
 		UserDetails details = accountDetailsService.loadUserByUsername(loginRequest.getPhone());		
-		return jwtUtility.generate(details);		
+		return jwtUtility.generate(details);
 	}
 	
-	@ApiOperation("Confirms new account's registration")
+	@ApiOperation("Registers new account")
 	@ApiResponses(value = 
 		{@ApiResponse(code = 201, message = "Your account has been created", response = String.class), 
 		 @ApiResponse(code = 400, message = "", responseContainer = "List", response = String.class),

@@ -64,10 +64,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
+import com.github.irybov.bankdemorest.controller.dto.LoginRequest;
 import com.github.irybov.bankdemorest.controller.dto.OperationRequest;
 import com.github.irybov.bankdemorest.controller.dto.PasswordRequest;
 import com.github.irybov.bankdemorest.dao.AccountDAO;
@@ -192,7 +194,7 @@ public class BankDemoBootApplicationIT {
 				dao.updateAccount(account);
 			}
 			
-	        mockMVC.perform(get("/swagger-ui/").with(httpBasic("3333333333", "gingerchick")))
+	        mockMVC.perform(get("/dox/swagger-ui/").with(httpBasic("3333333333", "gingerchick")))
 	    		.andExpect(status().isOk());
 		}
 		
@@ -212,7 +214,7 @@ public class BankDemoBootApplicationIT {
 				dao.updateAccount(account);
 			}
 			
-	        mockMVC.perform(get("/swagger-ui/").with(httpBasic("1111111111", "supervixen")))
+	        mockMVC.perform(get("/dox/swagger-ui/").with(httpBasic("1111111111", "supervixen")))
 				.andExpect(status().isForbidden());
 		}
 
@@ -239,7 +241,7 @@ public class BankDemoBootApplicationIT {
 				dao.updateAccount(account);
 			}
 
-	        mockMVC.perform(get("/v2/api-docs").with(httpBasic("3333333333", "gingerchick")))
+	        mockMVC.perform(get("/dox/v2/api-docs").with(httpBasic("3333333333", "gingerchick")))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));		
 		}
@@ -259,7 +261,7 @@ public class BankDemoBootApplicationIT {
 				dao.updateAccount(account);
 			}
 
-	        mockMVC.perform(get("/v2/api-docs").with(httpBasic("1111111111", "supervixen")))
+	        mockMVC.perform(get("/dox/v2/api-docs").with(httpBasic("1111111111", "supervixen")))
 				.andExpect(status().isForbidden());		
 		}
 	    
@@ -283,10 +285,10 @@ public class BankDemoBootApplicationIT {
 		@Autowired
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
-/*		@Autowired
+		@Autowired
 		private AccountJPA jpa;
 		@Autowired
-		private AccountDAO dao;*/
+		private AccountDAO dao;
 		
 //		private static final String PHONE = "0000000000";
 	
@@ -443,7 +445,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(model().hasErrors())
 				.andExpect(view().name("auth/register"));*/
 		}
-		
+/*		
 		@Disabled
 		@Test
 		void interrupted_registration() throws Exception {
@@ -466,17 +468,17 @@ public class BankDemoBootApplicationIT {
 				.andExpect(jsonPath("$").isArray());
 //				.andExpect(view().name("auth/register"));
 		}
-		
+	*/	
 		@Test
 		void violated_registration() throws Exception {
 			
 			AccountRequest accountRequest = new AccountRequest();
 //			accountRequestDTO.setBirthday("2001-01-01");
 			accountRequest.setBirthday(LocalDate.now().minusYears(17L));
-			accountRequest.setName("Admin");
-			accountRequest.setPassword("superadmin");
+			accountRequest.setName("Kylie");
+			accountRequest.setPassword("blackmamba");
 			accountRequest.setPhone("0000000000");
-			accountRequest.setSurname("Adminov");
+			accountRequest.setSurname("Bunbury");
 			
 			mockMVC.perform(post("/confirm")
 					.contentType(MediaType.APPLICATION_JSON)
@@ -489,6 +491,58 @@ public class BankDemoBootApplicationIT {
 				.andExpect(jsonPath("$.length()", equalTo(2)))
 				.andExpect(jsonPath("$").isArray());
 //				.andExpect(view().name("auth/register"));
+		}
+		
+		@Test
+		void correct_creds_jwt() throws Exception {
+			
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = jpa.findByPhone("0000000000").get();
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				jpa.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount("0000000000");
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
+			
+			LoginRequest loginRequest = new LoginRequest("0000000000", "superadmin");			
+			mockMVC.perform(post("/token")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isString());
+		}
+		
+		@Test
+		void wrong_creds_jwt() throws Exception {
+			
+			LoginRequest loginRequest = new LoginRequest("4444444444", "blackmamba");
+			mockMVC.perform(post("/token")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString("Wrong credentials")))
+				.andExpect(jsonPath("$").isString());
+		}
+		
+		@Test
+		void invalid_creds_jwt() throws Exception {
+			
+			LoginRequest loginRequest = new LoginRequest("00000", "super");
+			mockMVC.perform(post("/token")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$", hasItem("Please input phone number like a row of 10 digits")))
+				.andExpect(jsonPath("$", hasItem("Password should be 10-60 symbols length")))
+				.andExpect(jsonPath("$.length()", equalTo(2)))
+				.andExpect(jsonPath("$").isArray())
+			    .andExpect(result -> 
+			      	assertTrue(result.getResolvedException() 
+			      		instanceof MethodArgumentNotValidException));
 		}
 		
 	}
@@ -1381,7 +1435,7 @@ public class BankDemoBootApplicationIT {
 		
 	}
 	
-//	@WithMockUser(username = "0000000000", roles = "ADMIN")
+	@WithMockUser(username = "0000000000", roles = "ADMIN")
 	@Nested
 	class MegaControllerIT{
 		
@@ -1414,7 +1468,7 @@ public class BankDemoBootApplicationIT {
 			}
 
 			String impl = "DAO";			
-			mockMVC.perform(put("/control").with(httpBasic("0000000000", "superadmin")).param("impl", impl))
+			mockMVC.perform(put("/control").param("impl", impl))
 				.andExpect(status().isOk())
 				.andExpect(content()
 					.string(containsString("Services impementation has been switched to " + impl)));			
@@ -1423,7 +1477,7 @@ public class BankDemoBootApplicationIT {
 			assertThat(context.getBean("operationServiceAlias")).isInstanceOf(OperationServiceDAO.class);
 			
 			impl = "JPA";
-			mockMVC.perform(put("/control").with(httpBasic("0000000000", "superadmin")).param("impl", impl))
+			mockMVC.perform(put("/control").param("impl", impl))
 				.andExpect(status().isOk())
 				.andExpect(content()
 					.string(containsString("Services impementation has been switched to " + impl)));
@@ -1448,13 +1502,13 @@ public class BankDemoBootApplicationIT {
 			}
 			
 			String impl = "XXX";
-			mockMVC.perform(put("/control").with(httpBasic("0000000000", "superadmin")).param("impl", impl))
+			mockMVC.perform(put("/control").param("impl", impl))
 					.andExpect(status().isBadRequest())
 					.andExpect(content()
 						.string(containsString("Wrong implementation type " + impl + " specified, retry")));
 		}
 		
-//		@WithMockUser(username = "1111111111", roles = "CLIENT")
+		@WithMockUser(username = "1111111111", roles = "CLIENT")
 		@Test
 		void credentials_forbidden() throws Exception {
 			
@@ -1470,7 +1524,7 @@ public class BankDemoBootApplicationIT {
 				dao.updateAccount(account);
 			}
 			
-	        mockMVC.perform(get("/control").with(httpBasic("1111111111", "supervixen")))
+	        mockMVC.perform(get("/control"))
 				.andExpect(status().isForbidden());
 		}
 		

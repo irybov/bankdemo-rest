@@ -42,8 +42,8 @@ public class JWTUtility {
         return JWT.create()
                 .withSubject(details.getUsername())
                 .withClaim("roles", claims)
-                .withIssuedAt(new Date())
                 .withIssuer("bankdemo")
+                .withIssuedAt(new Date())
                 .withExpiresAt(expiration)
                 .sign(Algorithm.HMAC256(secret));
     }
@@ -53,7 +53,7 @@ public class JWTUtility {
         JWTVerifier verifier = JWT.require(Algorithm.HMAC256(secret))
                 .withIssuer("bankdemo")
                 .build();
-		return verifier.verify(token);    	
+		return verifier.verify(token);
     }
     
 }

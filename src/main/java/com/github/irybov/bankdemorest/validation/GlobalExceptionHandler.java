@@ -28,7 +28,7 @@ import com.github.irybov.bankdemorest.exception.PaymentException;
 import lombok.extern.slf4j.Slf4j;
 
 //@ControllerAdvice(basePackages = "com.github.irybov.bankdemorest.controller")
-@ControllerAdvice(basePackageClasses = BankController.class)
+@ControllerAdvice(basePackageClasses = {BankController.class, AuthController.class})
 @Slf4j
 public class GlobalExceptionHandler {
 

@@ -84,16 +84,18 @@ public class SecurityConfig {
     		"/accounts/password"
     };
     private static final String[] ADMIN_LIST_URLS = {
-    		"/configuration/**", 
-//			"/swagger*/**", 
-//			"/**/api-docs/**", 
-    		"/webjars/**", 
 			"/control", 
     		"/accounts/search/*", 
     		"/accounts/status/{id}", 
     		"/accounts/list/*", 
 			"/operations/**", 
 			"/h2-console/**"
+    };
+    private static final String[] SWAGGER_LIST_URLS = {
+//    		"/configuration/**", 
+			"/dox/swagger-ui/**", 
+			"/dox/v*/api-docs/**"
+//    		"/webjars/**"
     };
 //    private static final String[] REMOTE_LIST_URLS = {
 //			"**/swagger*/**", 
@@ -150,17 +152,36 @@ public class SecurityConfig {
     }
 	
 	@Bean
-	@Order(Ordered.LOWEST_PRECEDENCE)
-	public SecurityFilterChain basicChain(HttpSecurity http) throws Exception {
+	@Order(1)
+	public SecurityFilterChain actuatorChain(HttpSecurity http) throws Exception {
 		
 		http
 			.csrf().disable()
 			.sessionManagement()
 	        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-			.and()
+				.and()
+			.antMatcher("/actuator/**")
 			.authorizeRequests()
 			.antMatchers("/actuator/**").hasRole("REMOTE")
-			.antMatchers("/**/api-docs/**", "/swagger*/**").hasRole("ADMIN")
+			.anyRequest().authenticated()
+				.and()
+			.httpBasic();
+        
+		return http.build();
+	}
+
+	@Bean
+	@Order(2)
+	public SecurityFilterChain swaggerChain(HttpSecurity http) throws Exception {
+		
+		http
+			.csrf().disable()
+			.sessionManagement()
+	        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+				.and()
+			.antMatcher("/dox/**")
+			.authorizeRequests()
+			.mvcMatchers(SWAGGER_LIST_URLS).hasRole("ADMIN")
 			.anyRequest().authenticated()
 				.and()
 			.httpBasic();
@@ -169,6 +190,7 @@ public class SecurityConfig {
 	}
 	
     @Bean
+    @Order(3)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     	        
 //    	CsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();   	
@@ -202,7 +224,7 @@ public class SecurityConfig {
 	        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 //			.cors(Customizer.withDefaults())
 //			.cors()
-			.and()
+				.and()
 			.authorizeRequests()
 			.mvcMatchers(WHITE_LIST_URLS).permitAll()
 			.mvcMatchers(SHARED_LIST_URLS).hasAnyRole("ADMIN", "CLIENT")
