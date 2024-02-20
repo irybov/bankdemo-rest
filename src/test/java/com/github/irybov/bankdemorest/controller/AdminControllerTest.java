@@ -84,6 +84,7 @@ import com.github.irybov.bankdemorest.security.AccountDetailsService;
 import com.github.irybov.bankdemorest.service.AccountService;
 import com.github.irybov.bankdemorest.service.BillService;
 import com.github.irybov.bankdemorest.service.OperationService;
+import com.github.irybov.bankdemorest.util.JWTUtility;
 import com.opencsv.CSVWriter;
 
 @WithMockUser(username = "0000000000", roles = "ADMIN")
@@ -101,7 +102,9 @@ class AdminControllerTest {
 	@Qualifier("operationServiceAlias")
 	private OperationService operationService;
 	@MockBean
-	private UserDetailsService accountDetailsService;
+	private UserDetailsService accountDetailsService;	
+	@MockBean
+	private JWTUtility jwtUtility;
 	@Autowired
 	private MockMvc mockMVC;
 	@Autowired

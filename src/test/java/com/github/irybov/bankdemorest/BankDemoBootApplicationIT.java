@@ -518,7 +518,7 @@ public class BankDemoBootApplicationIT {
 		}
 		
 		@Test
-		void wrong_creds_jwt() throws Exception {
+		void abscent_creds_jwt() throws Exception {
 			
 			LoginRequest loginRequest = new LoginRequest("4444444444", "blackmamba");
 			mockMVC.perform(get("/token")
@@ -1558,6 +1558,88 @@ public class BankDemoBootApplicationIT {
 				.andExpect(status().isForbidden());
 		}
 		
+	}
+		
+	@Nested
+	class JWTFilterIT{
+		
+		@Autowired
+		private ObjectMapper mapper;
+		
+		@Autowired
+		@Qualifier("accountServiceAlias")
+		private AccountService accountService;
+		@Autowired
+		private AccountJPA jpa;
+		@Autowired
+		private AccountDAO dao;
+		
+		@Test
+		void incorrect_or_abscent_header() throws Exception {
+						
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = jpa.findByPhone("1111111111").get();
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				jpa.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount("1111111111");
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
+			
+			LoginRequest loginRequest = new LoginRequest("1111111111", "supervixen");			
+			MvcResult result = mockMVC.perform(get("/token")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isString())
+				.andReturn();
+			
+			String token = result.getResponse().getContentAsString();
+	        mockMVC.perform(put("/control").header("Authorization", "Bear " + token))
+				.andExpect(status().isForbidden());
+	        
+	        mockMVC.perform(put("/control"))
+				.andExpect(status().isForbidden());
+		}
+
+		@Test
+		void corrupted_or_abscent_token() throws Exception {
+			
+			Account account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = jpa.findByPhone("1111111111").get();
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				jpa.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount("1111111111");
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
+			
+			LoginRequest loginRequest = new LoginRequest("1111111111", "supervixen");			
+			MvcResult result = mockMVC.perform(get("/token")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isString())
+				.andReturn();
+			
+			String token = result.getResponse().getContentAsString();
+		    mockMVC.perform(put("/control").header("Authorization", "Bearer " + token + "fake"))
+		    	.andExpect(jsonPath("$").isString())
+		    	.andExpect(content().string(containsString("Invalid token provided")))
+				.andExpect(status().isExpectationFailed());			
+			
+		    mockMVC.perform(put("/control").header("Authorization", "Bearer "))
+	    		.andExpect(jsonPath("$").isString())
+	    		.andExpect(content().string(containsString("No token provided with Bearer")))
+				.andExpect(status().isExpectationFailed());
+		}
+
 	}
 	
 	@AfterAll

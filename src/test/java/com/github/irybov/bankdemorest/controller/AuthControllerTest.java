@@ -53,11 +53,13 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.Validator;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -72,6 +74,7 @@ import com.github.irybov.bankdemorest.entity.Account;
 import com.github.irybov.bankdemorest.exception.RegistrationException;
 import com.github.irybov.bankdemorest.security.AccountDetails;
 import com.github.irybov.bankdemorest.security.AccountDetailsService;
+import com.github.irybov.bankdemorest.security.Role;
 import com.github.irybov.bankdemorest.service.AccountService;
 import com.github.irybov.bankdemorest.service.AccountServiceDAO;
 import com.github.irybov.bankdemorest.service.AccountServiceJPA;
@@ -79,6 +82,7 @@ import com.github.irybov.bankdemorest.util.JWTUtility;
 
 @WebMvcTest(AuthController.class)
 @Import(SecurityConfig.class)
+@TestPropertySource(locations = "classpath:jwt.properties")
 class AuthControllerTest {
 
 	@MockBean
@@ -95,7 +99,7 @@ class AuthControllerTest {
 	@Autowired
 	private ObjectMapper mapper;
 
-	@MockBean
+	@SpyBean
 	private JWTUtility jwtUtility;
 	@MockBean
 	private AuthenticationManager authenticationManager;
@@ -383,12 +387,18 @@ class AuthControllerTest {
 	@Test
 	void correct_creds_jwt() throws Exception {
 		
+		Account account = new Account("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
+				 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
+		account.addRole(Role.ADMIN);
+		UserDetails details = new AccountDetails(account);
+		
 		LoginRequest loginRequest = new LoginRequest("0000000000", "superadmin");
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken
 				(loginRequest.getPhone(), loginRequest.getPassword());
 		
 		doReturn(auth).when(authenticationManager).authenticate(refEq(auth));
-		doReturn(new String("token")).when(jwtUtility).generate(null);
+		doReturn(details).when(accountDetailsService).loadUserByUsername(refEq(loginRequest.getPhone()));
+//		doReturn(new String("XXL")).when(jwtUtility).generate(refEq(details));
 			
 		mockMVC.perform(get("/token")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -397,11 +407,12 @@ class AuthControllerTest {
 			.andExpect(jsonPath("$").isString());
 		
 		verify(authenticationManager).authenticate(refEq(auth));
-		verify(jwtUtility).generate(refEq(null));
+		verify(accountDetailsService).loadUserByUsername(refEq(loginRequest.getPhone()));
+//		verify(jwtUtility).generate(refEq(details));
 	}
 	
 	@Test
-	void wrong_creds_jwt() throws Exception {
+	void abscent_creds_jwt() throws Exception {
 		
 		LoginRequest loginRequest = new LoginRequest("4444444444", "blackmamba");
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken

@@ -92,6 +92,7 @@ import com.github.irybov.bankdemorest.security.AccountDetailsService;
 import com.github.irybov.bankdemorest.service.AccountService;
 import com.github.irybov.bankdemorest.service.BillService;
 import com.github.irybov.bankdemorest.service.OperationService;
+import com.github.irybov.bankdemorest.util.JWTUtility;
 
 @WithMockUser(username = "4444444444", roles = "CLIENT")
 @WebMvcTest(controllers = BankController.class)
@@ -109,6 +110,8 @@ class BankControllerTest {
 	private OperationService operationService;
 	@MockBean
 	private UserDetailsService accountDetailsService;
+	@MockBean
+	private JWTUtility jwtUtility;
 	@Autowired
 	private MockMvc mockMVC;
 	@Autowired
