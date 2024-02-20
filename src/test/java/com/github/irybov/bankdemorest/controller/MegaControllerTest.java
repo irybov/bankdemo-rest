@@ -107,7 +107,7 @@ class MegaControllerTest {
 	@Test
 	void credentials_forbidden() throws Exception {
 		
-        mockMVC.perform(get("/control"))
+        mockMVC.perform(put("/control"))
 			.andExpect(status().isForbidden());
 	}
 	

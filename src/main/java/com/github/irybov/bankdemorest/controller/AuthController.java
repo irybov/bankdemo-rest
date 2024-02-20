@@ -106,7 +106,10 @@ public class AuthController extends BaseController {
 	}
 */
 	@ApiOperation("Generates JWT")
-	@PostMapping(value = "/token", produces = MediaType.TEXT_PLAIN_VALUE)
+	@ApiResponses(value = 
+		{@ApiResponse(code = 200, message = "", response = String.class), 
+		 @ApiResponse(code = 400, message = "Wrong credentials", response = String.class)})
+	@GetMapping("/token")
 	@ResponseBody
 	public String getToken(@Valid @RequestBody LoginRequest loginRequest, 
 			HttpServletResponse response) {

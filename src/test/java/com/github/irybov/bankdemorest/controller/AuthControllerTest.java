@@ -6,8 +6,11 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -40,10 +43,14 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -53,17 +60,22 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.Validator;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.irybov.bankdemorest.config.SecurityConfig;
 import com.github.irybov.bankdemorest.controller.AuthController;
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
+import com.github.irybov.bankdemorest.controller.dto.LoginRequest;
 import com.github.irybov.bankdemorest.entity.Account;
 import com.github.irybov.bankdemorest.exception.RegistrationException;
 import com.github.irybov.bankdemorest.security.AccountDetails;
 import com.github.irybov.bankdemorest.security.AccountDetailsService;
 import com.github.irybov.bankdemorest.service.AccountService;
+import com.github.irybov.bankdemorest.service.AccountServiceDAO;
+import com.github.irybov.bankdemorest.service.AccountServiceJPA;
+import com.github.irybov.bankdemorest.util.JWTUtility;
 
 @WebMvcTest(AuthController.class)
 @Import(SecurityConfig.class)
@@ -77,15 +89,21 @@ class AuthControllerTest {
 	private AccountService accountService;
 	@MockBean
 	private UserDetailsService accountDetailsService;
+	
 	@Autowired
 	private MockMvc mockMVC;
 	@Autowired
 	private ObjectMapper mapper;
-	
+
+	@MockBean
+	private JWTUtility jwtUtility;
+	@MockBean
+	private AuthenticationManager authenticationManager;
+/*	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
-	
+	*/
 	@TestConfiguration
 	static class TestConfig {
 		
@@ -346,7 +364,7 @@ class AuthControllerTest {
 		accountRequest.setPhone("0000000000");
 		accountRequest.setSurname("Adminov");
 		
-		doThrow(new RuntimeException("This number is already in use."))
+		doThrow(new RuntimeException("This number is already in use"))
 		.when(accountService).saveAccount(refEq(accountRequest));
 
 		mockMVC.perform(post("/confirm")
@@ -357,9 +375,66 @@ class AuthControllerTest {
 	        .andExpect(model().attributeExists("account"))
         	.andExpect(model().attribute("message", "This number is already in use."))
 			.andExpect(view().name("auth/register"));*/
-			.andExpect(content().string("This number is already in use."));
+			.andExpect(content().string("This number is already in use"));
 		
 	    verify(accountService).saveAccount(refEq(accountRequest));
+	}
+	
+	@Test
+	void correct_creds_jwt() throws Exception {
+		
+		LoginRequest loginRequest = new LoginRequest("0000000000", "superadmin");
+		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken
+				(loginRequest.getPhone(), loginRequest.getPassword());
+		
+		doReturn(auth).when(authenticationManager).authenticate(refEq(auth));
+		doReturn(new String("token")).when(jwtUtility).generate(null);
+			
+		mockMVC.perform(get("/token")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(loginRequest)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$").isString());
+		
+		verify(authenticationManager).authenticate(refEq(auth));
+		verify(jwtUtility).generate(refEq(null));
+	}
+	
+	@Test
+	void wrong_creds_jwt() throws Exception {
+		
+		LoginRequest loginRequest = new LoginRequest("4444444444", "blackmamba");
+		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken
+				(loginRequest.getPhone(), loginRequest.getPassword());
+		
+		doThrow(new BadCredentialsException(null))
+		.when(authenticationManager).authenticate(refEq(auth));
+		
+		mockMVC.perform(get("/token")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(loginRequest)))
+			.andExpect(status().isBadRequest())
+			.andExpect(content().string(containsString("Wrong credentials")))
+			.andExpect(jsonPath("$").isString());
+		
+		verify(authenticationManager).authenticate(refEq(auth));
+	}
+	
+	@Test
+	void invalid_creds_jwt() throws Exception {
+		
+		LoginRequest loginRequest = new LoginRequest("00000", "super");
+		mockMVC.perform(get("/token")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(loginRequest)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$", hasItem("Please input phone number like a row of 10 digits")))
+			.andExpect(jsonPath("$", hasItem("Password should be 10-60 symbols length")))
+			.andExpect(jsonPath("$.length()", equalTo(2)))
+			.andExpect(jsonPath("$").isArray())
+		    .andExpect(result -> 
+		      	assertTrue(result.getResolvedException() 
+		      		instanceof MethodArgumentNotValidException));
 	}
 	
 }

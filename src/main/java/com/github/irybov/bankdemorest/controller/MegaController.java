@@ -18,6 +18,8 @@ import com.github.irybov.bankdemorest.service.OperationService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 
 @Api(description = "Special controller for runtime switch of model's layer type")
@@ -26,9 +28,12 @@ import lombok.extern.slf4j.Slf4j;
 public class MegaController extends BaseController {
     
     @Autowired
-    private AccountDetailsService details;
+    private AccountDetailsService accountDetailsService;
 	
 	@ApiOperation("Switchs model's layer type wired to defined controllers")
+	@ApiResponses(value = 
+		{@ApiResponse(code = 200, message = "", response = String.class), 
+		 @ApiResponse(code = 400, message = "", response = String.class)})
 	@PreAuthorize("hasRole('ADMIN')")
 	@PutMapping("/control")
 	public String changeServiceImpl(@RequestParam String impl, HttpServletResponse response) {
@@ -38,7 +43,7 @@ public class MegaController extends BaseController {
 	    
 	    if(impl.equals("JPA") || impl.equals("DAO")) {
 	    	
-	    	details.setImpl(impl);	    	
+	    	accountDetailsService.setImpl(impl);	    	
 		    registry.destroySingleton("accountServiceAlias");
 		    AccountService as = (AccountService) context.getBean("accountService" + impl);
 	    	registry.registerSingleton("accountServiceAlias", as);

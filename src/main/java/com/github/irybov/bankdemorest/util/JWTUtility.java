@@ -31,17 +31,17 @@ public class JWTUtility {
     
     public String generate(UserDetails details) {
 
-        Map<String, Object> claims = new HashMap<>();
+//        Map<String, Object> claims = new HashMap<>();
         List<String> roles = details.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
-        claims.put("roles", roles);
+//        claims.put("roles", roles);
 
     	Date expiration = Date.from(ZonedDateTime.now().plusMinutes(lifetime.toMinutes()).toInstant());
     	
         return JWT.create()
                 .withSubject(details.getUsername())
-                .withClaim("roles", claims)
+                .withClaim("roles", roles)
                 .withIssuer("bankdemo")
                 .withIssuedAt(new Date())
                 .withExpiresAt(expiration)

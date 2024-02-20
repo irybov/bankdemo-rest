@@ -57,6 +57,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -509,7 +510,7 @@ public class BankDemoBootApplicationIT {
 			}
 			
 			LoginRequest loginRequest = new LoginRequest("0000000000", "superadmin");			
-			mockMVC.perform(post("/token")
+			mockMVC.perform(get("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isOk())
@@ -520,7 +521,7 @@ public class BankDemoBootApplicationIT {
 		void wrong_creds_jwt() throws Exception {
 			
 			LoginRequest loginRequest = new LoginRequest("4444444444", "blackmamba");
-			mockMVC.perform(post("/token")
+			mockMVC.perform(get("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isBadRequest())
@@ -532,7 +533,7 @@ public class BankDemoBootApplicationIT {
 		void invalid_creds_jwt() throws Exception {
 			
 			LoginRequest loginRequest = new LoginRequest("00000", "super");
-			mockMVC.perform(post("/token")
+			mockMVC.perform(get("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isBadRequest())
@@ -1435,13 +1436,16 @@ public class BankDemoBootApplicationIT {
 		
 	}
 	
-	@WithMockUser(username = "0000000000", roles = "ADMIN")
+//	@WithUserDetails("0000000000")
 	@Nested
 	class MegaControllerIT{
 		
 	    @Autowired
 	    ApplicationContext context;
-	    
+	    		
+		@Autowired
+		private ObjectMapper mapper;
+		
 		@Autowired
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
@@ -1449,26 +1453,34 @@ public class BankDemoBootApplicationIT {
 		private AccountJPA jpa;
 		@Autowired
 		private AccountDAO dao;
-		
-		private static final String PHONE = "0000000000";
-		
+	
 		@Test
 		void can_change_implementation() throws Exception {
 			
 			Account account = null;
 			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone(PHONE).get();
+				account = jpa.findByPhone("0000000000").get();
 				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
 				jpa.saveAndFlush(account);
 			}
 			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount(PHONE);
+				account = dao.getAccount("0000000000");
 				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
 				dao.updateAccount(account);
 			}
+			
+			LoginRequest loginRequest = new LoginRequest("0000000000", "superadmin");			
+			MvcResult result = mockMVC.perform(get("/token")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isString())
+				.andReturn();
+			
+			String token = result.getResponse().getContentAsString();
 
 			String impl = "DAO";			
-			mockMVC.perform(put("/control").param("impl", impl))
+			mockMVC.perform(put("/control").header("Authorization", "Bearer " + token).param("impl", impl))
 				.andExpect(status().isOk())
 				.andExpect(content()
 					.string(containsString("Services impementation has been switched to " + impl)));			
@@ -1477,7 +1489,7 @@ public class BankDemoBootApplicationIT {
 			assertThat(context.getBean("operationServiceAlias")).isInstanceOf(OperationServiceDAO.class);
 			
 			impl = "JPA";
-			mockMVC.perform(put("/control").param("impl", impl))
+			mockMVC.perform(put("/control").header("Authorization", "Bearer " + token).param("impl", impl))
 				.andExpect(status().isOk())
 				.andExpect(content()
 					.string(containsString("Services impementation has been switched to " + impl)));
@@ -1488,27 +1500,36 @@ public class BankDemoBootApplicationIT {
 				
 		@Test
 		void wrong_implementation_type() throws Exception {
-			
+						
 			Account account = null;
 			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone(PHONE).get();
+				account = jpa.findByPhone("0000000000").get();
 				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
 				jpa.saveAndFlush(account);
 			}
 			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount(PHONE);
+				account = dao.getAccount("0000000000");
 				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
 				dao.updateAccount(account);
 			}
 			
+			LoginRequest loginRequest = new LoginRequest("0000000000", "superadmin");			
+			MvcResult result = mockMVC.perform(get("/token")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isString())
+				.andReturn();
+			
+			String token = result.getResponse().getContentAsString();			
 			String impl = "XXX";
-			mockMVC.perform(put("/control").param("impl", impl))
-					.andExpect(status().isBadRequest())
-					.andExpect(content()
-						.string(containsString("Wrong implementation type " + impl + " specified, retry")));
+			mockMVC.perform(put("/control").header("Authorization", "Bearer " + token).param("impl", impl))
+				.andExpect(status().isBadRequest())
+				.andExpect(content()
+				.string(containsString("Wrong implementation type " + impl + " specified, retry")));
 		}
 		
-		@WithMockUser(username = "1111111111", roles = "CLIENT")
+//		@WithUserDetails("1111111111")
 		@Test
 		void credentials_forbidden() throws Exception {
 			
@@ -1524,7 +1545,16 @@ public class BankDemoBootApplicationIT {
 				dao.updateAccount(account);
 			}
 			
-	        mockMVC.perform(get("/control"))
+			LoginRequest loginRequest = new LoginRequest("1111111111", "supervixen");			
+			MvcResult result = mockMVC.perform(get("/token")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isString())
+				.andReturn();
+			
+			String token = result.getResponse().getContentAsString();
+	        mockMVC.perform(put("/control").header("Authorization", "Bearer " + token))
 				.andExpect(status().isForbidden());
 		}
 		
