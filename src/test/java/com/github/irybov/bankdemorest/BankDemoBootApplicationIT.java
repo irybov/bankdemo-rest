@@ -38,6 +38,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -95,6 +96,14 @@ public class BankDemoBootApplicationIT {
 
 	@Autowired
 	private MockMvc mockMVC;
+		
+	@Autowired
+	@Qualifier("accountServiceAlias")
+	private AccountService accountService;
+	@Autowired
+	private AccountJPA jpa;
+	@Autowired
+	private AccountDAO dao;
 	
 	private static WireMockServer wireMockServer;
 	@Value("${external.payment-service}")
@@ -120,7 +129,7 @@ public class BankDemoBootApplicationIT {
 	
     @Nested
     class ActuatorAccessIT{
-    	
+/*    	
 		@Autowired
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
@@ -128,7 +137,7 @@ public class BankDemoBootApplicationIT {
 		private AccountJPA jpa;
 		@Autowired
 		private AccountDAO dao;
-	
+	*/
 //		@WithMockUser(username = "remote", roles = "REMOTE")
 		@Test
 		void actuator_allowed() throws Exception {
@@ -169,7 +178,7 @@ public class BankDemoBootApplicationIT {
 //	@WithMockUser(username = "3333333333", roles = {"ADMIN", "CLIENT"})
     @Nested
     class SwaggerAccessIT{
-		
+/*		
 		@Autowired
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
@@ -177,7 +186,7 @@ public class BankDemoBootApplicationIT {
 		private AccountJPA jpa;
 		@Autowired
 		private AccountDAO dao;
-		
+	*/	
 		private static final String PHONE = "3333333333";
     	
 		@Test
@@ -282,7 +291,7 @@ public class BankDemoBootApplicationIT {
 		
 		@Autowired
 		private ObjectMapper mapper;
-		
+/*		
 		@Autowired
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
@@ -290,7 +299,7 @@ public class BankDemoBootApplicationIT {
 		private AccountJPA jpa;
 		@Autowired
 		private AccountDAO dao;
-		
+	*/	
 //		private static final String PHONE = "0000000000";
 	
 /*		@Test
@@ -714,7 +723,7 @@ public class BankDemoBootApplicationIT {
 		private ObjectMapper mapper;
 		@Autowired
 		private TestRestTemplate testRestTemplate;
-		
+/*		
 		@Autowired
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
@@ -722,7 +731,7 @@ public class BankDemoBootApplicationIT {
 		private AccountJPA jpa;
 		@Autowired
 		private AccountDAO dao;
-		
+		*/
 		private static final String PHONE = "1111111111";
 		
 		@Value("${external.payment-service}")
@@ -1445,7 +1454,7 @@ public class BankDemoBootApplicationIT {
 	    		
 		@Autowired
 		private ObjectMapper mapper;
-		
+/*		
 		@Autowired
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
@@ -1453,7 +1462,7 @@ public class BankDemoBootApplicationIT {
 		private AccountJPA jpa;
 		@Autowired
 		private AccountDAO dao;
-	
+	*/
 		@Test
 		void can_change_implementation() throws Exception {
 			
@@ -1565,7 +1574,7 @@ public class BankDemoBootApplicationIT {
 		
 		@Autowired
 		private ObjectMapper mapper;
-		
+/*		
 		@Autowired
 		@Qualifier("accountServiceAlias")
 		private AccountService accountService;
@@ -1573,10 +1582,30 @@ public class BankDemoBootApplicationIT {
 		private AccountJPA jpa;
 		@Autowired
 		private AccountDAO dao;
+		*/		
+		private Account account;
+		private LoginRequest loginRequest;
+		
+		@BeforeEach
+		void set_up() {
+			
+			account = null;
+			if(accountService instanceof AccountServiceJPA) {
+				account = jpa.findByPhone("1111111111").get();
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				jpa.saveAndFlush(account);
+			}
+			else if(accountService instanceof AccountServiceDAO) {
+				account = dao.getAccount("1111111111");
+				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+				dao.updateAccount(account);
+			}
+			loginRequest = new LoginRequest("1111111111", "supervixen");
+		}
 		
 		@Test
 		void incorrect_or_abscent_header() throws Exception {
-						
+/*						
 			Account account = null;
 			if(accountService instanceof AccountServiceJPA) {
 				account = jpa.findByPhone("1111111111").get();
@@ -1588,8 +1617,8 @@ public class BankDemoBootApplicationIT {
 				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
 				dao.updateAccount(account);
 			}
-			
-			LoginRequest loginRequest = new LoginRequest("1111111111", "supervixen");			
+			*/
+//			LoginRequest loginRequest = new LoginRequest("1111111111", "supervixen");
 			MvcResult result = mockMVC.perform(get("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
@@ -1607,7 +1636,7 @@ public class BankDemoBootApplicationIT {
 
 		@Test
 		void corrupted_or_abscent_token() throws Exception {
-			
+/*			
 			Account account = null;
 			if(accountService instanceof AccountServiceJPA) {
 				account = jpa.findByPhone("1111111111").get();
@@ -1619,8 +1648,8 @@ public class BankDemoBootApplicationIT {
 				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
 				dao.updateAccount(account);
 			}
-			
-			LoginRequest loginRequest = new LoginRequest("1111111111", "supervixen");			
+			*/
+//			LoginRequest loginRequest = new LoginRequest("1111111111", "supervixen");
 			MvcResult result = mockMVC.perform(get("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
@@ -1640,6 +1669,12 @@ public class BankDemoBootApplicationIT {
 				.andExpect(status().isExpectationFailed());
 		}
 
+		@AfterEach
+		void tear_down() {
+			account = null;
+			loginRequest = null;
+		}
+		
 	}
 	
 	@AfterAll
