@@ -10,7 +10,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -40,6 +43,8 @@ import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.jpa.OperationJPA;
 import com.github.irybov.bankdemorest.page.OperationPage;
 import com.github.irybov.bankdemorest.service.OperationServiceJPA;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
 
 class OperationServiceJPATest {
 	
@@ -118,7 +123,7 @@ class OperationServiceJPATest {
 				.limit(size)
 				.collect(Collectors.toList());			
 		Page<Operation> result = new PageImpl<Operation>(operations);
-		when(operationJPA.findAll(any(Specification.class), any(Pageable.class)))
+		when(operationJPA.findAll(ExpressionUtils.allOf(any(Predicate.class)), any(Pageable.class)))
 				.thenReturn(result);
 
 		final int id = new Random().nextInt();
@@ -128,11 +133,12 @@ class OperationServiceJPATest {
 				   page.getSortDirection(), page.getSortBy());
 		
 		Page<OperationResponse> dtos = operationService.getPage(id, "^[a-z]{7,8}", value, value,
-				any(OffsetDateTime.class), any(OffsetDateTime.class), pageable);
+				OffsetDateTime.of(LocalDate.parse("1900-01-01"), LocalTime.MIN, ZoneOffset.UTC), 
+				OffsetDateTime.now(), pageable);
 		assertThat(dtos)
 			.hasSameClassAs(new PageImpl<OperationResponse>(new ArrayList<OperationResponse>()));
 		assertThat(dtos.getContent().size()).isEqualTo(size);
-		verify(operationJPA).findAll(any(Specification.class), any(Pageable.class));
+		verify(operationJPA).findAll(ExpressionUtils.allOf(any(Predicate.class)), any(Pageable.class));
 	}
 	
     @AfterEach

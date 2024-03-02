@@ -3,6 +3,7 @@ package com.github.irybov.bankdemorest.jpa;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -24,9 +25,12 @@ import org.springframework.test.context.jdbc.Sql;
 
 import com.github.irybov.bankdemorest.controller.dto.OperationResponse;
 import com.github.irybov.bankdemorest.entity.Operation;
+import com.github.irybov.bankdemorest.entity.QOperation;
 import com.github.irybov.bankdemorest.jpa.OperationJPA;
 import com.github.irybov.bankdemorest.page.OperationPage;
 import com.github.irybov.bankdemorest.util.OperationSpecifications;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
 
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Sql("/test-operations-h2.sql")
@@ -60,11 +64,15 @@ class OperationJPATest {
 				page.getSortDirection(), page.getSortBy());
 		
 		ModelMapper modelMapper = new ModelMapper();
+		List<Predicate> predicates = new ArrayList<>();
+		predicates.add(QOperation.operation.action.like(action));
+		predicates.add(QOperation.operation.sender.eq(id).or
+				(QOperation.operation.recipient.eq(id)));
+		predicates.add(QOperation.operation.amount.between(minval, maxval));
+		predicates.add(QOperation.operation.createdAt.between(mindate, maxdate));
+		
 		Page<OperationResponse> resultPage = operationJPA.findAll
-				(Specification.where(OperationSpecifications.hasAction(action)
-				.and(OperationSpecifications.hasOwner(id))
-				.and(OperationSpecifications.amountBetween(minval, maxval))
-				.and(OperationSpecifications.dateBetween(mindate, maxdate))), pageable)
+				(ExpressionUtils.allOf(predicates), pageable)
 				.map(source -> modelMapper.map(source, OperationResponse.class));
 		
 		assertThat(resultPage.getContent().size()).isEqualTo(quantity);

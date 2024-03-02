@@ -17,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.github.irybov.bankdemorest.entity.Operation_;
+import com.github.irybov.bankdemorest.entity.QOperation;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.github.irybov.bankdemorest.entity.Operation;
 
 @Repository
@@ -61,7 +63,7 @@ public class OperationDAO {
 	
 	public Page<Operation> getPage(int id, String action, double minval, double maxval, 
 			OffsetDateTime mindate, OffsetDateTime maxdate, Pageable pageable){
-		
+/*		
 		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Operation> result = builder.createQuery(Operation.class);
 		Root<Operation> root = result.from(Operation.class);
@@ -72,34 +74,36 @@ public class OperationDAO {
 		Predicate amountBetween = builder.between(root.get(Operation_.AMOUNT), minval, maxval);
 		Predicate dateBetween = builder.between(root.get(Operation_.CREATED_AT), mindate, maxdate);
 		Predicate query = builder.and(hasAction, hasOwner, amountBetween, dateBetween);
+		
 		result.where(query);
-		result.orderBy(builder.desc(root.get(Operation_.ID)));
+		result.orderBy(builder.desc(root.get(Operation_.ID)));		
+		result.select(root);
+		List<Operation> operations = entityManager.createQuery(result).getResultList();
 		
-		TypedQuery<Operation> typed = entityManager.createQuery(result);
-		List<Operation> operations = typed.getResultList();
-        typed.setFirstResult(pageable.getPageNumber() * pageable.getPageSize());
-        typed.setMaxResults(pageable.getPageSize());
-		
-/*		long count = (long) entityManager.createQuery("SELECT COUNT(o.id) FROM Operation o "
-				+ "WHERE o.action LIKE :action AND (o.sender=:id OR o.recipient=:id)")
-				.setParameter("action", "%"+action+"%")
-				.setParameter("id", id)
-				.getSingleResult();*/
+//		TypedQuery<Operation> typed = entityManager.createQuery(result);
+//		List<Operation> operations = typed.getResultList();
+//        typed.setFirstResult(pageable.getPageNumber() * pageable.getPageSize());
+//        typed.setMaxResults(pageable.getPageSize());
 		
 		CriteriaQuery<Long> howMuch = builder.createQuery(Long.class);
 		Root<Operation> quantity = howMuch.from(Operation.class);
 		howMuch.select(builder.count(quantity));
 		long count = entityManager.createQuery(howMuch).getSingleResult();
+*/		
+		List<Operation> operations = new JPAQuery<Operation>(entityManager)
+//									.select(QOperation.operation)
+									.from(QOperation.operation)
+									.where(QOperation.operation.action.like("%"+action+"%"), 
+										QOperation.operation.sender.eq(id).or
+										(QOperation.operation.recipient.eq(id)), 
+										QOperation.operation.amount.between(minval, maxval), 
+										QOperation.operation.createdAt.between(mindate, maxdate))
+									.fetch();
 		
-/*		List<Operation> operations = entityManager.createQuery
-				("SELECT o FROM Operation o WHERE o.action LIKE :action AND "
-				+ "(o.sender=:id OR o.recipient=:id) ORDER BY id DESC",
-				Operation.class)
-				.setParameter("action", "%"+action+"%")
-				.setParameter("id", id)
-				.setFirstResult(pageable.getPageNumber() * pageable.getPageSize())
-				.setMaxResults(pageable.getPageSize())
-				.getResultList();*/
+		long count = new JPAQuery<Operation>(entityManager)
+//					.select(QOperation.operation)
+					.from(QOperation.operation)
+					.fetchCount();
 		
 		return new PageImpl<>(operations, pageable, count);
 	}

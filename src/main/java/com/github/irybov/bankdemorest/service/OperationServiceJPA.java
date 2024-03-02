@@ -1,6 +1,7 @@
 package com.github.irybov.bankdemorest.service;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,8 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.github.irybov.bankdemorest.controller.dto.OperationResponse;
 import com.github.irybov.bankdemorest.entity.Operation;
+import com.github.irybov.bankdemorest.entity.QOperation;
 import com.github.irybov.bankdemorest.jpa.OperationJPA;
 import com.github.irybov.bankdemorest.util.OperationSpecifications;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
 
 @Service
 @Transactional(readOnly = true, noRollbackFor = Exception.class)
@@ -52,10 +56,22 @@ public class OperationServiceJPA implements OperationService {
 		
 //		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
 //											page.getSortDirection(), page.getSortBy());
-		
-		return operationJPA.findAll(Specification.where(OperationSpecifications.hasAction(action)
-				.and(OperationSpecifications.hasOwner(id)).and(OperationSpecifications.amountBetween(minval, maxval))
+/*		
+		return operationJPA.findAll(OperationSpecifications.orderBy
+					(OperationSpecifications.hasAction(action)
+				.and(OperationSpecifications.hasOwner(id))
+				.and(OperationSpecifications.amountBetween(minval, maxval))
 				.and(OperationSpecifications.dateBetween(mindate, maxdate))), pageable)
+					.map(source -> modelMapper.map(source, OperationResponse.class));
+*/		
+		List<Predicate> predicates = new ArrayList<>();
+		predicates.add(QOperation.operation.action.like("%"+action+"%"));
+		predicates.add(QOperation.operation.sender.eq(id).or
+				(QOperation.operation.recipient.eq(id)));
+		predicates.add(QOperation.operation.amount.between(minval, maxval));
+		predicates.add(QOperation.operation.createdAt.between(mindate, maxdate));
+		
+		return operationJPA.findAll(ExpressionUtils.allOf(predicates), pageable)
 				.map(source -> modelMapper.map(source, OperationResponse.class));
 	}
 	
