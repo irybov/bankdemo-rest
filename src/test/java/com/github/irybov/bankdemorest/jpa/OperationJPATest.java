@@ -28,7 +28,7 @@ import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.entity.QOperation;
 import com.github.irybov.bankdemorest.jpa.OperationJPA;
 import com.github.irybov.bankdemorest.page.OperationPage;
-import com.github.irybov.bankdemorest.util.OperationSpecifications;
+import com.github.irybov.bankdemorest.util.QPredicates;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Predicate;
 
@@ -64,15 +64,26 @@ class OperationJPATest {
 				page.getSortDirection(), page.getSortBy());
 		
 		ModelMapper modelMapper = new ModelMapper();
-		List<Predicate> predicates = new ArrayList<>();
-		predicates.add(QOperation.operation.action.like(action));
-		predicates.add(QOperation.operation.sender.eq(id).or
-				(QOperation.operation.recipient.eq(id)));
-		predicates.add(QOperation.operation.amount.between(minval, maxval));
-		predicates.add(QOperation.operation.createdAt.between(mindate, maxdate));
+//		List<Predicate> predicates = new ArrayList<>();
+//		predicates.add(QOperation.operation.action.like(action));
+//		predicates.add(QOperation.operation.sender.eq(id).or
+//				(QOperation.operation.recipient.eq(id)));
+//		predicates.add(QOperation.operation.amount.between(minval, maxval));
+//		predicates.add(QOperation.operation.createdAt.between(mindate, maxdate));
+		Predicate or = QPredicates.builder()
+				.add(id, QOperation.operation.sender::eq)
+				.add(id, QOperation.operation.recipient::eq)
+				.buildOr();
+		Predicate and = QPredicates.builder()
+				.add(action, QOperation.operation.action::like)
+				.add(minval, maxval, QOperation.operation.amount::between)
+				.add(mindate, maxdate, QOperation.operation.createdAt::between)
+				.buildAnd();
+		Predicate where = ExpressionUtils.allOf(or, and);
 		
 		Page<OperationResponse> resultPage = operationJPA.findAll
-				(ExpressionUtils.allOf(predicates), pageable)
+//				(ExpressionUtils.allOf(predicates), pageable)
+				(where, pageable)
 				.map(source -> modelMapper.map(source, OperationResponse.class));
 		
 		assertThat(resultPage.getContent().size()).isEqualTo(quantity);

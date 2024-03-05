@@ -44,6 +44,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -318,17 +319,28 @@ public class AdminController extends BaseController {
 	@GetMapping("/operations/list/{id}")
 	@ResponseBody
 	public Page<OperationResponse> getOperationsList(@PathVariable int id,
-			@RequestParam Optional<String> mindate, @RequestParam Optional<String> maxdate,
-			@RequestParam Optional<Double> minval, @RequestParam Optional<Double> maxval,
-			@RequestParam Optional<String> action, Pageable pageable) {
+//			@RequestParam Optional<String> mindate, @RequestParam Optional<String> maxdate,
+//			@RequestParam Optional<Double> minval, @RequestParam Optional<Double> maxval,
+//			@RequestParam Optional<String> action, Pageable pageable) {
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) 
+	Optional<LocalDate> mindate, 
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) 
+	Optional<LocalDate> maxdate,
+			@RequestParam(required = false) Double minval, 
+			@RequestParam(required = false) Double maxval,
+			@RequestParam(required = false) String action, Pageable pageable) {
 		
-		final String FROM = mindate.orElse("1900-01-01");
-		final String TO = maxdate.orElse(LocalDate.now().toString());
-		LocalDate from = LocalDate.parse(FROM.isEmpty() ? "1900-01-01" : FROM);
-		LocalDate to = LocalDate.parse(TO.isEmpty() ? LocalDate.now().toString() : TO);
+//		final String FROM = mindate.orElse("1900-01-01");
+//		final String TO = maxdate.orElse(LocalDate.now().toString());
+//		LocalDate from = LocalDate.parse(FROM.isEmpty() ? "1900-01-01" : FROM);
+//		LocalDate to = LocalDate.parse(TO.isEmpty() ? LocalDate.now().toString() : TO);
 		
-		OffsetDateTime dateFrom = OffsetDateTime.of(from, LocalTime.MIN, ZoneOffset.UTC);
-		OffsetDateTime dateTo = OffsetDateTime.of(to, LocalTime.MAX, ZoneOffset.UTC);
+		OffsetDateTime dateFrom = null;
+		OffsetDateTime dateTo = null;
+		if(mindate.isPresent()) dateFrom = OffsetDateTime.of(mindate.get(), 
+				LocalTime.MIN, ZoneOffset.UTC);
+		if(maxdate.isPresent()) dateTo = OffsetDateTime.of(maxdate.get(), 
+				LocalTime.MAX, ZoneOffset.UTC);
 		
 //		OperationPage page = new OperationPage();
 //		page.setPageNumber(pageable.getPageNumber());
@@ -337,8 +349,8 @@ public class AdminController extends BaseController {
 		log.info("Admin {} requests list of operations with bill {}",
 									 authentication().getName(), id);
 		
-		return operationService.getPage(id, action.orElse("_"),
-				minval.orElse(0.01), maxval.orElse(10000.00), dateFrom, dateTo, pageable);
+//		return operationService.getPage(id, action.orElse("_"),
+		return operationService.getPage(id, action, minval, maxval, dateFrom, dateTo, pageable);
 	}
 	
 	@ApiOperation("Exports bill's operations list to CSV file")

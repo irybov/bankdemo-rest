@@ -4,11 +4,11 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+//import javax.persistence.TypedQuery;
+//import javax.persistence.criteria.CriteriaBuilder;
+//import javax.persistence.criteria.CriteriaQuery;
+//import javax.persistence.criteria.Predicate;
+//import javax.persistence.criteria.Root;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,8 +16,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import com.github.irybov.bankdemorest.entity.Operation_;
 import com.github.irybov.bankdemorest.entity.QOperation;
+import com.github.irybov.bankdemorest.util.QPredicates;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.github.irybov.bankdemorest.entity.Operation;
 
@@ -61,7 +63,7 @@ public class OperationDAO {
 		return new PageImpl<>(operations, pageable, count);
 	}*/
 	
-	public Page<Operation> getPage(int id, String action, double minval, double maxval, 
+	public Page<Operation> getPage(int id, String action, Double minval, Double maxval, 
 			OffsetDateTime mindate, OffsetDateTime maxdate, Pageable pageable){
 /*		
 		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -90,14 +92,29 @@ public class OperationDAO {
 		howMuch.select(builder.count(quantity));
 		long count = entityManager.createQuery(howMuch).getSingleResult();
 */		
+		Predicate or = QPredicates.builder()
+				.add(id, QOperation.operation.sender::eq)
+				.add(id, QOperation.operation.recipient::eq)
+				.buildOr();
+		Predicate and = QPredicates.builder()
+				.add(action, QOperation.operation.action::like)
+				.add(minval, maxval, QOperation.operation.amount::between)
+				.add(mindate, maxdate, QOperation.operation.createdAt::between)
+				.buildAnd();
+		Predicate where = ExpressionUtils.allOf(or, and);
+//		Pageable page = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), 
+//		Sort.Direction.DESC, new OperationPage().getSortBy());		
+
 		List<Operation> operations = new JPAQuery<Operation>(entityManager)
 //									.select(QOperation.operation)
 									.from(QOperation.operation)
-									.where(QOperation.operation.action.like("%"+action+"%"), 
+									.where(where)
+/*									.where(QOperation.operation.action.like("%"+action+"%"), 
 										QOperation.operation.sender.eq(id).or
 										(QOperation.operation.recipient.eq(id)), 
 										QOperation.operation.amount.between(minval, maxval), 
-										QOperation.operation.createdAt.between(mindate, maxdate))
+										QOperation.operation.createdAt.between(mindate, maxdate))*/
+//									.orderBy(QOperation.operation.id.desc())
 									.fetch();
 		
 		long count = new JPAQuery<Operation>(entityManager)

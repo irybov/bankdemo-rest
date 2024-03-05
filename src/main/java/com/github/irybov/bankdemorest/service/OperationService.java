@@ -48,6 +48,6 @@ public interface OperationService {
 	public OperationResponse getOne(long id);
 	public List<OperationResponse> getAll(int id);
 //	public Page<OperationResponse> getPage(int id, OperationPage page);
-	public Page<OperationResponse> getPage(int id, String action, double minval, double maxval,
+	public Page<OperationResponse> getPage(int id, String action, Double minval, Double maxval,
 			OffsetDateTime mindate, OffsetDateTime maxdate, Pageable pageable);
 }

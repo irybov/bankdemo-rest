@@ -44,7 +44,7 @@ public class OperationServiceDAO implements OperationService {
 		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize());
 		return operationDAO.getPage(id, pageable).map(OperationResponseDTO::new);
 	}*/
-	public Page<OperationResponse> getPage(int id, String action, double minval, double maxval,
+	public Page<OperationResponse> getPage(int id, String action, Double minval, Double maxval,
 			OffsetDateTime mindate, OffsetDateTime maxdate, Pageable pageable) {
 		
 //		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
