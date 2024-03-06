@@ -43,6 +43,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
+import com.github.irybov.bankdemorest.controller.dto.BillRequest;
 import com.github.irybov.bankdemorest.controller.dto.BillResponse;
 import com.github.irybov.bankdemorest.dao.AccountDAO;
 import com.github.irybov.bankdemorest.entity.Account;
@@ -110,7 +111,8 @@ class AccountServiceDAOTest {
 			}}).when(accountDAO).updateAccount(adminEntity);
     	
     	try {
-    		org.assertj.core.api.BDDAssertions.then(accountService.addBill(phone, currency))
+    		org.assertj.core.api.BDDAssertions.then(accountService.addBill
+    											(new BillRequest(phone, currency)))
 												.isExactlyInstanceOf(BillResponse.class);
 		}
     	catch (Exception exc) {

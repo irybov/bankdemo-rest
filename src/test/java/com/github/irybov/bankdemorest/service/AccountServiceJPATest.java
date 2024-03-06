@@ -42,6 +42,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
+import com.github.irybov.bankdemorest.controller.dto.BillRequest;
 import com.github.irybov.bankdemorest.controller.dto.BillResponse;
 import com.github.irybov.bankdemorest.entity.Account;
 import com.github.irybov.bankdemorest.entity.Bill;
@@ -109,7 +110,8 @@ class AccountServiceJPATest {
 			}}).when(accountJPA).save(adminEntity);
     	
     	try {
-    		org.assertj.core.api.BDDAssertions.then(accountService.addBill(phone, currency))
+    		org.assertj.core.api.BDDAssertions.then(accountService.addBill
+    											(new BillRequest(phone, currency)))
     											.isExactlyInstanceOf(BillResponse.class);
 		}
     	catch (Exception exc) {

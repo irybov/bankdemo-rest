@@ -67,6 +67,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
+import com.github.irybov.bankdemorest.controller.dto.BillRequest;
 import com.github.irybov.bankdemorest.controller.dto.BillResponse;
 import com.github.irybov.bankdemorest.controller.dto.OperationRequest;
 import com.github.irybov.bankdemorest.controller.dto.PasswordRequest;
@@ -209,21 +210,21 @@ public class BankController extends BaseController {
 	@PreAuthorize("hasRole('CLIENT')")
 	@PostMapping("/bills/add")
 	@ResponseBody
-	public BillResponse createBill(@RequestParam Map<String, String> params,
+	public BillResponse createBill(@Valid @RequestBody BillRequest billRequest,
 			HttpServletResponse response) {
 
-		log.info("Client {} creates new {} bill", params.get("phone"), params.get("currency"));
+		log.info("Client {} creates new {} bill", billRequest.getPhone(), billRequest.getCurrency());
 //		if(params.get("currency").isEmpty()) return "Please choose currency type";
 //		if(params.get("phone").isEmpty()) phone = authentication().getName();		
-		BillResponse bill = null;
+		BillResponse billResponse = null;
 //		try {
-			bill = accountService.addBill(params.get("phone"), params.get("currency"));
+			billResponse = accountService.addBill(billRequest);
 /*		}
 		catch (PersistenceException exc) {
 			log.error(exc.getMessage(), exc);
 		}*/
 		response.setStatus(HttpServletResponse.SC_CREATED);
-		return bill;
+		return billResponse;
 	}
 	
 /*	@PreAuthorize("hasRole('CLIENT')")

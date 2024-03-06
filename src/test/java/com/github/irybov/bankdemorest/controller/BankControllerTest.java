@@ -6,7 +6,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-//import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -81,6 +81,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.github.irybov.bankdemorest.config.SecurityConfig;
 import com.github.irybov.bankdemorest.controller.BankController;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
+import com.github.irybov.bankdemorest.controller.dto.BillRequest;
 import com.github.irybov.bankdemorest.controller.dto.BillResponse;
 import com.github.irybov.bankdemorest.controller.dto.OperationRequest;
 import com.github.irybov.bankdemorest.controller.dto.PasswordRequest;
@@ -230,13 +231,12 @@ class BankControllerTest {
 		bill.setCreatedAt(OffsetDateTime.now());
 		bill.setUpdatedAt(OffsetDateTime.now());
 		bill.setId(0);
-		when(accountService.addBill(anyString(), anyString()))
+		when(accountService.addBill(org.mockito.ArgumentMatchers.any(BillRequest.class)))
 			.thenReturn(modelMapper.map(bill, BillResponse.class));
 		
 		mockMVC.perform(post("/bills/add")
-			   .param("phone", anyString())
-			   .param("currency", anyString())
-				)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(new BillRequest(phone, "SEA"))))
 			.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.createdAt").exists())
@@ -246,7 +246,7 @@ class BankControllerTest {
 			.andExpect(jsonPath("$.currency").value("SEA"));
 //			.andExpect(jsonPath("$.owner").exists());
 		
-		verify(accountService).addBill(anyString(), anyString());
+		verify(accountService).addBill(org.mockito.ArgumentMatchers.any(BillRequest.class));
 	}
 	
 	@Test

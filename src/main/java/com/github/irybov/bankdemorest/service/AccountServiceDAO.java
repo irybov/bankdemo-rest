@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
+import com.github.irybov.bankdemorest.controller.dto.BillRequest;
 import com.github.irybov.bankdemorest.controller.dto.BillResponse;
 import com.github.irybov.bankdemorest.dao.AccountDAO;
 import com.github.irybov.bankdemorest.entity.Account;
@@ -51,10 +52,10 @@ public class AccountServiceDAO implements AccountService {
 			throw new RegistrationException("You must be 18+ to register");
 		}
 		
-		Account account = new Account(accountRequest.getName(), accountRequest.getSurname(),
-				accountRequest.getPhone(), accountRequest.getBirthday(),
-				bCryptPasswordEncoder.encode(accountRequest.getPassword()), true);
+		Account account = modelMapper.map(accountRequest, Account.class);
+		bCryptPasswordEncoder.encode(accountRequest.getPassword());
 		account.addRole(Role.CLIENT);
+		
 		try {
 			accountDAO.saveAccount(account);
 		}
@@ -114,9 +115,9 @@ public class AccountServiceDAO implements AccountService {
 		return billService.getAll(id);
 	}*/
 	
-	public BillResponse addBill(String phone, String currency) throws RuntimeException {
-		Account account = getAccount(phone);
-		Bill bill = new Bill(currency, true, account);
+	public BillResponse addBill(BillRequest billRequest) throws RuntimeException {
+		Account account = getAccount(billRequest.getPhone());
+		Bill bill = new Bill(billRequest.getCurrency(), true, account);
 		billService.saveBill(bill);
 		account.addBill(bill);
 		updateAccount(account);

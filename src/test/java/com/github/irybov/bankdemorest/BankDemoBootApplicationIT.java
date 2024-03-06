@@ -71,6 +71,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
+import com.github.irybov.bankdemorest.controller.dto.BillRequest;
 import com.github.irybov.bankdemorest.controller.dto.LoginRequest;
 import com.github.irybov.bankdemorest.controller.dto.OperationRequest;
 import com.github.irybov.bankdemorest.controller.dto.PasswordRequest;
@@ -768,9 +769,8 @@ public class BankDemoBootApplicationIT {
 		void can_create_new_bill() throws Exception {
 			
 			mockMVC.perform(post("/bills/add")
-										   .param("phone", PHONE)
-										   .param("currency", "SEA")
-							)
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(new BillRequest(PHONE, "SEA"))))
 					.andExpect(status().isCreated())
 					.andExpect(jsonPath("$.id").isNumber())
 					.andExpect(jsonPath("$.createdAt").exists())

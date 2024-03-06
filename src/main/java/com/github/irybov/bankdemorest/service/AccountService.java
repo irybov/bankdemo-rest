@@ -7,6 +7,7 @@ import javax.persistence.PersistenceException;
 
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
+import com.github.irybov.bankdemorest.controller.dto.BillRequest;
 import com.github.irybov.bankdemorest.controller.dto.BillResponse;
 
 public interface AccountService {
@@ -15,7 +16,7 @@ public interface AccountService {
 	public AccountResponse getAccountDTO(String phone) throws PersistenceException;
 //	public void updateAccount(Account account);
 	public boolean verifyAccount(String phone, String current) throws PersistenceException;
-	public BillResponse addBill(String phone, String currency) throws PersistenceException;
+	public BillResponse addBill(BillRequest billRequest) throws PersistenceException;
 //	public void changeStatus(String phone) throws Exception;
 	public void changePassword(String phone, String password) throws PersistenceException;
 	public boolean comparePassword(String oldPassword, String phone) throws PersistenceException;
