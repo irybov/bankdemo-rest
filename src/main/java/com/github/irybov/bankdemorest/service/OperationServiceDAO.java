@@ -16,28 +16,33 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.irybov.bankdemorest.controller.dto.OperationResponse;
 import com.github.irybov.bankdemorest.dao.OperationDAO;
 import com.github.irybov.bankdemorest.entity.Operation;
+import com.github.irybov.bankdemorest.mapper.OperationMapper;
 
 @Service
 @Transactional(readOnly = true, noRollbackFor = Exception.class)
 public class OperationServiceDAO implements OperationService {
 	
 	@Autowired
-	private ModelMapper modelMapper;
+	private OperationMapper mapStruct;
+//	@Autowired
+//	private ModelMapper modelMapper;
 
 	@Autowired
 	private OperationDAO operationDAO;
 	
 	public OperationResponse getOne(long id) {
-		return modelMapper.map(operationDAO.getById(id), OperationResponse.class);
+//		return modelMapper.map(operationDAO.getById(id), OperationResponse.class);
+		return mapStruct.toDTO(operationDAO.getById(id));
 	}
 	public List<OperationResponse> getAll(int id) {
 		
 //	    Comparator<Operation> compareById = Comparator.comparing(Operation::getId);	    
-		return operationDAO.getAll(id)
+/*		return operationDAO.getAll(id)
 				.stream()
 //				.sorted(compareById)
 				.map(source -> modelMapper.map(source, OperationResponse.class))
-				.collect(Collectors.toList());
+				.collect(Collectors.toList());*/
+		return mapStruct.toList(operationDAO.getAll(id)); 
 	}
 /*	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public Page<OperationResponseDTO> getPage(int id, OperationPage page) {		
@@ -50,7 +55,8 @@ public class OperationServiceDAO implements OperationService {
 //		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
 //											page.getSortDirection(), page.getSortBy());
 		return operationDAO.getPage(id, action, minval, maxval, mindate, maxdate, pageable)
-				.map(source -> modelMapper.map(source, OperationResponse.class));
+//				.map(source -> modelMapper.map(source, OperationResponse.class));
+				.map(source -> mapStruct.toDTO(source));
 	}
 	
 }

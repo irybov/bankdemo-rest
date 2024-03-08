@@ -35,12 +35,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.github.irybov.bankdemorest.controller.dto.OperationResponse;
 import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.jpa.OperationJPA;
+import com.github.irybov.bankdemorest.mapper.OperationMapper;
 import com.github.irybov.bankdemorest.page.OperationPage;
 import com.github.irybov.bankdemorest.service.OperationServiceJPA;
 import com.querydsl.core.types.ExpressionUtils;
@@ -49,7 +49,9 @@ import com.querydsl.core.types.Predicate;
 class OperationServiceJPATest {
 	
 	@Spy
-	private ModelMapper modelMapper;
+	private OperationMapper mapStruct;
+//	@Spy
+//	private ModelMapper modelMapper;
 	@Mock
 	private OperationJPA operationJPA;
 	@InjectMocks
@@ -71,7 +73,8 @@ class OperationServiceJPATest {
 		autoClosable = MockitoAnnotations.openMocks(this);
 		operationService = new OperationServiceJPA();
 		ReflectionTestUtils.setField(operationService, "operationJPA", operationJPA);
-		ReflectionTestUtils.setField(operationService, "modelMapper", modelMapper);
+//		ReflectionTestUtils.setField(operationService, "modelMapper", modelMapper);
+		ReflectionTestUtils.setField(operationService, "mapStruct", mapStruct);
 	}
 
 	@Test
@@ -91,9 +94,9 @@ class OperationServiceJPATest {
 	
 	@Test
 	void can_get_single_entity() {
-		when(operationJPA.getById(anyLong())).thenReturn(operation);
+		when(operationJPA.getReferenceById(anyLong())).thenReturn(operation);
 		assertThat(operationService.getOne(anyLong())).isExactlyInstanceOf(OperationResponse.class);
-		verify(operationJPA).getById(anyLong());
+		verify(operationJPA).getReferenceById(anyLong());
 	}
 	
 	@Test

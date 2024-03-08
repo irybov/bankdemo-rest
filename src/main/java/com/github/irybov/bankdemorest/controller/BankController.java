@@ -290,8 +290,9 @@ public class BankController extends BaseController {
 		 @ApiResponse(code = 503, message = "", response = String.class)})
 	@PreAuthorize("hasRole('CLIENT')")
 	@PatchMapping("/bills/launch/{id}")
-	public ResponseEntity<String> operateMoney(@PathVariable int id, @RequestParam(required=false) String recipient,
-			@RequestParam Map<String, String> params, HttpServletResponse response) {
+	public ResponseEntity<String> operateMoney(@PathVariable int id, 
+			@RequestParam(required=false) String recipient,
+			@RequestParam Map<String, String> params) {
 		
 		String phone = authentication().getName();
 		int target = -1;

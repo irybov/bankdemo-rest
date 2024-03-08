@@ -39,13 +39,16 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.github.irybov.bankdemorest.controller.dto.OperationResponse;
 import com.github.irybov.bankdemorest.dao.OperationDAO;
 import com.github.irybov.bankdemorest.entity.Operation;
+import com.github.irybov.bankdemorest.mapper.OperationMapper;
 import com.github.irybov.bankdemorest.page.OperationPage;
 import com.github.irybov.bankdemorest.service.OperationServiceDAO;
 
 class OperationServiceDAOTest {
-
+	
 	@Spy
-	private ModelMapper modelMapper;
+	private OperationMapper mapStruct;
+//	@Spy
+//	private ModelMapper modelMapper;
 	@Mock
 	private OperationDAO operationDAO;
 	@InjectMocks
@@ -67,7 +70,8 @@ class OperationServiceDAOTest {
 		autoClosable = MockitoAnnotations.openMocks(this);
 		operationService = new OperationServiceDAO();
 		ReflectionTestUtils.setField(operationService, "operationDAO", operationDAO);
-		ReflectionTestUtils.setField(operationService, "modelMapper", modelMapper);
+//		ReflectionTestUtils.setField(operationService, "modelMapper", modelMapper);
+		ReflectionTestUtils.setField(operationService, "mapStruct", mapStruct);
 	}
 	
 	@Test

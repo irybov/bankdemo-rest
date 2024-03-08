@@ -80,6 +80,7 @@ import com.github.irybov.bankdemorest.controller.dto.OperationResponse;
 import com.github.irybov.bankdemorest.entity.Account;
 import com.github.irybov.bankdemorest.entity.Bill;
 import com.github.irybov.bankdemorest.entity.Operation;
+import com.github.irybov.bankdemorest.mapper.OperationMapper;
 import com.github.irybov.bankdemorest.security.AccountDetailsService;
 import com.github.irybov.bankdemorest.service.AccountService;
 import com.github.irybov.bankdemorest.service.BillService;
@@ -119,6 +120,8 @@ class AdminControllerTest {
 	
 	@SpyBean
 	private ModelMapper modelMapper;
+	@SpyBean
+	private OperationMapper mapStruct;
 	
 	@TestConfiguration
 	static class TestConfig {
@@ -151,8 +154,6 @@ class AdminControllerTest {
 		entity.setCreatedAt(OffsetDateTime.now());
 		entity.setUpdatedAt(OffsetDateTime.now());
 		entity.setId(0);
-		
-//		modelMapper = new ModelMapper();
 	}
 	
 	@BeforeEach
@@ -360,7 +361,8 @@ class AdminControllerTest {
 	void can_get_operations_page() throws Exception {
 		
 		List<OperationResponse> operations = new ArrayList<>();
-		operations.add(modelMapper.map(new Operation(), OperationResponse.class));
+//		operations.add(modelMapper.map(new Operation(), OperationResponse.class));
+		operations.add(mapStruct.toDTO(new Operation()));
 //		OperationPage page = new OperationPage();
 //		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
 //										   page.getSortDirection(), page.getSortBy());

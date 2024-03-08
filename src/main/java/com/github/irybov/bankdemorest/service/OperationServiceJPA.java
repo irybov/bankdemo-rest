@@ -21,6 +21,7 @@ import com.github.irybov.bankdemorest.controller.dto.OperationResponse;
 import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.entity.QOperation;
 import com.github.irybov.bankdemorest.jpa.OperationJPA;
+import com.github.irybov.bankdemorest.mapper.OperationMapper;
 import com.github.irybov.bankdemorest.page.OperationPage;
 import com.github.irybov.bankdemorest.util.QPredicates;
 import com.querydsl.core.types.ExpressionUtils;
@@ -29,22 +30,26 @@ import com.querydsl.core.types.Predicate;
 @Service
 @Transactional(readOnly = true, noRollbackFor = Exception.class)
 public class OperationServiceJPA implements OperationService {
-
+	
 	@Autowired
-	private ModelMapper modelMapper;
+	private OperationMapper mapStruct;
+//	@Autowired
+//	private ModelMapper modelMapper;
 	
 	@Autowired
 	private OperationJPA operationJPA;
 	
 	public OperationResponse getOne(long id) {
-		return modelMapper.map(operationJPA.getById(id), OperationResponse.class);
+//		return modelMapper.map(operationJPA.getReferenceById(id), OperationResponse.class);
+		return mapStruct.toDTO(operationJPA.getReferenceById(id));
 	}
 	public List<OperationResponse> getAll(int id) {
 
-		return operationJPA.findBySenderOrRecipientOrderByIdDesc(id, id)
-				.stream()
-				.map(source -> modelMapper.map(source, OperationResponse.class))
-				.collect(Collectors.toList());
+//		return operationJPA.findBySenderOrRecipientOrderByIdDesc(id, id)
+//				.stream()
+//				.map(source -> modelMapper.map(source, OperationResponse.class))
+//				.collect(Collectors.toList());
+		return mapStruct.toList(operationJPA.findBySenderOrRecipientOrderByIdDesc(id, id));
 	}
 /*	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public Page<OperationResponseDTO> getPage(int id, OperationPage page){
@@ -82,7 +87,8 @@ public class OperationServiceJPA implements OperationService {
 		
 //		return operationJPA.findAll(ExpressionUtils.allOf(predicates), pageable)
 		return operationJPA.findAll(where, pageable)				
-				.map(source -> modelMapper.map(source, OperationResponse.class));
+//				.map(source -> modelMapper.map(source, OperationResponse.class));
+				.map(source -> mapStruct.toDTO(source));
 	}
 	
 }
