@@ -81,6 +81,7 @@ import com.github.irybov.bankdemorest.entity.Account;
 import com.github.irybov.bankdemorest.entity.Bill;
 import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.mapper.OperationMapper;
+import com.github.irybov.bankdemorest.mapper.OperationMapperImpl;
 import com.github.irybov.bankdemorest.security.AccountDetailsService;
 import com.github.irybov.bankdemorest.service.AccountService;
 import com.github.irybov.bankdemorest.service.BillService;
@@ -90,7 +91,7 @@ import com.opencsv.CSVWriter;
 
 @WithMockUser(username = "0000000000", roles = "ADMIN")
 @WebMvcTest(controllers = AdminController.class)
-@Import(SecurityConfig.class)
+@Import(value = {SecurityConfig.class, OperationMapperImpl.class})
 class AdminControllerTest {
 
 	@MockBean
@@ -401,7 +402,8 @@ class AdminControllerTest {
 				.createdAt(OffsetDateTime.now())
 				.bank("Demo")
 				.build();
-		operations.add(modelMapper.map(operation, OperationResponse.class));
+//		operations.add(modelMapper.map(operation, OperationResponse.class));
+		operations.add(mapStruct.toDTO(operation));
 
 		Bill fake = new Bill("SEA", true, entity);
 		fake.setBalance(BigDecimal.valueOf(9.99));

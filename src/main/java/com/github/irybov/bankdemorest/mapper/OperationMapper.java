@@ -11,7 +11,7 @@ import com.github.irybov.bankdemorest.entity.Operation;
 
 @Mapper(componentModel = "spring", 
 	nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL, 
-	injectionStrategy = InjectionStrategy.CONSTRUCTOR)
+	injectionStrategy = InjectionStrategy.FIELD)
 public interface OperationMapper {
 
 	OperationResponse toDTO(Operation entity);

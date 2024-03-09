@@ -40,7 +40,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.github.irybov.bankdemorest.controller.dto.OperationResponse;
 import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.jpa.OperationJPA;
-import com.github.irybov.bankdemorest.mapper.OperationMapper;
+import com.github.irybov.bankdemorest.mapper.OperationMapperImpl;
 import com.github.irybov.bankdemorest.page.OperationPage;
 import com.github.irybov.bankdemorest.service.OperationServiceJPA;
 import com.querydsl.core.types.ExpressionUtils;
@@ -49,7 +49,7 @@ import com.querydsl.core.types.Predicate;
 class OperationServiceJPATest {
 	
 	@Spy
-	private OperationMapper mapStruct;
+	private OperationMapperImpl mapStruct;
 //	@Spy
 //	private ModelMapper modelMapper;
 	@Mock
