@@ -30,6 +30,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
 		<tests.skip>true</tests.skip>
 		<mapstruct.version>1.3.1.Final</mapstruct.version>
 		<lombok.version>1.18.26</lombok.version>
+<!-- 		<m2e.apt.activation>jdt_apt</m2e.apt.activation> -->
 	</properties>
 	<dependencies>
 		<dependency>
@@ -69,17 +70,17 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-			    <exclusions>
+<!-- 			    <exclusions>
 			        <exclusion>
 			            <groupId>org.springframework.boot</groupId>
 			            <artifactId>spring-boot-starter-tomcat</artifactId>
 			        </exclusion>
-			    </exclusions>
+			    </exclusions> -->
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-undertow</artifactId>
-		</dependency>
+		</dependency> -->
 		<dependency>
 		    <groupId>com.fasterxml.jackson.dataformat</groupId>
 		    <artifactId>jackson-dataformat-xml</artifactId>
@@ -165,11 +166,11 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
 			<artifactId>opencsv</artifactId>
 			<version>5.6</version>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 		    <groupId>org.modelmapper</groupId>
 		    <artifactId>modelmapper</artifactId>
 		    <version>3.1.0</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 		    <groupId>org.mapstruct</groupId>
 		    <artifactId>mapstruct</artifactId>

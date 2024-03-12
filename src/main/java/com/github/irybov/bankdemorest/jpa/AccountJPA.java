@@ -15,7 +15,7 @@ public interface AccountJPA extends JpaRepository<Account, Integer> {
 	@Query("SELECT phone FROM Account WHERE phone=:check")
 	Optional<String> getPhone(String check);
 	
-	@Query("SELECT DISTINCT a FROM Account a JOIN a.roles r WHERE r = 'CLIENT'")
+	@Query("SELECT DISTINCT a FROM Account a JOIN a.roles r WHERE r = 'CLIENT' ORDER BY a.id ASC")
 	List<Account> getAll();
 	
 	@Query("SELECT a FROM Account a LEFT JOIN FETCH a.bills WHERE a.phone=:phone")

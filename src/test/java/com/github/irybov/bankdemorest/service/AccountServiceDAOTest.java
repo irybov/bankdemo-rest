@@ -35,7 +35,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.modelmapper.ModelMapper;
+//import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 //import org.mockito.junit.jupiter.MockitoExtension;
@@ -49,6 +49,9 @@ import com.github.irybov.bankdemorest.dao.AccountDAO;
 import com.github.irybov.bankdemorest.entity.Account;
 import com.github.irybov.bankdemorest.entity.Bill;
 import com.github.irybov.bankdemorest.exception.RegistrationException;
+import com.github.irybov.bankdemorest.mapper.AccountMapperImpl;
+import com.github.irybov.bankdemorest.mapper.BillMapperImpl;
+import com.github.irybov.bankdemorest.mapper.CycleAvoidingMappingContext;
 import com.github.irybov.bankdemorest.security.Role;
 import com.github.irybov.bankdemorest.service.AccountServiceDAO;
 import com.github.irybov.bankdemorest.service.BillService;
@@ -59,7 +62,11 @@ import com.github.irybov.bankdemorest.service.BillService;
 class AccountServiceDAOTest {
 
 	@Spy
-	private ModelMapper modelMapper;
+	private AccountMapperImpl accountMapper;
+	@Spy
+	private BillMapperImpl billMapper;
+//	@Spy
+//	private ModelMapper modelMapper;
 	@Mock
 	private BillService billService;
 	@Spy
@@ -91,7 +98,9 @@ class AccountServiceDAOTest {
 //		ReflectionTestUtils.setField(accountService, "accountService", accountServiceDAO);
 		ReflectionTestUtils.setField(accountService, "bCryptPasswordEncoder", bCryptPasswordEncoder);
 		ReflectionTestUtils.setField(accountService, "billService", billService);
-		ReflectionTestUtils.setField(accountService, "modelMapper", modelMapper);
+//		ReflectionTestUtils.setField(accountService, "modelMapper", modelMapper);
+		ReflectionTestUtils.setField(accountService, "accountMapper", accountMapper);		
+		ReflectionTestUtils.setField(accountService, "billMapper", billMapper);
     }
     
     @Test
@@ -121,9 +130,11 @@ class AccountServiceDAOTest {
     	verify(accountDAO).getAccount(phone);
     	
 //    	given(accountDAO.getById(anyInt())).willReturn(adminEntity);
-    	List<BillResponse> dtos = adminEntity.getBills().stream()
+/*    	List<BillResponse> dtos = adminEntity.getBills().stream()
 				.map(source -> modelMapper.map(source, BillResponse.class))
-				.collect(Collectors.toList());
+				.collect(Collectors.toList());*/
+    	List<BillResponse> dtos = billMapper.toList(adminEntity.getBills(), 
+    			new CycleAvoidingMappingContext());
     	given(billService.getAll(anyInt())).willReturn(dtos);    	
     	org.assertj.core.api.BDDAssertions.then(billService.getAll(anyInt())).hasSize(3);
 //    	verify(accountDAO).getById(anyInt());

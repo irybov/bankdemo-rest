@@ -53,8 +53,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mockito;
-import org.modelmapper.ModelMapper;
+//import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -90,6 +91,11 @@ import com.github.irybov.bankdemorest.entity.Account;
 import com.github.irybov.bankdemorest.entity.Bill;
 import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.exception.PaymentException;
+import com.github.irybov.bankdemorest.mapper.AccountMapper;
+import com.github.irybov.bankdemorest.mapper.AccountMapperImpl;
+import com.github.irybov.bankdemorest.mapper.BillMapper;
+import com.github.irybov.bankdemorest.mapper.BillMapperImpl;
+import com.github.irybov.bankdemorest.mapper.CycleAvoidingMappingContext;
 import com.github.irybov.bankdemorest.security.AccountDetailsService;
 import com.github.irybov.bankdemorest.service.AccountService;
 import com.github.irybov.bankdemorest.service.BillService;
@@ -98,7 +104,7 @@ import com.github.irybov.bankdemorest.util.JWTUtility;
 
 @WithMockUser(username = "4444444444", roles = "CLIENT")
 @WebMvcTest(controllers = BankController.class)
-@Import(SecurityConfig.class)
+@Import(value = {SecurityConfig.class, BillMapperImpl.class, AccountMapperImpl.class})
 class BankControllerTest {
 
 	@MockBean
@@ -135,7 +141,9 @@ class BankControllerTest {
 	private static Operation.OperationBuilder builder;
 	private static Bill bill;
 	
-	private static ModelMapper modelMapper;
+//	private static ModelMapper modelMapper;
+	private static AccountMapper accountMapper;
+	private static BillMapper billMapper;
 	
 	@Value("${external.payment-service}")
 	private String externalURL;
@@ -174,7 +182,9 @@ class BankControllerTest {
 		builder = mock(Operation.OperationBuilder.class, Mockito.RETURNS_SELF);
 		bill = new Bill("SEA", true, new Account());
 		
-		modelMapper = new ModelMapper();
+//		modelMapper = new ModelMapper();
+		accountMapper = Mappers.getMapper(AccountMapper.class);
+		billMapper = Mappers.getMapper(BillMapper.class);
 	}
 	
 	@BeforeEach
@@ -185,11 +195,13 @@ class BankControllerTest {
 	@Test
 	void can_get_client_info() throws Exception {
 
-		AccountResponse account = modelMapper.map(entity, AccountResponse.class);		
+//		AccountResponse account = modelMapper.map(entity, AccountResponse.class);
+		AccountResponse account = accountMapper.toDTO(entity, new CycleAvoidingMappingContext());
 		List<BillResponse> bills = new ArrayList<>();
 		Bill bill = new Bill();
 		bill.setOwner(entity);
-		bills.add(modelMapper.map(bill, BillResponse.class));
+//		bills.add(modelMapper.map(bill, BillResponse.class));
+		bills.add(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		account.setBills(bills);
 		
 //		when(accountService.getAccountDTO(phone)).thenReturn(account);
@@ -233,7 +245,8 @@ class BankControllerTest {
 		bill.setUpdatedAt(OffsetDateTime.now());
 		bill.setId(0);
 		when(accountService.addBill(org.mockito.ArgumentMatchers.any(BillRequest.class)))
-			.thenReturn(modelMapper.map(bill, BillResponse.class));
+//			.thenReturn(modelMapper.map(bill, BillResponse.class));
+			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		
 		mockMVC.perform(post("/bills/add")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -328,7 +341,8 @@ class BankControllerTest {
 		bill.setOwner(entity);
 		
 		when(billService.getBillDTO(anyInt()))
-			.thenReturn(modelMapper.map(bill, BillResponse.class));
+//			.thenReturn(modelMapper.map(bill, BillResponse.class));
+			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		
 		mockMVC.perform(get("/bills/validate/{id}", "4"))
 			.andExpect(status().isOk())
@@ -471,7 +485,8 @@ class BankControllerTest {
 	void wrong_bill_serial() throws Exception {
 		
 		when(billService.getBillDTO(anyInt()))
-			.thenReturn(modelMapper.map(bill, BillResponse.class));
+//			.thenReturn(modelMapper.map(bill, BillResponse.class));
+			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		when(restTemplate.postForEntity(anyString(), anyString(), 
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>("No bill with serial 33 found", HttpStatus.NOT_FOUND));
@@ -502,7 +517,8 @@ class BankControllerTest {
 	void wrong_bank_name() throws Exception {
 		
 		when(billService.getBillDTO(anyInt()))
-			.thenReturn(modelMapper.map(bill, BillResponse.class));
+//			.thenReturn(modelMapper.map(bill, BillResponse.class));
+			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		when(restTemplate.postForEntity(anyString(), anyString(), 
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>("No bank with name Demo found", HttpStatus.NOT_FOUND));
@@ -533,7 +549,8 @@ class BankControllerTest {
 	void connection_failure() throws Exception {
 		
 		when(billService.getBillDTO(anyInt()))
-			.thenReturn(modelMapper.map(bill, BillResponse.class));
+//			.thenReturn(modelMapper.map(bill, BillResponse.class));
+			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		when(restTemplate.postForEntity(anyString(), anyString(), 
 				org.mockito.ArgumentMatchers.any(Class.class)))
 			.thenReturn(new ResponseEntity<>("Service is temporary unavailable", HttpStatus.SERVICE_UNAVAILABLE));
@@ -565,7 +582,8 @@ class BankControllerTest {
 		
 		when(builder.build()).thenReturn(operation);
 		when(billService.getBillDTO(anyInt()))
-			.thenReturn(modelMapper.map(bill, BillResponse.class));
+//			.thenReturn(modelMapper.map(bill, BillResponse.class));
+			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		doNothing().when(executorService).execute(
 				org.mockito.ArgumentMatchers.any(Runnable.class));
 		
@@ -659,7 +677,8 @@ class BankControllerTest {
 		
 		when(builder.build()).thenReturn(operation);
 		when(billService.getBillDTO(anyInt()))
-			.thenReturn(modelMapper.map(bill, BillResponse.class));
+//			.thenReturn(modelMapper.map(bill, BillResponse.class));
+			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		
 		when(operationService.deposit(anyDouble(), anyString(), anyString(), anyInt(), anyString()))
 			.thenReturn(operation);
@@ -777,7 +796,8 @@ class BankControllerTest {
 		
 		when(builder.build()).thenReturn(operation);
 		when(billService.getBillDTO(anyInt()))
-			.thenReturn(modelMapper.map(bill, BillResponse.class));
+//			.thenReturn(modelMapper.map(bill, BillResponse.class));
+			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		
 		when(operationService.withdraw(anyDouble(), anyString(), anyString(), anyInt(), anyString()))
 			.thenReturn(operation);
@@ -863,7 +883,8 @@ class BankControllerTest {
 		
 		when(builder.build()).thenReturn(operation);
 		when(billService.getBillDTO(anyInt()))
-			.thenReturn(modelMapper.map(bill, BillResponse.class));
+//			.thenReturn(modelMapper.map(bill, BillResponse.class));
+			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 
 		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt(), 
 				anyString()))
@@ -937,7 +958,8 @@ class BankControllerTest {
 		
 		when(builder.build()).thenReturn(operation);
 		when(billService.getBillDTO(anyInt()))
-			.thenReturn(modelMapper.map(bill, BillResponse.class));
+//			.thenReturn(modelMapper.map(bill, BillResponse.class));
+			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 
 		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt(), 
 				anyString()))
@@ -1097,7 +1119,9 @@ class BankControllerTest {
     	builder = null;
 		bill = null;
 		
-		modelMapper = null;
+//		modelMapper = null;
+		accountMapper = null;
+		billMapper = null;
 	}
 	
 }

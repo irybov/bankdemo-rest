@@ -6,8 +6,9 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
-import org.modelmapper.ModelMapper;
+//import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +19,18 @@ import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.exception.PaymentException;
 import com.github.irybov.bankdemorest.jpa.BillJPA;
 import com.github.irybov.bankdemorest.jpa.OperationJPA;
+import com.github.irybov.bankdemorest.mapper.BillMapper;
+import com.github.irybov.bankdemorest.mapper.CycleAvoidingMappingContext;
 
 @Service
 @Transactional
 public class BillServiceJPA implements BillService {
 
 	@Autowired
-	private ModelMapper modelMapper;
+//	@Lazy
+	private BillMapper mapStruct;
+//	@Autowired
+//	private ModelMapper modelMapper;
 //	@Autowired
 //	BillServiceJPA billService;
 	@Autowired
@@ -48,7 +54,8 @@ public class BillServiceJPA implements BillService {
 	
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public BillResponse getBillDTO(int id) throws EntityNotFoundException {
-		return modelMapper.map(getBill(id), BillResponse.class);
+//		return modelMapper.map(getBill(id), BillResponse.class);
+		return mapStruct.toDTO(getBill(id), new CycleAvoidingMappingContext());
 	}
 //	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
 	Bill getBill(int id) throws EntityNotFoundException {
@@ -163,9 +170,10 @@ public class BillServiceJPA implements BillService {
 	@Transactional(propagation = Propagation.MANDATORY, readOnly = true, noRollbackFor = Exception.class)
 	public List<BillResponse> getAll(int id) {		
 //		List<Bill> bills = billRepository.getAll(id);
-		List<Bill> bills = billJPA.findByOwnerId(id);
-		return bills.stream().map(source -> modelMapper.map(source, BillResponse.class))
-					.collect(Collectors.toList());		
+//		List<Bill> bills = billJPA.findByOwnerId(id);
+//		return bills.stream().map(source -> modelMapper.map(source, BillResponse.class))
+//					.collect(Collectors.toList());
+		return mapStruct.toList(billJPA.findByOwnerId(id), new CycleAvoidingMappingContext());
 	}
 	
 }

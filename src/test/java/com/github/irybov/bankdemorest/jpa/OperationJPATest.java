@@ -13,7 +13,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.modelmapper.ModelMapper;
+import org.mapstruct.factory.Mappers;
+//import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -27,6 +28,7 @@ import com.github.irybov.bankdemorest.controller.dto.OperationResponse;
 import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.entity.QOperation;
 import com.github.irybov.bankdemorest.jpa.OperationJPA;
+import com.github.irybov.bankdemorest.mapper.OperationMapper;
 import com.github.irybov.bankdemorest.page.OperationPage;
 import com.github.irybov.bankdemorest.util.QPredicates;
 import com.querydsl.core.types.ExpressionUtils;
@@ -63,7 +65,8 @@ class OperationJPATest {
 		Pageable pageable = PageRequest.of(page.getPageNumber(), page.getPageSize(),
 				page.getSortDirection(), page.getSortBy());
 		
-		ModelMapper modelMapper = new ModelMapper();
+//		ModelMapper modelMapper = new ModelMapper();
+		OperationMapper mapStruct = Mappers.getMapper(OperationMapper.class);
 //		List<Predicate> predicates = new ArrayList<>();
 //		predicates.add(QOperation.operation.action.like(action));
 //		predicates.add(QOperation.operation.sender.eq(id).or
@@ -84,7 +87,8 @@ class OperationJPATest {
 		Page<OperationResponse> resultPage = operationJPA.findAll
 //				(ExpressionUtils.allOf(predicates), pageable)
 				(where, pageable)
-				.map(source -> modelMapper.map(source, OperationResponse.class));
+//				.map(source -> modelMapper.map(source, OperationResponse.class));
+				.map(source -> mapStruct.toDTO(source));
 		
 		assertThat(resultPage.getContent().size()).isEqualTo(quantity);
 	}

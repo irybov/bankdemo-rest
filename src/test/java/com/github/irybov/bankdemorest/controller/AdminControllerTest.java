@@ -46,7 +46,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.modelmapper.ModelMapper;
+//import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -80,6 +80,11 @@ import com.github.irybov.bankdemorest.controller.dto.OperationResponse;
 import com.github.irybov.bankdemorest.entity.Account;
 import com.github.irybov.bankdemorest.entity.Bill;
 import com.github.irybov.bankdemorest.entity.Operation;
+import com.github.irybov.bankdemorest.mapper.AccountMapper;
+import com.github.irybov.bankdemorest.mapper.AccountMapperImpl;
+import com.github.irybov.bankdemorest.mapper.BillMapper;
+import com.github.irybov.bankdemorest.mapper.BillMapperImpl;
+import com.github.irybov.bankdemorest.mapper.CycleAvoidingMappingContext;
 import com.github.irybov.bankdemorest.mapper.OperationMapper;
 import com.github.irybov.bankdemorest.mapper.OperationMapperImpl;
 import com.github.irybov.bankdemorest.security.AccountDetailsService;
@@ -91,7 +96,8 @@ import com.opencsv.CSVWriter;
 
 @WithMockUser(username = "0000000000", roles = "ADMIN")
 @WebMvcTest(controllers = AdminController.class)
-@Import(value = {SecurityConfig.class, OperationMapperImpl.class})
+@Import(value = {SecurityConfig.class, OperationMapperImpl.class, 
+		BillMapperImpl.class, AccountMapperImpl.class})
 class AdminControllerTest {
 
 	@MockBean
@@ -119,10 +125,14 @@ class AdminControllerTest {
 	
 	private static Account entity;
 	
-	@SpyBean
-	private ModelMapper modelMapper;
+//	@SpyBean
+//	private ModelMapper modelMapper;
 	@SpyBean
 	private OperationMapper mapStruct;
+	@SpyBean
+	private AccountMapper accountMapper;
+	@SpyBean
+	private BillMapper billMapper;
 	
 	@TestConfiguration
 	static class TestConfig {
@@ -202,7 +212,8 @@ class AdminControllerTest {
 		List<AccountResponse> clients = new ArrayList<>();
 		Account entity = new Account("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
 				 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
-		clients.add(modelMapper.map(entity, AccountResponse.class));
+//		clients.add(modelMapper.map(entity, AccountResponse.class));
+		clients.add(accountMapper.toDTO(entity, new CycleAvoidingMappingContext()));
 		when(accountService.getAll()).thenReturn(clients);
 		
 		byte[] output = data_2_gzip_converter(clients);
@@ -330,11 +341,13 @@ class AdminControllerTest {
 	@Test
 	void can_get_account_info() throws Exception {
 		
-		AccountResponse account = modelMapper.map(entity, AccountResponse.class);
+//		AccountResponse account = modelMapper.map(entity, AccountResponse.class);
+		AccountResponse account = accountMapper.toDTO(entity, new CycleAvoidingMappingContext());
 		List<BillResponse> bills = new ArrayList<>();
 		Bill bill = new Bill();
 		bill.setOwner(entity);
-		bills.add(modelMapper.map(bill, BillResponse.class));
+//		bills.add(modelMapper.map(bill, BillResponse.class));
+		bills.add(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		account.setBills(bills);
 //		when(accountService.getAccountDTO(phone)).thenReturn(account);
 		when(accountService.getFullDTO(phone)).thenReturn(account);
@@ -408,7 +421,8 @@ class AdminControllerTest {
 		Bill fake = new Bill("SEA", true, entity);
 		fake.setBalance(BigDecimal.valueOf(9.99));
 		fake.setCreatedAt(OffsetDateTime.now());
-		BillResponse bill = modelMapper.map(fake, BillResponse.class);
+//		BillResponse bill = modelMapper.map(fake, BillResponse.class);
+		BillResponse bill = billMapper.toDTO(fake, new CycleAvoidingMappingContext());
 		
 		CompletableFuture<List<OperationResponse>> futureOperations =
 				CompletableFuture.completedFuture(operations);

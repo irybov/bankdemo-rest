@@ -40,7 +40,8 @@ public class Bill {
 	@Column(nullable = false)
 	private boolean isActive;
 	
-	@Column(nullable = false, columnDefinition = "Decimal(19,2) default '0.00'", scale = 2, precision = 2)
+	@Column(nullable = false, columnDefinition = "Decimal(19,2) default '0.00'", 
+			scale = 2, precision = 2)
 	private BigDecimal balance = BigDecimal.valueOf(0.00).setScale(2);
 
 	@Column(nullable = false, length=3, updatable = false)
@@ -48,7 +49,7 @@ public class Bill {
 	
 	@ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.DETACH,
 			CascadeType.REFRESH}, fetch=FetchType.EAGER)
-	@JoinColumn(name="account_id", updatable = false)
+	@JoinColumn(name="account_id", nullable = false, updatable = false)
 	private Account owner;
 	
 	public Bill(String currency, boolean isActive, Account owner) {		

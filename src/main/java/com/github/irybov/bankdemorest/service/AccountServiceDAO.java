@@ -9,9 +9,10 @@ import java.util.stream.Collectors;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 
-import org.modelmapper.ModelMapper;
+//import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -25,6 +26,9 @@ import com.github.irybov.bankdemorest.dao.AccountDAO;
 import com.github.irybov.bankdemorest.entity.Account;
 import com.github.irybov.bankdemorest.entity.Bill;
 import com.github.irybov.bankdemorest.exception.RegistrationException;
+import com.github.irybov.bankdemorest.mapper.AccountMapper;
+import com.github.irybov.bankdemorest.mapper.BillMapper;
+import com.github.irybov.bankdemorest.mapper.CycleAvoidingMappingContext;
 import com.github.irybov.bankdemorest.security.Role;
 
 @Service
@@ -32,7 +36,12 @@ import com.github.irybov.bankdemorest.security.Role;
 public class AccountServiceDAO implements AccountService {
 
 	@Autowired
-	private ModelMapper modelMapper;
+	private AccountMapper accountMapper;
+	@Autowired
+//	@Lazy
+	private BillMapper billMapper;
+//	@Autowired
+//	private ModelMapper modelMapper;
 //	@Autowired
 //	AccountServiceDAO accountService;
 	@Autowired
@@ -52,7 +61,8 @@ public class AccountServiceDAO implements AccountService {
 			throw new RegistrationException("You must be 18+ to register");
 		}
 		
-		Account account = modelMapper.map(accountRequest, Account.class);
+//		Account account = modelMapper.map(accountRequest, Account.class);
+		Account account = accountMapper.toModel(accountRequest, new CycleAvoidingMappingContext());
 		bCryptPasswordEncoder.encode(accountRequest.getPassword());
 		account.addRole(Role.CLIENT);
 		
@@ -70,7 +80,8 @@ public class AccountServiceDAO implements AccountService {
 		if(account == null) {
 			throw new NoResultException("Account with phone " + phone + " not found");
 		}
-		AccountResponse dto = modelMapper.map(account, AccountResponse.class);
+//		AccountResponse dto = modelMapper.map(account, AccountResponse.class);
+		AccountResponse dto = accountMapper.toDTO(account, new CycleAvoidingMappingContext());
 /*		dto.setBills(account.getBills().stream()
 				.map(source -> modelMapper.map(source, BillResponse.class))
 				.collect(Collectors.toList()));*/
@@ -78,7 +89,8 @@ public class AccountServiceDAO implements AccountService {
 	}
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public AccountResponse getAccountDTO(String phone) throws NoResultException {
-		return modelMapper.map(getAccount(phone), AccountResponse.class);
+//		return modelMapper.map(getAccount(phone), AccountResponse.class);
+		return accountMapper.toDTO(getAccount(phone), new CycleAvoidingMappingContext());
 	}
 //	@Transactional(propagation = Propagation.MANDATORY, readOnly = true)
 	Account getAccount(String phone) throws NoResultException {
@@ -121,7 +133,8 @@ public class AccountServiceDAO implements AccountService {
 		billService.saveBill(bill);
 		account.addBill(bill);
 		updateAccount(account);
-		return modelMapper.map(bill, BillResponse.class);
+//		return modelMapper.map(bill, BillResponse.class);
+		return billMapper.toDTO(bill, new CycleAvoidingMappingContext());
 	}
 	
 /*	public void changeStatus(String phone) throws Exception {
@@ -162,11 +175,12 @@ public class AccountServiceDAO implements AccountService {
 
 	@Transactional(readOnly = true, noRollbackFor = Exception.class)
 	public List<AccountResponse> getAll() {
-		return accountDAO.getAll()
+/*		return accountDAO.getAll()
 				.stream()
 //				.sorted((a1, a2) -> a1.getId() - a2.getId())
 				.map(source -> modelMapper.map(source, AccountResponse.class))
-				.collect(Collectors.toList());
+				.collect(Collectors.toList());*/
+		return accountMapper.toList(accountDAO.getAll(), new CycleAvoidingMappingContext());
 	}
 	
 }
