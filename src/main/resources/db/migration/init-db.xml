@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+xsi:schemaLocation=
+"http://www.liquibase.org/xml/ns/dbchangelog
+http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd
+http://www.liquibase.org/xml/ns/dbchangelog-ext
+http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+http://www.liquibase.org/xml/ns/pro
+http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
+
+<changeSet id="1" author="irybov">
+
+<!--     <sql dbms="postgresql">CREATE SCHEMA IF NOT EXISTS bankdemo;</sql> -->
+
+	<createTable schemaName="bankdemo" tableName="accounts">
+		<column name="id" type="int" autoIncrement="true">
+			<constraints primaryKey="true"/>
+		</column>
+		<column name="created_at" type="timestamp">
+		</column>
+		<column name="updated_at" type="timestamp">
+		</column>
+		<column name="is_active" type="boolean">
+			<constraints nullable="false"/>
+		</column>
+		<column name="name" type="varchar(20)">
+			<constraints nullable="false"/>
+		</column>
+		<column name="surname" type="varchar(40)">
+			<constraints nullable="false"/>
+		</column>
+		<column name="phone" type="varchar(10)">
+			<constraints unique="true" nullable="false"/>
+		</column>
+		<column name="birthday" type="date">
+			<constraints nullable="false"/>
+		</column>
+		<column name="password" type="varchar(60)">
+			<constraints nullable="false"/>
+		</column>
+	</createTable>
+	<sql dbms="postgresql">ALTER TABLE bankdemo.accounts ADD CONSTRAINT phonechk CHECK (CHAR_LENGTH(phone) = 10);</sql>
+
+	<createTable schemaName="bankdemo" tableName="bills">
+		<column name="id" type="int" autoIncrement="true">
+			<constraints primaryKey="true"/>
+		</column>
+		<column name="created_at" type="timestamp">
+		</column>
+		<column name="updated_at" type="timestamp">
+		</column>
+		<column name="is_active" type="boolean">
+			<constraints nullable="false"/>
+		</column>
+		<column name="balance" type="number(19,2)">
+			<constraints nullable="false"/>
+		</column>
+		<column name="currency" type="varchar(3)">
+			<constraints nullable="false"/>
+		</column>
+		<column name="account_id" type="int">
+			<constraints foreignKeyName="account_id"/>
+		</column>
+	</createTable>
+	<sql dbms="postgresql">ALTER TABLE bankdemo.bills ADD CONSTRAINT currencychk CHECK (CHAR_LENGTH(currency) = 3);</sql>
+	
+	<createTable schemaName="bankdemo" tableName="operations">
+		<column name="id" type="bigint" autoIncrement="true">
+			<constraints primaryKey="true"/>
+		</column>
+		<column name="created_at" type="timestamp">
+			<constraints nullable="false"/>
+		</column>
+		<column name="amount" type="double">
+			<constraints nullable="false"/>
+		</column>
+		<column name="action" type="varchar(10)">
+			<constraints nullable="false"/>
+		</column>
+		<column name="currency" type="varchar(3)">
+			<constraints nullable="false"/>
+		</column>
+		<column name="sender" type="int">
+		</column>
+		<column name="recipient" type="int">
+		</column>
+		<column name="bank" type="varchar(30)">
+			<constraints nullable="false"/>
+		</column>
+	</createTable>
+	<sql dbms="postgresql">ALTER TABLE bankdemo.operations ADD CONSTRAINT currencychk CHECK (CHAR_LENGTH(currency) = 3);</sql>
+
+	<createTable schemaName="bankdemo" tableName="roles">
+		<column name="role" type="varchar(10)">
+			<constraints nullable="false"/>
+		</column>
+		<column name="account_id" type="int">
+			<constraints nullable="false" foreignKeyName="account_id"/>
+		</column>
+	</createTable>
+	
+	<sql dbms="postgresql">CREATE EXTENSION IF NOT EXISTS pgcrypto;</sql>
+
+</changeSet>
+
+</databaseChangeLog>

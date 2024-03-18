@@ -23,7 +23,9 @@ import com.github.irybov.bankdemorest.jpa.BillJPA;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DataJpaTest
 class BillJPATest {
-	
+
+	@Autowired
+	private AccountJPA accountJPA;
 	@Autowired
 	private BillJPA billJPA;
 	
@@ -35,6 +37,7 @@ class BillJPATest {
     	billJPA.deleteAll();
 		account = new Account
 				("Kylie", "Bunbury", "4444444444", LocalDate.of(1989, 01, 30), "blackmamba", true);
+		accountJPA.save(account);
 		bill = new Bill("SEA", true, account);
 		billJPA.save(bill);
 	}
@@ -54,7 +57,7 @@ class BillJPATest {
 		List<Bill> bills = (List<Bill>) billJPA.findAll();
 		assertThat(bills.size()).isEqualTo(0);
 		
-		bills = billJPA.findByOwnerId(1);
+		bills = billJPA.findByOwnerId(4);
 		assertThat(bills.size()).isEqualTo(0);
 	}
 

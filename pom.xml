@@ -14,16 +14,16 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Bank demo</name>
 	<description>Demo project for Spring Boot monolith</description>
-	<contributors>
-		<contributor>
+	<developers>
+		<developer>
 			<name>Ivan Ryabov</name>
 			<email>v_cho@list.ru</email>
 			<organization>Home</organization>
 			<roles>
 				<role>Leading developer</role>
 			</roles>
-		</contributor>
-	</contributors>
+		</developer>
+	</developers>
 	<properties>
 		<java.version>1.8</java.version>
 		<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
@@ -110,13 +110,22 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
+		    <groupId>org.liquibase</groupId>
+		    <artifactId>liquibase-core</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>net.lbruun.springboot</groupId>
+		    <artifactId>preliquibase-spring-boot-starter</artifactId>
+		    <version>1.2.2</version>
+		</dependency>
+<!-- 		<dependency>
 	      <groupId>org.flywaydb</groupId>
 	      <artifactId>flyway-core</artifactId>
-    	</dependency>
+    	</dependency> -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>${lombok.version}</version>
+<!-- 			<version>${lombok.version}</version> -->
 			<scope>provided</scope>
 			<optional>true</optional>
 		</dependency>
@@ -239,7 +248,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
 			            <path>
 			                <groupId>org.projectlombok</groupId>
 			                <artifactId>lombok</artifactId>
-			                <version>${lombok.version}</version>
+<!-- 			                <version>${lombok.version}</version> -->
 			            </path>
 			            <path>
 			                <groupId>org.projectlombok</groupId>
