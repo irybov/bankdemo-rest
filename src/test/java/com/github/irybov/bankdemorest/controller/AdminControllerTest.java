@@ -66,6 +66,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -96,7 +97,7 @@ import com.opencsv.CSVWriter;
 
 @WithMockUser(username = "0000000000", roles = "ADMIN")
 @WebMvcTest(controllers = AdminController.class)
-@Import(value = {SecurityConfig.class, OperationMapperImpl.class, 
+@Import(value = {SecurityConfig.class, BCryptConfig.class, OperationMapperImpl.class, 
 		BillMapperImpl.class, AccountMapperImpl.class})
 class AdminControllerTest {
 
@@ -135,14 +136,8 @@ class AdminControllerTest {
 	private BillMapper billMapper;
 	
 	@TestConfiguration
-	static class TestConfig {
-		
-		@Bean
-		@Primary
-		public BCryptPasswordEncoder passwordEncoder() {
-		    return new BCryptPasswordEncoder(4);
-		}
-		
+	static class ExecutorConfig {
+	
 		@Bean
 	    @Primary
 	    public Executor asyncExecutor() {

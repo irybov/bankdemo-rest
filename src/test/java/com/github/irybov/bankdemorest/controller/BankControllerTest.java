@@ -73,6 +73,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -104,7 +105,8 @@ import com.github.irybov.bankdemorest.util.JWTUtility;
 
 @WithMockUser(username = "4444444444", roles = "CLIENT")
 @WebMvcTest(controllers = BankController.class)
-@Import(value = {SecurityConfig.class, BillMapperImpl.class, AccountMapperImpl.class})
+@Import(value = {SecurityConfig.class, BCryptConfig.class, 
+		BillMapperImpl.class, AccountMapperImpl.class})
 class BankControllerTest {
 
 	@MockBean
@@ -147,18 +149,7 @@ class BankControllerTest {
 	
 	@Value("${external.payment-service}")
 	private String externalURL;
-	
-	@TestConfiguration
-	static class TestConfig {
-		
-		@Bean
-		@Primary
-		public BCryptPasswordEncoder passwordEncoder() {
-		    return new BCryptPasswordEncoder(4);
-		}
-		
-	}
-	
+
 	@BeforeAll
 	static void prepare() {
 		

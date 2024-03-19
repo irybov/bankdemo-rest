@@ -59,6 +59,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -82,7 +83,7 @@ import com.github.irybov.bankdemorest.service.AccountServiceJPA;
 import com.github.irybov.bankdemorest.util.JWTUtility;
 
 @WebMvcTest(AuthController.class)
-@Import(SecurityConfig.class)
+@Import(value = {SecurityConfig.class, BCryptConfig.class})
 @TestPropertySource(locations = "classpath:jwt.properties")
 class AuthControllerTest {
 
@@ -109,17 +110,7 @@ class AuthControllerTest {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
 	*/
-	@TestConfiguration
-	static class TestConfig {
-		
-		@Bean
-		@Primary
-		public BCryptPasswordEncoder passwordEncoder() {
-		    return new BCryptPasswordEncoder(4);
-		}
-		
-	}
-	
+
 /*	@Test
 	void can_get_start_html() throws Exception {
 		
