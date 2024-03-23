@@ -3,6 +3,7 @@ package com.github.irybov.bankdemorest.mapper;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,16 +24,18 @@ class BillMapperTest {
 	
 	@Autowired
 	private BillMapper mapStruct;
+	private static Account entity = new Account
+			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
 
 	@Test
 	void test() {
 		
 		CycleAvoidingMappingContext cycleAvoidingMappingContext = new CycleAvoidingMappingContext();
 		
-		Bill bill = new Bill("SEA", true, new Account());
+		Bill bill = new Bill("SEA", true, entity);
 		List<Bill> bills = new ArrayList<>();
 		bills.add(bill);
-		bills.add(new Bill());
+		bills.add(new Bill("SEA", true, entity));
 		BillResponse response = new BillResponse();
 		response.setCurrency(bill.getCurrency());
 		response.setActive(bill.isActive());

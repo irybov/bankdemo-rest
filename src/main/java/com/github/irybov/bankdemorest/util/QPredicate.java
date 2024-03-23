@@ -11,18 +11,18 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class QPredicates {
+public class QPredicate {
 
     private List<Predicate> predicates = new ArrayList<>();
 
-    public <T> QPredicates add(T object, Function<T, Predicate> function) {
+    public <T> QPredicate add(T object, Function<T, Predicate> function) {
         if (object != null) {
             predicates.add(function.apply(object));
         }
         return this;
     }
     
-    public <T, U> QPredicates add(T first, U second, BiFunction<T, U, Predicate> function) {
+    public <T, U> QPredicate add(T first, U second, BiFunction<T, U, Predicate> function) {
         if (first != null && second != null ) {
             predicates.add(function.apply(first, second));
         }
@@ -37,8 +37,8 @@ public class QPredicates {
         return ExpressionUtils.anyOf(predicates);
     }
 
-    public static QPredicates builder() {
-        return new QPredicates();
+    public static QPredicate builder() {
+        return new QPredicate();
     }
 
 }

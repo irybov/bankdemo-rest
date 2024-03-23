@@ -17,7 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.github.irybov.bankdemorest.entity.QOperation;
-import com.github.irybov.bankdemorest.util.QPredicates;
+import com.github.irybov.bankdemorest.util.QPredicate;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -92,11 +92,11 @@ public class OperationDAO {
 		howMuch.select(builder.count(quantity));
 		long count = entityManager.createQuery(howMuch).getSingleResult();
 */		
-		Predicate or = QPredicates.builder()
+		Predicate or = QPredicate.builder()
 				.add(id, QOperation.operation.sender::eq)
 				.add(id, QOperation.operation.recipient::eq)
 				.buildOr();
-		Predicate and = QPredicates.builder()
+		Predicate and = QPredicate.builder()
 				.add(action, QOperation.operation.action::like)
 				.add(minval, maxval, QOperation.operation.amount::between)
 				.add(mindate, maxdate, QOperation.operation.createdAt::between)

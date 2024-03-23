@@ -339,8 +339,8 @@ class AdminControllerTest {
 //		AccountResponse account = modelMapper.map(entity, AccountResponse.class);
 		AccountResponse account = accountMapper.toDTO(entity, new CycleAvoidingMappingContext());
 		List<BillResponse> bills = new ArrayList<>();
-		Bill bill = new Bill();
-		bill.setOwner(entity);
+		Bill bill = new Bill("SEA", true, entity);
+//		bill.setOwner(entity);
 //		bills.add(modelMapper.map(bill, BillResponse.class));
 		bills.add(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		account.setBills(bills);

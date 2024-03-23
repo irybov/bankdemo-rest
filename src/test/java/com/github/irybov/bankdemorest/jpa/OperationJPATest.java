@@ -30,7 +30,7 @@ import com.github.irybov.bankdemorest.entity.QOperation;
 import com.github.irybov.bankdemorest.jpa.OperationJPA;
 import com.github.irybov.bankdemorest.mapper.OperationMapper;
 import com.github.irybov.bankdemorest.page.OperationPage;
-import com.github.irybov.bankdemorest.util.QPredicates;
+import com.github.irybov.bankdemorest.util.QPredicate;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Predicate;
 
@@ -73,11 +73,11 @@ class OperationJPATest {
 //				(QOperation.operation.recipient.eq(id)));
 //		predicates.add(QOperation.operation.amount.between(minval, maxval));
 //		predicates.add(QOperation.operation.createdAt.between(mindate, maxdate));
-		Predicate or = QPredicates.builder()
+		Predicate or = QPredicate.builder()
 				.add(id, QOperation.operation.sender::eq)
 				.add(id, QOperation.operation.recipient::eq)
 				.buildOr();
-		Predicate and = QPredicates.builder()
+		Predicate and = QPredicate.builder()
 				.add(action, QOperation.operation.action::like)
 				.add(minval, maxval, QOperation.operation.amount::between)
 				.add(mindate, maxdate, QOperation.operation.createdAt::between)
