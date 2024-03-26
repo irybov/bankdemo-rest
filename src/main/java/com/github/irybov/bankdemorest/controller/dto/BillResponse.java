@@ -18,7 +18,7 @@ public class BillResponse {
 	private Integer id;
 	private OffsetDateTime createdAt;
 	private OffsetDateTime updatedAt;
-	private boolean active;
+	private boolean isActive;
 	private BigDecimal balance;
 	private String currency;
 	@JsonBackReference

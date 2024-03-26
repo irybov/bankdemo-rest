@@ -3,6 +3,7 @@ package com.github.irybov.bankdemorest.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 //import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.mock;
@@ -28,11 +29,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.github.irybov.bankdemorest.controller.dto.BillResponse;
 import com.github.irybov.bankdemorest.dao.BillDAO;
 import com.github.irybov.bankdemorest.dao.OperationDAO;
+import com.github.irybov.bankdemorest.domain.OperationEvent;
 import com.github.irybov.bankdemorest.entity.Account;
 import com.github.irybov.bankdemorest.entity.Bill;
 import com.github.irybov.bankdemorest.entity.Operation;
@@ -46,8 +49,10 @@ class BillServiceDAOTest {
 //	BillServiceDAO billServiceDAO;
 	@Mock
 	private BillDAO billDAO;
+//	@Spy
+//	private OperationDAO operationDAO;
 	@Spy
-	private OperationDAO operationDAO;
+	private ApplicationEventPublisher publisher;
 	@InjectMocks
 	private BillServiceDAO billService;
 	
@@ -73,7 +78,8 @@ class BillServiceDAOTest {
 		billService = new BillServiceDAO();
 		ReflectionTestUtils.setField(billService, "billDAO", billDAO);
 //		ReflectionTestUtils.setField(billService, "billService", billServiceDAO);
-		ReflectionTestUtils.setField(billService, "operationDAO", operationDAO);
+//		ReflectionTestUtils.setField(billService, "operationDAO", operationDAO);
+		ReflectionTestUtils.setField(billService, "publisher", publisher);
 	}
 
 	@Test
@@ -175,7 +181,8 @@ class BillServiceDAOTest {
 		assertEquals(bill.getBalance().setScale(2, RoundingMode.DOWN).doubleValue(), amount, 0.01);
 		verify(billDAO).getBill(anyInt());
 		
-		verify(operationDAO).save(operation);
+//		verify(operationDAO).save(operation);
+		verify(publisher).publishEvent(any(OperationEvent.class));
 	}
 	
 	@Test
@@ -219,7 +226,8 @@ class BillServiceDAOTest {
 		assertThat(bill.getBalance().setScale(2, RoundingMode.FLOOR).doubleValue()).isEqualTo(0.5);
 		verify(billDAO).getBill(anyInt());
 		
-		verify(operationDAO).save(operation);
+//		verify(operationDAO).save(operation);
+		verify(publisher).publishEvent(any(OperationEvent.class));
 	}
 
 	@Test
@@ -266,7 +274,8 @@ class BillServiceDAOTest {
 		}
 		verify(billDAO, times(2)).getBill(anyInt());
 		
-		verify(operationDAO).save(operation);
+//		verify(operationDAO).save(operation);
+		verify(publisher).publishEvent(any(OperationEvent.class));
 	}
 
 	@AfterEach

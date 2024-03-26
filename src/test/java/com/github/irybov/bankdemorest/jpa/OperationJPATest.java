@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Test;
 //import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -29,6 +30,7 @@ import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.entity.QOperation;
 import com.github.irybov.bankdemorest.jpa.OperationJPA;
 import com.github.irybov.bankdemorest.mapper.OperationMapper;
+import com.github.irybov.bankdemorest.misc.Action;
 import com.github.irybov.bankdemorest.page.OperationPage;
 import com.github.irybov.bankdemorest.util.QPredicate;
 import com.querydsl.core.types.ExpressionUtils;
@@ -97,6 +99,22 @@ class OperationJPATest {
 				OffsetDateTime.now().minusDays(1L), OffsetDateTime.now().plusDays(1L), 1),
 				Arguments.of(2, "transfer",  200.00, 900.00,
 						OffsetDateTime.now().minusDays(1L), OffsetDateTime.now().plusDays(1L), 2));
+	}
+	
+	@Test
+	void test_saveAndFlush() {
+		
+		Operation.OperationBuilder builder = Operation.builder();
+		Operation operation = builder
+			.amount(0.00)
+			.action(Action.EXTERNAL.name().toLowerCase())
+			.currency("SEA")
+			.createdAt(OffsetDateTime.now())
+			.bank("Demo")
+			.build();
+		
+		Operation entity = operationJPA.saveAndFlush(operation);
+		assertThat(entity.getId() == 1);
 	}
 	
 }

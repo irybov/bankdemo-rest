@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 //import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.irybov.bankdemorest.controller.dto.OperationResponse;
@@ -58,5 +59,8 @@ public class OperationServiceDAO implements OperationService {
 //				.map(source -> modelMapper.map(source, OperationResponse.class));
 				.map(source -> mapStruct.toDTO(source));
 	}
+	
+	@Transactional(readOnly = false, propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+	public void save(Operation operation) {operationDAO.save(operation);}
 	
 }

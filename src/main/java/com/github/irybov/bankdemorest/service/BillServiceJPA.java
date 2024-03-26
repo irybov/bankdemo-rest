@@ -8,12 +8,13 @@ import javax.persistence.EntityNotFoundException;
 
 //import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.irybov.bankdemorest.controller.dto.BillResponse;
+import com.github.irybov.bankdemorest.domain.OperationEvent;
 import com.github.irybov.bankdemorest.entity.Bill;
 import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.exception.PaymentException;
@@ -35,8 +36,10 @@ public class BillServiceJPA implements BillService {
 //	BillServiceJPA billService;
 	@Autowired
 	private BillJPA billJPA;
-	@Autowired
-	private OperationJPA operationJPA;
+//	@Autowired
+//	private OperationJPA operationJPA;
+    @Autowired
+    private ApplicationEventPublisher publisher;
 	
 	@Transactional(propagation = Propagation.MANDATORY)
 	public void saveBill(Bill bill) {
@@ -72,7 +75,8 @@ public class BillServiceJPA implements BillService {
 		Bill bill = getBill(id);
 		bill.setBalance(bill.getBalance().add(BigDecimal.valueOf(amount)));
 		updateBill(bill);
-		operationJPA.saveAndFlush(operation);
+//		operationJPA.saveAndFlush(operation);
+		publisher.publishEvent(new OperationEvent(this, operation));
 	}
 	
 	public void withdraw(Operation operation) throws PaymentException {
@@ -87,7 +91,8 @@ public class BillServiceJPA implements BillService {
 		}
 		bill.setBalance(bill.getBalance().subtract(BigDecimal.valueOf(amount)));
 		updateBill(bill);
-		operationJPA.saveAndFlush(operation);
+//		operationJPA.saveAndFlush(operation);
+		publisher.publishEvent(new OperationEvent(this, operation));
 	}
 	
 	public void transfer(Operation operation) throws PaymentException {
@@ -115,7 +120,8 @@ public class BillServiceJPA implements BillService {
 		sender.setBalance(sender.getBalance().subtract(BigDecimal.valueOf(amount)));
 		updateBill(target);
 		updateBill(sender);
-		operationJPA.saveAndFlush(operation);
+//		operationJPA.saveAndFlush(operation);
+		publisher.publishEvent(new OperationEvent(this, operation));
 	}
 	
 	public void external(Operation operation) throws PaymentException {
@@ -133,7 +139,8 @@ public class BillServiceJPA implements BillService {
 		}
 		target.setBalance(target.getBalance().add(BigDecimal.valueOf(amount)));
 		updateBill(target);
-		operationJPA.saveAndFlush(operation);
+//		operationJPA.saveAndFlush(operation);
+		publisher.publishEvent(new OperationEvent(this, operation));
 	}
 	
 	public void outward(Operation operation) throws PaymentException {
@@ -151,7 +158,8 @@ public class BillServiceJPA implements BillService {
 		}
 		sender.setBalance(sender.getBalance().subtract(BigDecimal.valueOf(amount)));
 		updateBill(sender);
-		operationJPA.saveAndFlush(operation);
+//		operationJPA.saveAndFlush(operation);
+		publisher.publishEvent(new OperationEvent(this, operation));
 	}
 	
 	public boolean changeStatus(int id) {
