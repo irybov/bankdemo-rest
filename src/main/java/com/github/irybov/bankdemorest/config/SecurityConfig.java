@@ -150,6 +150,11 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
+    
+	@Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().antMatchers("/error");
+    }
 	
 	@Bean
 	@Order(1)
@@ -265,11 +270,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-    
-/*	@Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().antMatchers("/css/**", "/js/**", "/webjars/**");
-    }*/
 	
 //    @Override
 //    public void configure(WebSecurity web) throws Exception {

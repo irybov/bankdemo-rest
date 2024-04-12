@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.PersistenceException;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
@@ -105,23 +106,23 @@ public class AuthController extends BaseController {
 		}
 	}
 */
-	@ApiOperation("Generates JWT")
+	@ApiOperation("Returns JWT")
 	@ApiResponses(value = 
 		{@ApiResponse(code = 200, message = "", response = String.class), 
-		 @ApiResponse(code = 400, message = "Wrong credentials", response = String.class)})
+		 @ApiResponse(code = 401, message = "", response = String.class), 
+		 @ApiResponse(code = 404, message = "", response = String.class)})
 	@GetMapping("/token")
 	@ResponseBody
-	public String getToken(@Valid @RequestBody LoginRequest loginRequest, 
-			HttpServletResponse response) {
+	public String getToken(@Valid @RequestBody LoginRequest loginRequest) {
 		
-		try {
+//		try {
 			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken
-					(loginRequest.getPhone(), loginRequest.getPassword()));
-		}
-		catch(AuthenticationException exc) {
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			return "Wrong credentials";
-		}
+								 (loginRequest.getPhone(), loginRequest.getPassword()));
+//		}
+//		catch(AuthenticationException exc) {
+//			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//			return exc.getMessage();
+//		}
 		
 		UserDetails details = accountDetailsService.loadUserByUsername(loginRequest.getPhone());		
 		return jwtUtility.generate(details);

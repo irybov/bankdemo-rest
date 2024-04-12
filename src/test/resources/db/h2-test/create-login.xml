@@ -12,8 +12,26 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
 http://www.liquibase.org/xml/ns/pro
 http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
 
-<include file="init-db.xml" relativeToChangelogFile="true"/>
-<include file="check-login.xml" relativeToChangelogFile="true"/>
-<include file="insert-data.xml" relativeToChangelogFile="true"/>
+<changeSet id="2" author="irybov">
+
+	<createTable schemaName="bankdemo" tableName="logins">
+		<column name="id" type="bigint" autoIncrement="true" generationType="ALWAYS">
+			<constraints primaryKey="true"/>
+		</column>
+		<column name="created_at" type="timestamp">
+			<constraints nullable="false"/>
+		</column>
+		<column name="source_ip" type="varchar(40)">
+			<constraints nullable="false"/>
+		</column>
+		<column name="event" type="varchar(10)">
+			<constraints nullable="false"/>
+		</column>
+		<column name="account_id" type="int">
+			<constraints foreignKeyName="account_id"/>
+		</column>
+	</createTable>
+
+</changeSet>
 
 </databaseChangeLog>

@@ -31,6 +31,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.github.irybov.bankdemorest.config.SecurityBeans;
 import com.github.irybov.bankdemorest.config.SecurityConfig;
 import com.github.irybov.bankdemorest.controller.AdminController;
 import com.github.irybov.bankdemorest.controller.AuthController;
@@ -44,7 +45,7 @@ import com.github.irybov.bankdemorest.service.AccountServiceJPA;
 @Disabled
 @WebMvcTest(controllers = MegaController.class)
 @WithMockUser(username = "0000000000", roles = "ADMIN")
-@Import(value = {SecurityConfig.class, BCryptConfig.class})
+@Import(value = {SecurityConfig.class, SecurityBeans.class})
 class MegaControllerTest {
 
 	@MockBean
@@ -54,19 +55,17 @@ class MegaControllerTest {
 	private AccountServiceJPA accountServiceJPA;
 	@MockBean
 	private AccountServiceDAO accountServiceDAO;
-	@MockBean
+	@Autowired
 	ApplicationContext context;
-	@MockBean
-	UserDetailsService accountDetailsService;
 	@Autowired
 	private MockMvc mockMVC;
-
+	
 	@Test
 	void can_change_implementation() throws Exception {
 
 		String impl = "DAO";
 //		String bean = accountService.getClass().getSimpleName();
-		when(context.getBean("accountServiceDAO")).thenReturn(accountServiceDAO);
+		when(context.getBean("accountServiceAlias")).thenReturn(accountServiceDAO);
 		mockMVC.perform(put("/control").with(csrf()).param("impl", impl))
 				.andExpect(status().isOk())
 				.andExpect(content()
@@ -75,7 +74,7 @@ class MegaControllerTest {
 		
 		impl = "JPA";
 //		bean = accountService.getClass().getSimpleName();
-		when(context.getBean("accountServiceJPA")).thenReturn(accountServiceJPA);
+		when(context.getBean("accountServiceAlias")).thenReturn(accountServiceJPA);
 		mockMVC.perform(put("/control").with(csrf()).param("impl", impl))
 				.andExpect(status().isOk())
 				.andExpect(content()

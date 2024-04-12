@@ -1,5 +1,6 @@
 package com.github.irybov.bankdemorest.controller;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -7,9 +8,9 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
-//import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -21,6 +22,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -51,6 +53,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -66,7 +69,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.Validator;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.irybov.bankdemorest.config.SecurityBeans;
 import com.github.irybov.bankdemorest.config.SecurityConfig;
 import com.github.irybov.bankdemorest.controller.AuthController;
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
@@ -83,7 +88,7 @@ import com.github.irybov.bankdemorest.service.AccountServiceJPA;
 import com.github.irybov.bankdemorest.util.JWTUtility;
 
 @WebMvcTest(AuthController.class)
-@Import(value = {SecurityConfig.class, BCryptConfig.class})
+@Import(value = {SecurityConfig.class, SecurityBeans.class})
 @TestPropertySource(locations = "classpath:jwt.properties")
 class AuthControllerTest {
 
@@ -404,23 +409,82 @@ class AuthControllerTest {
 	}
 	
 	@Test
+	void wrong_password_jwt() throws Exception {
+		
+		LoginRequest loginRequest = new LoginRequest("0000000000", "localadmin");
+		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken
+				(loginRequest.getPhone(), loginRequest.getPassword());
+		
+		doThrow(new BadCredentialsException("Bad credentials"))
+			.when(authenticationManager).authenticate(refEq(auth));
+		for(int i = 1; i < 4; i++) {
+			mockMVC.perform(get("/token")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+			.andExpect(status().isUnauthorized())
+			.andExpect(content().string(containsString("Bad credentials")))
+			.andExpect(jsonPath("$").isString())
+			.andExpect(result -> assertThat
+				(result.getResolvedException() instanceof BadCredentialsException))
+			.andExpect(result -> assertEquals
+				("Bad credentials", result.getResolvedException().getMessage()))
+			.andDo(print());
+		}
+		verify(authenticationManager, times(3)).authenticate(refEq(auth));
+		
+		loginRequest = new LoginRequest("0000000000", "superadmin");
+		auth = new UsernamePasswordAuthenticationToken
+				(loginRequest.getPhone(), loginRequest.getPassword());
+		
+		doThrow(new DisabledException("User is disabled"))
+			.when(authenticationManager).authenticate(refEq(auth));
+		mockMVC.perform(get("/token")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(loginRequest)))
+			.andExpect(status().isUnauthorized())
+			.andExpect(content().string(containsString("User is disabled")))
+			.andExpect(jsonPath("$").isString())
+			.andExpect(result -> assertThat
+				(result.getResolvedException() instanceof DisabledException))
+			.andExpect(result -> assertEquals
+				("User is disabled", result.getResolvedException().getMessage()))
+			.andDo(print());
+		
+		verify(authenticationManager).authenticate(refEq(auth));
+	}
+	
+	@Test
 	void abscent_creds_jwt() throws Exception {
+		
+		Account account = new Account("Kylie", "Bunbury", "4444444444", LocalDate.of(1989, 01, 30),
+				 BCrypt.hashpw("blackmamba", BCrypt.gensalt(4)), true);
+		account.addRole(Role.CLIENT);
+//		UserDetails details = new AccountDetails(account);
 		
 		LoginRequest loginRequest = new LoginRequest("4444444444", "blackmamba");
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken
 				(loginRequest.getPhone(), loginRequest.getPassword());
 		
-		doThrow(new BadCredentialsException(null))
-		.when(authenticationManager).authenticate(refEq(auth));
+		doThrow(new UsernameNotFoundException("User " + loginRequest.getPhone() + " not found"))
+			.when(authenticationManager).authenticate(refEq(auth));
+//		doCallRealMethod().when(authenticationManager).authenticate(refEq(auth));
+//		doThrow(new UsernameNotFoundException("User " + loginRequest.getPhone() + " not found"))
+//			.when(accountDetailsService).loadUserByUsername(loginRequest.getPhone());
 		
 		mockMVC.perform(get("/token")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(loginRequest)))
-			.andExpect(status().isBadRequest())
-			.andExpect(content().string(containsString("Wrong credentials")))
-			.andExpect(jsonPath("$").isString());
+			.andExpect(status().isNotFound())
+			.andExpect(content().string(containsString("User " + loginRequest.getPhone() + " not found")))
+			.andExpect(jsonPath("$").isString())
+			.andExpect(result -> assertThat
+				(result.getResolvedException() instanceof UsernameNotFoundException))
+			.andExpect(result -> assertEquals
+				("User " + loginRequest.getPhone() + " not found", result.getResolvedException().getMessage()))
+			.andDo(print());
 		
 		verify(authenticationManager).authenticate(refEq(auth));
+//		verify(accountDetailsService).loadUserByUsername(loginRequest.getPhone());
 	}
 	
 	@Test
@@ -435,9 +499,8 @@ class AuthControllerTest {
 			.andExpect(jsonPath("$", hasItem("Password should be 10-60 symbols length")))
 			.andExpect(jsonPath("$.length()", equalTo(2)))
 			.andExpect(jsonPath("$").isArray())
-		    .andExpect(result -> 
-		      	assertTrue(result.getResolvedException() 
-		      		instanceof MethodArgumentNotValidException));
+		    .andExpect(result -> assertTrue
+		    		(result.getResolvedException() instanceof MethodArgumentNotValidException));
 	}
 	
 }

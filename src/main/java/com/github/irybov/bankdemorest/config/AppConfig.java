@@ -15,7 +15,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,8 +29,10 @@ import com.github.irybov.bankdemorest.service.BillService;
 import com.github.irybov.bankdemorest.service.OperationService;
 import com.github.irybov.bankdemorest.validation.AccountValidator;
 
+@EnableScheduling
 @Configuration
-@ComponentScan(basePackages="bankdemorest")
+@ComponentScan(basePackages="com.github.irybov.bankdemorest.config")
+@EnableJpaRepositories(enableDefaultTransactions = false, basePackages="com.github.irybov.bankdemorest")
 public class AppConfig {
 
     @Autowired
@@ -40,10 +44,6 @@ public class AppConfig {
 	public DataSource datasource() {
 		return DataSourceBuilder.create().build();
 	}*/
-	@Bean
-	protected PasswordEncoder bCryptPasswordEncoder() {
-	    return new BCryptPasswordEncoder(4);
-	}
 	
     @Bean
     public AccountService accountServiceAlias(@Value("accountService"+"${bean.service-impl}")

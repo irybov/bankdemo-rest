@@ -1,4 +1,4 @@
-package com.github.irybov.bankdemorest.validation;
+package com.github.irybov.bankdemorest.exception;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +12,10 @@ import javax.validation.ConstraintViolationException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -23,7 +27,8 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.github.irybov.bankdemorest.controller.AuthController;
 import com.github.irybov.bankdemorest.controller.BankController;
-import com.github.irybov.bankdemorest.exception.PaymentException;
+import com.github.irybov.bankdemorest.validation.ValidationErrorResponse;
+import com.github.irybov.bankdemorest.validation.Violation;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,9 +66,25 @@ public class GlobalExceptionHandler {
 	}
 	
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	@ExceptionHandler({PaymentException.class, PersistenceException.class})
+	@ExceptionHandler(value = {PaymentException.class, PersistenceException.class})
 	@ResponseBody
 	String handleRuntimeException(RuntimeException exc) {
+		log.warn(exc.getMessage(), exc);
+		return exc.getMessage();
+	}
+	
+	@ResponseStatus(HttpStatus.UNAUTHORIZED)
+	@ExceptionHandler(value = {BadCredentialsException.class, DisabledException.class})
+	@ResponseBody
+	String handleAuthenticationException(AuthenticationException exc) {
+		log.warn(exc.getMessage(), exc);
+		return exc.getMessage();
+	}
+	
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	@ExceptionHandler(UsernameNotFoundException.class)
+	@ResponseBody
+	String handleUsernameNotFoundException(UsernameNotFoundException exc) {
 		log.warn(exc.getMessage(), exc);
 		return exc.getMessage();
 	}

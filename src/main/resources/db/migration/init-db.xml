@@ -63,7 +63,7 @@ http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
 			<constraints nullable="false"/>
 		</column>
 		<column name="account_id" type="int">
-			<constraints foreignKeyName="account_id"/>
+			<constraints nullable="false" foreignKeyName="account_id"/>
 		</column>
 	</createTable>
 	<sql dbms="postgresql">ALTER TABLE bankdemo.bills ADD CONSTRAINT currencychk CHECK (CHAR_LENGTH(currency) = 3);</sql>

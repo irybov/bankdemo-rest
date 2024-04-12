@@ -1,5 +1,6 @@
 package com.github.irybov.bankdemorest;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -55,8 +56,11 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
@@ -70,6 +74,9 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.github.irybov.bankdemorest.security.AccountDetailsService;
+import com.github.irybov.bankdemorest.security.LoginListener;
+import com.github.irybov.bankdemorest.security.UnlockService;
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
 import com.github.irybov.bankdemorest.controller.dto.BillRequest;
@@ -98,7 +105,9 @@ public class BankDemoBootApplicationIT {
 
 	@Autowired
 	private MockMvc mockMVC;
-		
+
+	@Autowired
+	private ObjectMapper mapper;
 	@Autowired
 	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
@@ -122,6 +131,20 @@ public class BankDemoBootApplicationIT {
 	
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
+	}
+	private void hashPassword(String phone) {
+		
+		Account account = null;
+		if(accountService instanceof AccountServiceJPA) {
+			account = jpa.findByPhone(phone).get();
+			account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+			jpa.saveAndFlush(account);
+		}
+		else if(accountService instanceof AccountServiceDAO) {
+			account = dao.getAccount(phone);
+			account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
+			dao.updateAccount(account);
+		}
 	}
 
 	@Test
@@ -159,17 +182,7 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void actuator_forbidden() throws Exception {
 			
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone("3333333333").get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount("3333333333");
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
+			hashPassword("3333333333");
 			
 	        mockMVC.perform(get("/actuator/").with(httpBasic("3333333333", "gingerchick")))
 	    		.andExpect(status().isForbidden());
@@ -189,24 +202,15 @@ public class BankDemoBootApplicationIT {
 		@Autowired
 		private AccountDAO dao;
 	*/	
-		private static final String PHONE = "3333333333";
+		private static final String ADMIN_PHONE = "3333333333";
+		private static final String CLIENT_PHONE = "1111111111";
     	
 		@Test
 		void swagger_allowed() throws Exception {
 			
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone(PHONE).get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount(PHONE);
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
+			hashPassword(ADMIN_PHONE);
 			
-	        mockMVC.perform(get("/dox/swagger-ui/").with(httpBasic("3333333333", "gingerchick")))
+	        mockMVC.perform(get("/dox/swagger-ui/").with(httpBasic(ADMIN_PHONE, "gingerchick")))
 	    		.andExpect(status().isOk());
 		}
 		
@@ -214,19 +218,9 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void swagger_denied() throws Exception {
 			
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone("1111111111").get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount("1111111111");
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
+			hashPassword(CLIENT_PHONE);
 			
-	        mockMVC.perform(get("/dox/swagger-ui/").with(httpBasic("1111111111", "supervixen")))
+	        mockMVC.perform(get("/dox/swagger-ui/").with(httpBasic(CLIENT_PHONE, "supervixen")))
 				.andExpect(status().isForbidden());
 		}
 
@@ -241,19 +235,9 @@ public class BankDemoBootApplicationIT {
 	    @Test
 	    void can_get_api_docs() throws Exception {
 	    	
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone(PHONE).get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount(PHONE);
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
+	    	hashPassword(ADMIN_PHONE);
 
-	        mockMVC.perform(get("/dox/v2/api-docs").with(httpBasic("3333333333", "gingerchick")))
+	        mockMVC.perform(get("/dox/v2/api-docs").with(httpBasic(ADMIN_PHONE, "gingerchick")))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));		
 		}
@@ -261,19 +245,9 @@ public class BankDemoBootApplicationIT {
 	    @Test
 	    void denied_api_docs() throws Exception {
 	    	
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone("1111111111").get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount("1111111111");
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
+	    	hashPassword(CLIENT_PHONE);
 
-	        mockMVC.perform(get("/dox/v2/api-docs").with(httpBasic("1111111111", "supervixen")))
+	        mockMVC.perform(get("/dox/v2/api-docs").with(httpBasic(CLIENT_PHONE, "supervixen")))
 				.andExpect(status().isForbidden());		
 		}
 	    
@@ -290,9 +264,6 @@ public class BankDemoBootApplicationIT {
 
 	@Nested
 	class AuthControllerIT{
-		
-		@Autowired
-		private ObjectMapper mapper;
 /*		
 		@Autowired
 		@Qualifier("accountServiceAlias")
@@ -302,7 +273,7 @@ public class BankDemoBootApplicationIT {
 		@Autowired
 		private AccountDAO dao;
 	*/	
-//		private static final String PHONE = "0000000000";
+		private static final String PHONE = "0000000000";
 	
 /*		@Test
 		void can_get_start_html() throws Exception {
@@ -508,24 +479,46 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void correct_creds_jwt() throws Exception {
 			
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone("0000000000").get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount("0000000000");
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
+			hashPassword(PHONE);
 			
-			LoginRequest loginRequest = new LoginRequest("0000000000", "superadmin");			
+			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");			
 			mockMVC.perform(get("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isString());
+		}
+		
+		@Test
+		void wrong_password_jwt() throws Exception {
+			
+			hashPassword(PHONE);			
+			LoginRequest loginRequest = new LoginRequest(PHONE, "localadmin");
+			
+			for(int i = 1; i < 4; i++) {
+			mockMVC.perform(get("/token")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isUnauthorized())
+				.andExpect(content().string(containsString("Bad credentials")))
+				.andExpect(jsonPath("$").isString())
+				.andExpect(result -> assertThat
+					(result.getResolvedException() instanceof BadCredentialsException))
+				.andExpect(result -> assertEquals
+					("Bad credentials", result.getResolvedException().getMessage()));
+			}
+			
+			loginRequest = new LoginRequest(PHONE, "superadmin");
+			mockMVC.perform(get("/token")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isUnauthorized())
+				.andExpect(content().string(containsString("User is disabled")))
+				.andExpect(jsonPath("$").isString())
+				.andExpect(result -> assertThat
+					(result.getResolvedException() instanceof DisabledException))
+				.andExpect(result -> assertEquals
+					("User is disabled", result.getResolvedException().getMessage()));
 		}
 		
 		@Test
@@ -535,9 +528,13 @@ public class BankDemoBootApplicationIT {
 			mockMVC.perform(get("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
-				.andExpect(status().isBadRequest())
-				.andExpect(content().string(containsString("Wrong credentials")))
-				.andExpect(jsonPath("$").isString());
+				.andExpect(status().isNotFound())
+				.andExpect(content().string(containsString("User 4444444444 not found")))
+				.andExpect(jsonPath("$").isString())
+				.andExpect(result -> assertThat
+					(result.getResolvedException() instanceof UsernameNotFoundException))
+				.andExpect(result -> assertEquals
+					("User 4444444444 not found", result.getResolvedException().getMessage()));
 		}
 		
 		@Test
@@ -552,9 +549,8 @@ public class BankDemoBootApplicationIT {
 				.andExpect(jsonPath("$", hasItem("Password should be 10-60 symbols length")))
 				.andExpect(jsonPath("$.length()", equalTo(2)))
 				.andExpect(jsonPath("$").isArray())
-			    .andExpect(result -> 
-			      	assertTrue(result.getResolvedException() 
-			      		instanceof MethodArgumentNotValidException));
+			    .andExpect(result -> assertTrue
+			    		(result.getResolvedException() instanceof MethodArgumentNotValidException));
 		}
 		
 	}
@@ -879,7 +875,7 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void wrong_format_input() throws Exception {
 			
-			mockMVC.perform(patch("/bills/launch/{id}", "1").with(csrf())
+			mockMVC.perform(patch("/bills/launch/{id}", "1")
 										.param("recipient", "XXX")
 //									    .param("id", "1")
 									    .param("action", "transfer")
@@ -907,19 +903,8 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void success_password_change() throws Exception {
 			
-			PasswordRequest pwDTO = new PasswordRequest("supervixen", "japanrocks");
-			
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone(PHONE).get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount(PHONE);
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
+			PasswordRequest pwDTO = new PasswordRequest("supervixen", "japanrocks");			
+			hashPassword(PHONE);
 			
 			mockMVC.perform(patch("/accounts/password/{phone}", PHONE)
 						.contentType(MediaType.APPLICATION_JSON)
@@ -936,18 +921,7 @@ public class BankDemoBootApplicationIT {
 		void failure_password_change() throws Exception {
 			
 			PasswordRequest pwDTO = new PasswordRequest("superjapan", "vixenrocks");
-			
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone(PHONE).get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount(PHONE);
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
+			hashPassword(PHONE);
 			
 			mockMVC.perform(patch("/accounts/password/{phone}", PHONE)
 						.contentType(MediaType.APPLICATION_JSON)
@@ -1452,9 +1426,6 @@ public class BankDemoBootApplicationIT {
 		
 	    @Autowired
 	    ApplicationContext context;
-	    		
-		@Autowired
-		private ObjectMapper mapper;
 /*		
 		@Autowired
 		@Qualifier("accountServiceAlias")
@@ -1464,22 +1435,14 @@ public class BankDemoBootApplicationIT {
 		@Autowired
 		private AccountDAO dao;
 	*/
+		private static final String PHONE = "0000000000";
+		
 		@Test
 		void can_change_implementation() throws Exception {
 			
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone("0000000000").get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount("0000000000");
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
+			hashPassword(PHONE);
 			
-			LoginRequest loginRequest = new LoginRequest("0000000000", "superadmin");			
+			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");			
 			MvcResult result = mockMVC.perform(get("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
@@ -1489,6 +1452,10 @@ public class BankDemoBootApplicationIT {
 			
 			String token = result.getResponse().getContentAsString();
 
+			AccountDetailsService details = (AccountDetailsService) context.getBean("accountDetailsService");
+			LoginListener listener = (LoginListener) context.getBean("loginListener");
+			UnlockService unlock = (UnlockService) context.getBean("unlockService");
+			
 			String impl = "DAO";			
 			mockMVC.perform(put("/control").header("Authorization", "Bearer " + token).param("impl", impl))
 				.andExpect(status().isOk())
@@ -1497,6 +1464,9 @@ public class BankDemoBootApplicationIT {
 			assertThat(context.getBean("accountServiceAlias")).isInstanceOf(AccountServiceDAO.class);
 			assertThat(context.getBean("billServiceAlias")).isInstanceOf(BillServiceDAO.class);
 			assertThat(context.getBean("operationServiceAlias")).isInstanceOf(OperationServiceDAO.class);
+			assertThat(details.getImpl()).isEqualTo("DAO");
+			assertThat(listener.getImpl()).isEqualTo("DAO");
+			assertThat(unlock.getImpl()).isEqualTo("DAO");
 			
 			impl = "JPA";
 			mockMVC.perform(put("/control").header("Authorization", "Bearer " + token).param("impl", impl))
@@ -1506,24 +1476,17 @@ public class BankDemoBootApplicationIT {
 			assertThat(context.getBean("accountServiceAlias")).isInstanceOf(AccountServiceJPA.class);
 			assertThat(context.getBean("billServiceAlias")).isInstanceOf(BillServiceJPA.class);
 			assertThat(context.getBean("operationServiceAlias")).isInstanceOf(OperationServiceJPA.class);
+			assertThat(details.getImpl()).isEqualTo("JPA");
+			assertThat(listener.getImpl()).isEqualTo("JPA");
+			assertThat(unlock.getImpl()).isEqualTo("JPA");
 		}
 				
 		@Test
 		void wrong_implementation_type() throws Exception {
 						
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone("0000000000").get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount("0000000000");
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
+			hashPassword(PHONE);
 			
-			LoginRequest loginRequest = new LoginRequest("0000000000", "superadmin");			
+			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");			
 			MvcResult result = mockMVC.perform(get("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
@@ -1543,17 +1506,7 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void credentials_forbidden() throws Exception {
 			
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone("1111111111").get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount("1111111111");
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
+			hashPassword("1111111111");
 			
 			LoginRequest loginRequest = new LoginRequest("1111111111", "supervixen");			
 			MvcResult result = mockMVC.perform(get("/token")
@@ -1572,9 +1525,6 @@ public class BankDemoBootApplicationIT {
 		
 	@Nested
 	class JWTFilterIT{
-		
-		@Autowired
-		private ObjectMapper mapper;
 /*		
 		@Autowired
 		@Qualifier("accountServiceAlias")
@@ -1584,25 +1534,9 @@ public class BankDemoBootApplicationIT {
 		@Autowired
 		private AccountDAO dao;
 		*/		
-		private Account account;
+//		private Account account;
 		private LoginRequest loginRequest;
-		
-		@BeforeEach
-		void set_up() {
-			
-			account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone("1111111111").get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount("1111111111");
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
-			loginRequest = new LoginRequest("1111111111", "supervixen");
-		}
+		private static final String PHONE = "1111111111";
 		
 		@Test
 		void incorrect_or_abscent_header() throws Exception {
@@ -1619,7 +1553,9 @@ public class BankDemoBootApplicationIT {
 				dao.updateAccount(account);
 			}
 			*/
-//			LoginRequest loginRequest = new LoginRequest("1111111111", "supervixen");
+			hashPassword(PHONE);
+			loginRequest = new LoginRequest(PHONE, "supervixen");
+			
 			MvcResult result = mockMVC.perform(get("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
@@ -1650,7 +1586,9 @@ public class BankDemoBootApplicationIT {
 				dao.updateAccount(account);
 			}
 			*/
-//			LoginRequest loginRequest = new LoginRequest("1111111111", "supervixen");
+			hashPassword(PHONE);
+			loginRequest = new LoginRequest(PHONE, "supervixen");
+			
 			MvcResult result = mockMVC.perform(get("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
@@ -1668,12 +1606,6 @@ public class BankDemoBootApplicationIT {
 	    		.andExpect(jsonPath("$").isString())
 	    		.andExpect(content().string(containsString("No token provided with Bearer")))
 				.andExpect(status().isExpectationFailed());
-		}
-
-		@AfterEach
-		void tear_down() {
-			account = null;
-			loginRequest = null;
 		}
 		
 	}

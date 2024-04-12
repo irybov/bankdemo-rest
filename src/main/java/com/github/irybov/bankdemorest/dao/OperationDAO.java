@@ -37,7 +37,7 @@ public class OperationDAO {
 		return entityManager.find(Operation.class, id);
 	}
 	
-	public List<Operation> getAll(int id){
+	public List<Operation> getAll(int id) {
 		return entityManager.createQuery
 				("SELECT o FROM Operation o WHERE o.sender=:id OR o.recipient=:id ORDER BY id DESC",
 				Operation.class)
