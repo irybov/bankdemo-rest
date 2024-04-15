@@ -111,7 +111,7 @@ public class AuthController extends BaseController {
 		{@ApiResponse(code = 200, message = "", response = String.class), 
 		 @ApiResponse(code = 401, message = "", response = String.class), 
 		 @ApiResponse(code = 404, message = "", response = String.class)})
-	@GetMapping("/token")
+	@PostMapping("/token")
 	@ResponseBody
 	public String getToken(@Valid @RequestBody LoginRequest loginRequest) {
 		

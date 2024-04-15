@@ -14,9 +14,14 @@ http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
 
 <changeSet id="3" author="irybov">
 
+	<preConditions onFail="MARK_RAN">
+		<not>
+		    <primaryKeyExists primaryKeyName="accounts_pkey" schemaName="bankdemo" tableName="accounts"/>
+	    </not>
+	</preConditions>
 <!--     <sqlFile dbms="postgresql" path="classpath:db/migration/insert-data.sql"/> -->
 
-    <sql dbms="postgresql" splitStatements="true" stripComments="true">         
+    <sql dbms="postgresql" splitStatements="true" stripComments="true">
 		INSERT INTO bankdemo.accounts(id, is_active, birthday, name, password, phone, surname, created_at, updated_at)
 		VALUES('0', '1', '2001-01-01', 'Admin', crypt('superadmin', gen_salt('bf', 4)), '0000000000', 'Adminov', now(), now());
 		INSERT INTO bankdemo.accounts(is_active, birthday, name, password, phone, surname, created_at, updated_at)

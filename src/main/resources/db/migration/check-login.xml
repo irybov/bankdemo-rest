@@ -14,6 +14,12 @@ http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
 
 <changeSet id="2" author="irybov">
 
+	<preConditions onFail="MARK_RAN">
+		<not>
+		    <tableExists schemaName="bankdemo" tableName="logins"/>
+	    </not>
+	</preConditions>
+
 	<createTable schemaName="bankdemo" tableName="logins">
 		<column name="id" type="bigint" autoIncrement="true">
 			<constraints primaryKey="true"/>

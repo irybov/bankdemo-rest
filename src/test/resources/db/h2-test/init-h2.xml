@@ -43,7 +43,7 @@ http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
 			<constraints nullable="false"/>
 		</column>
 	</createTable>
-	<sql dbms="postgresql">ALTER TABLE bankdemo.accounts ADD CONSTRAINT phonechk CHECK (CHAR_LENGTH(phone) = 10);</sql>
+	<sql dbms="postgresql">ALTER TABLE IF NOT EXISTS bankdemo.accounts ADD CONSTRAINT phonechk CHECK (CHAR_LENGTH(phone) = 10);</sql>
 
 	<createTable schemaName="bankdemo" tableName="bills">
 		<column name="id" type="int" autoIncrement="true" generationType="ALWAYS">
@@ -66,7 +66,7 @@ http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
 			<constraints foreignKeyName="account_id"/>
 		</column>
 	</createTable>
-	<sql dbms="postgresql">ALTER TABLE bankdemo.bills ADD CONSTRAINT currencychk CHECK (CHAR_LENGTH(currency) = 3);</sql>
+	<sql dbms="postgresql">ALTER TABLE IF NOT EXISTS bankdemo.bills ADD CONSTRAINT currencychk CHECK (CHAR_LENGTH(currency) = 3);</sql>
 	
 	<createTable schemaName="bankdemo" tableName="operations">
 		<column name="id" type="bigint" autoIncrement="true" generationType="ALWAYS">
@@ -92,7 +92,7 @@ http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
 			<constraints nullable="false"/>
 		</column>
 	</createTable>
-	<sql dbms="postgresql">ALTER TABLE bankdemo.operations ADD CONSTRAINT currencychk CHECK (CHAR_LENGTH(currency) = 3);</sql>
+	<sql dbms="postgresql">ALTER TABLE IF NOT EXISTS bankdemo.operations ADD CONSTRAINT currencychk CHECK (CHAR_LENGTH(currency) = 3);</sql>
 
 	<createTable schemaName="bankdemo" tableName="roles">
 		<column name="role" type="varchar(10)">

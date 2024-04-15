@@ -237,7 +237,7 @@ public class BankDemoBootApplicationIT {
 	    	
 	    	hashPassword(ADMIN_PHONE);
 
-	        mockMVC.perform(get("/dox/v2/api-docs").with(httpBasic(ADMIN_PHONE, "gingerchick")))
+	        mockMVC.perform(get("/dox/v3/api-docs").with(httpBasic(ADMIN_PHONE, "gingerchick")))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));		
 		}
@@ -247,7 +247,7 @@ public class BankDemoBootApplicationIT {
 	    	
 	    	hashPassword(CLIENT_PHONE);
 
-	        mockMVC.perform(get("/dox/v2/api-docs").with(httpBasic(CLIENT_PHONE, "supervixen")))
+	        mockMVC.perform(get("/dox/v3/api-docs").with(httpBasic(CLIENT_PHONE, "supervixen")))
 				.andExpect(status().isForbidden());		
 		}
 	    
@@ -255,7 +255,7 @@ public class BankDemoBootApplicationIT {
 	    @Test
 	    void can_get_swagger_config() throws Exception {
 
-	        mockMVC.perform(get("/v2/api-docs/swagger-config"))
+	        mockMVC.perform(get("/dox/v3/api-docs/swagger-config"))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON));		
 		}
@@ -1443,7 +1443,7 @@ public class BankDemoBootApplicationIT {
 			hashPassword(PHONE);
 			
 			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");			
-			MvcResult result = mockMVC.perform(get("/token")
+			MvcResult result = mockMVC.perform(post("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isOk())
@@ -1487,7 +1487,7 @@ public class BankDemoBootApplicationIT {
 			hashPassword(PHONE);
 			
 			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");			
-			MvcResult result = mockMVC.perform(get("/token")
+			MvcResult result = mockMVC.perform(post("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isOk())
@@ -1509,7 +1509,7 @@ public class BankDemoBootApplicationIT {
 			hashPassword("1111111111");
 			
 			LoginRequest loginRequest = new LoginRequest("1111111111", "supervixen");			
-			MvcResult result = mockMVC.perform(get("/token")
+			MvcResult result = mockMVC.perform(post("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isOk())
@@ -1556,7 +1556,7 @@ public class BankDemoBootApplicationIT {
 			hashPassword(PHONE);
 			loginRequest = new LoginRequest(PHONE, "supervixen");
 			
-			MvcResult result = mockMVC.perform(get("/token")
+			MvcResult result = mockMVC.perform(post("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isOk())
@@ -1589,7 +1589,7 @@ public class BankDemoBootApplicationIT {
 			hashPassword(PHONE);
 			loginRequest = new LoginRequest(PHONE, "supervixen");
 			
-			MvcResult result = mockMVC.perform(get("/token")
+			MvcResult result = mockMVC.perform(post("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isOk())

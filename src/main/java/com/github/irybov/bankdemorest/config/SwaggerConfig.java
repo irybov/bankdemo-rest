@@ -3,6 +3,7 @@ package com.github.irybov.bankdemorest.config;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.CorsEndpointProperties;
@@ -26,9 +27,11 @@ import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.ApiKey;
 import springfox.documentation.service.AuthorizationScope;
 import springfox.documentation.service.BasicAuth;
 import springfox.documentation.service.Contact;
+import springfox.documentation.service.HttpAuthenticationScheme;
 import springfox.documentation.service.SecurityReference;
 import springfox.documentation.service.SecurityScheme;
 import springfox.documentation.spi.DocumentationType;
@@ -41,33 +44,53 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {
+	
+    public static final String AUTHORIZATION_HEADER = "Authorization";
+    private ApiKey apiKey() {return new ApiKey("JWT", AUTHORIZATION_HEADER, "header");}
 
     @Bean
-    public Docket api() { 
-        return new Docket(DocumentationType.SWAGGER_2)
+    public Docket api() {
+    	
+        HttpAuthenticationScheme authenticationScheme = HttpAuthenticationScheme
+                .JWT_BEARER_BUILDER
+                .name("JWT")
+                .build();
+    	
+//        return new Docket(DocumentationType.SWAGGER_2)
+        return new Docket(DocumentationType.OAS_30)
           .select()
           .apis(RequestHandlerSelectors.basePackage("com.github.irybov.bankdemorest.controller"))
           .paths(PathSelectors.any())
-          .build().apiInfo(metaData())
-          .securityContexts(Arrays.asList(mySecurityContext()))
-          .securitySchemes(Arrays.asList(basicAuthScheme()));
+          .build()
+          .apiInfo(metaData())
+          .securityContexts(Arrays.asList(securityContext()))
+//          .securitySchemes(Arrays.asList(apiKey()));
+          .securitySchemes(Collections.singletonList(authenticationScheme));
+//          .securitySchemes(Arrays.asList(basicAuthScheme()));
 	}
     
 /*    @Bean
     public SecurityConfiguration security() {
     	return SecurityConfigurationBuilder.builder().enableCsrfSupport(true).build();
     }*/	
-	private SecurityContext mySecurityContext() {
-		return SecurityContext.builder()
-	      .securityReferences(Arrays.asList(basicAuthReference()))
-	      .build();
+	private SecurityContext securityContext() {
+		return SecurityContext.builder().securityReferences(defaultAuth()).build();
+//		return SecurityContext.builder()
+//	      .securityReferences(Arrays.asList(basicAuthReference()))
+//	      .build();
 	}	
-	private SecurityScheme basicAuthScheme() {
-		return new BasicAuth("basicAuth");
-	}	
-	private SecurityReference basicAuthReference() {
-		return new SecurityReference("basicAuth", new AuthorizationScope[0]);
-	}
+//	private SecurityScheme basicAuthScheme() {
+//		return new BasicAuth("basicAuth");
+//	}	
+//	private SecurityReference basicAuthReference() {
+//		return new SecurityReference("basicAuth", new AuthorizationScope[0]);
+//	}
+    private List<SecurityReference> defaultAuth(){
+        AuthorizationScope authorizationScope = new AuthorizationScope("global", "accessEverything");
+        AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];
+        authorizationScopes[0] = authorizationScope;
+        return Arrays.asList(new SecurityReference("JWT", authorizationScopes));
+    }
         
     private ApiInfo metaData() {
         return new ApiInfoBuilder()
@@ -81,7 +104,12 @@ public class SwaggerConfig {
     }
     
     @Bean
-    public WebMvcEndpointHandlerMapping webEndpointServletHandlerMapping(WebEndpointsSupplier webEndpointsSupplier, ServletEndpointsSupplier servletEndpointsSupplier, ControllerEndpointsSupplier controllerEndpointsSupplier, EndpointMediaTypes endpointMediaTypes, CorsEndpointProperties corsProperties, WebEndpointProperties webEndpointProperties, Environment environment) {
+    public WebMvcEndpointHandlerMapping webEndpointServletHandlerMapping
+    (WebEndpointsSupplier webEndpointsSupplier, ServletEndpointsSupplier servletEndpointsSupplier, 
+    ControllerEndpointsSupplier controllerEndpointsSupplier, EndpointMediaTypes endpointMediaTypes, 
+    CorsEndpointProperties corsProperties, WebEndpointProperties webEndpointProperties, 
+    Environment environment) {
+    	
             List<ExposableEndpoint<?>> allEndpoints = new ArrayList<>();
             Collection<ExposableWebEndpoint> webEndpoints = webEndpointsSupplier.getEndpoints();
             allEndpoints.addAll(webEndpoints);

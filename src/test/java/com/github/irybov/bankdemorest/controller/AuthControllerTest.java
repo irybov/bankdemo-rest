@@ -397,7 +397,7 @@ class AuthControllerTest {
 		doReturn(details).when(accountDetailsService).loadUserByUsername(refEq(loginRequest.getPhone()));
 //		doReturn(new String("XXL")).when(jwtUtility).generate(refEq(details));
 			
-		mockMVC.perform(get("/token")
+		mockMVC.perform(post("/token")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(loginRequest)))
 			.andExpect(status().isOk())
@@ -418,7 +418,7 @@ class AuthControllerTest {
 		doThrow(new BadCredentialsException("Bad credentials"))
 			.when(authenticationManager).authenticate(refEq(auth));
 		for(int i = 1; i < 4; i++) {
-			mockMVC.perform(get("/token")
+			mockMVC.perform(post("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 			.andExpect(status().isUnauthorized())
@@ -438,7 +438,7 @@ class AuthControllerTest {
 		
 		doThrow(new DisabledException("User is disabled"))
 			.when(authenticationManager).authenticate(refEq(auth));
-		mockMVC.perform(get("/token")
+		mockMVC.perform(post("/token")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(loginRequest)))
 			.andExpect(status().isUnauthorized())
@@ -471,7 +471,7 @@ class AuthControllerTest {
 //		doThrow(new UsernameNotFoundException("User " + loginRequest.getPhone() + " not found"))
 //			.when(accountDetailsService).loadUserByUsername(loginRequest.getPhone());
 		
-		mockMVC.perform(get("/token")
+		mockMVC.perform(post("/token")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(loginRequest)))
 			.andExpect(status().isNotFound())
@@ -491,7 +491,7 @@ class AuthControllerTest {
 	void invalid_creds_jwt() throws Exception {
 		
 		LoginRequest loginRequest = new LoginRequest("00000", "super");
-		mockMVC.perform(get("/token")
+		mockMVC.perform(post("/token")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(loginRequest)))
 			.andExpect(status().isBadRequest())
