@@ -482,7 +482,7 @@ public class BankDemoBootApplicationIT {
 			hashPassword(PHONE);
 			
 			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");			
-			mockMVC.perform(get("/token")
+			mockMVC.perform(post("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isOk())
@@ -496,7 +496,7 @@ public class BankDemoBootApplicationIT {
 			LoginRequest loginRequest = new LoginRequest(PHONE, "localadmin");
 			
 			for(int i = 1; i < 4; i++) {
-			mockMVC.perform(get("/token")
+			mockMVC.perform(post("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isUnauthorized())
@@ -509,7 +509,7 @@ public class BankDemoBootApplicationIT {
 			}
 			
 			loginRequest = new LoginRequest(PHONE, "superadmin");
-			mockMVC.perform(get("/token")
+			mockMVC.perform(post("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isUnauthorized())
@@ -525,7 +525,7 @@ public class BankDemoBootApplicationIT {
 		void abscent_creds_jwt() throws Exception {
 			
 			LoginRequest loginRequest = new LoginRequest("4444444444", "blackmamba");
-			mockMVC.perform(get("/token")
+			mockMVC.perform(post("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isNotFound())
@@ -541,7 +541,7 @@ public class BankDemoBootApplicationIT {
 		void invalid_creds_jwt() throws Exception {
 			
 			LoginRequest loginRequest = new LoginRequest("00000", "super");
-			mockMVC.perform(get("/token")
+			mockMVC.perform(post("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isBadRequest())
@@ -732,6 +732,10 @@ public class BankDemoBootApplicationIT {
 		*/
 		private static final String PHONE = "1111111111";
 		
+		@Value("${server.address}")
+		private String uri;
+		@Value("${server.port}")
+		private int port;
 		@Value("${external.payment-service}")
 		private String externalURL;
 		
@@ -1380,7 +1384,7 @@ public class BankDemoBootApplicationIT {
 			assertThat(emitter).isNotNull();*/
 		}
 		
-		@WithMockUser
+//		@WithMockUser
 		@Test
 		void check_cors_and_xml_support() throws Exception {
 			
@@ -1391,12 +1395,15 @@ public class BankDemoBootApplicationIT {
 													.contentType(MediaType.APPLICATION_XML))
 				.andExpect(status().isBadRequest());
 			
-			mockMVC.perform(post("/bills/external").header("Origin", "http://evildevil.com")
+			mockMVC.perform(post("/bills/external").header("Origin", "http://" + uri +":" + port)
 													.contentType(MediaType.APPLICATION_XML))
 				.andExpect(status().isForbidden());
 			
 			mockMVC.perform(get("/bills/notify").header("Origin", externalURL))
 				.andExpect(status().isForbidden());
+			
+			mockMVC.perform(get("/bills/notify").header("Origin", "http://" + uri +":" + port))
+				.andExpect(status().isOk());
 			
 			mockMVC.perform(post("/bills/external").header("Origin", externalURL))
 				.andExpect(status().isUnsupportedMediaType());

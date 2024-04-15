@@ -36,11 +36,15 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 //import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 //import org.springframework.web.servlet.config.annotation.CorsRegistry;
 //import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.github.irybov.bankdemorest.security.AccountDetailsService;
 import com.github.irybov.bankdemorest.security.JWTFilter;
@@ -55,6 +59,8 @@ public class SecurityConfig {
 	private int port;
 //	@Value("${management.server.port}")
 //	private int m_port;
+	@Value("${external.payment-service}")
+	private String externalURL;
 
 	@Autowired
 	private JWTFilter jwtFilter;
@@ -221,14 +227,16 @@ public class SecurityConfig {
 //	    auth.build();
 
 		http
+//			.cors()
+//			.cors(Customizer.withDefaults())
+//			.cors().configurationSource(corsConfigurationSource())
+//				.and()
 			.csrf().disable()
 //			.authenticationProvider(dao)
 //			.authenticationManager(authManager)
 //			.sessionManagement().disable()
 			.sessionManagement()
 	        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//			.cors(Customizer.withDefaults())
-//			.cors()
 				.and()
 			.authorizeRequests()
 			.mvcMatchers(WHITE_LIST_URLS).permitAll()
@@ -265,7 +273,6 @@ public class SecurityConfig {
             .deleteCookies("JSESSIONID")
 			.logoutSuccessUrl("/home")
 				.and()*/
-//			.and().cors().configurationSource(corsConfigurationSource());
 //		http.headers().frameOptions().disable();
 
         return http.build();
@@ -302,7 +309,7 @@ public class SecurityConfig {
     }*/
 	
 //    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource() {
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		CorsConfiguration configuration = new CorsConfiguration();
@@ -316,5 +323,35 @@ public class SecurityConfig {
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
     }
-    
+/*    
+    @Bean
+    public CorsFilter corsFilter() {
+        return new CorsFilter(corsConfigurationSource());
+    }
+*/
+    @Bean
+    public WebMvcConfigurer corsBean() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+            	
+        		registry.addMapping("/bills/external")
+				.allowedOrigins(externalURL)
+				.allowedMethods(RequestMethod.OPTIONS.name(), RequestMethod.POST.name())
+				.allowedHeaders("*")
+				.exposedHeaders("*")
+//				.maxAge(1800L)
+				.allowCredentials(true);
+
+        		registry.addMapping("/**")
+				.allowedOrigins("http://" + uri +":" + port)
+				.allowedMethods("*")
+				.allowedHeaders("*")
+				.exposedHeaders("*")
+//				.maxAge(1800L)
+				.allowCredentials(true);
+            }
+        };
+    }
+
 }

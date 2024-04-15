@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.Api;
 
 @Api(description = "Abstrcat controller, parent of all controllers")
-@CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
+//@CrossOrigin(origins="http://"+"${server.address}"+":"+"${server.port}", allowCredentials="true")
 abstract class BaseController {
 	
     @Autowired

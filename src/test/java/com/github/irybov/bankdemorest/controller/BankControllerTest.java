@@ -148,6 +148,10 @@ class BankControllerTest {
 	private static AccountMapper accountMapper;
 	private static BillMapper billMapper;
 	
+	@Value("${server.address}")
+	private String uri;
+	@Value("${server.port}")
+	private int port;
 	@Value("${external.payment-service}")
 	private String externalURL;
 
@@ -1052,7 +1056,7 @@ class BankControllerTest {
 		mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
 	}
 	
-	@WithMockUser
+//	@WithMockUser
 	@Test
 	void check_cors_and_xml_support() throws Exception {
 		
@@ -1063,12 +1067,15 @@ class BankControllerTest {
 												.contentType(MediaType.APPLICATION_XML))
 			.andExpect(status().isBadRequest());
 		
-		mockMVC.perform(post("/bills/external").header("Origin", "http://evildevil.com")
+		mockMVC.perform(post("/bills/external").header("Origin", "http://" + uri +":" + port)
 												.contentType(MediaType.APPLICATION_XML))
 			.andExpect(status().isForbidden());
 		
 		mockMVC.perform(get("/bills/notify").header("Origin", externalURL))
 			.andExpect(status().isForbidden());
+		
+		mockMVC.perform(get("/bills/notify").header("Origin", "http://" + uri +":" + port))
+			.andExpect(status().isOk());
 		
 		mockMVC.perform(post("/bills/external").header("Origin", externalURL))
 			.andExpect(status().isUnsupportedMediaType());
