@@ -52,6 +52,7 @@ public class JWTUtility {
 
         JWTVerifier verifier = JWT.require(Algorithm.HMAC256(secret))
                 .withIssuer("bankdemo")
+                .withClaimPresence("roles")
                 .build();
 		return verifier.verify(token);
     }

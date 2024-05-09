@@ -37,20 +37,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GlobalExceptionHandler {
 
-//	@ExceptionHandler(ConstraintViolationException.class)
-//	@ResponseBody
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ExceptionHandler(ConstraintViolationException.class)
+	@ResponseBody
 //	ValidationErrorResponse onConstraintValidationException(ConstraintViolationException exc) {
-	ModelAndView handleConstraintValidation(ConstraintViolationException exc) {		
+	List<Violation> handleConstraintValidation(ConstraintViolationException exc) {		
 				
 	    ValidationErrorResponse error = new ValidationErrorResponse();	    
-/*	    for(ConstraintViolation<?> violation : exc.getConstraintViolations()) {
+	    for(ConstraintViolation<?> violation : exc.getConstraintViolations()) {
 	    	error.getViolations().add(new Violation(violation.getMessage()));
 	    }
-	    return error;*/
-		ModelAndView mav = new ModelAndView("error");
 		List<Violation> violations = error.getViolations();
-		mav.addObject("violations", violations);
-		return mav;
+		return violations;
 	}
 	
 	@ResponseStatus(HttpStatus.BAD_REQUEST)

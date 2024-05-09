@@ -105,7 +105,7 @@ import com.github.irybov.bankdemorest.service.OperationService;
 import com.github.irybov.bankdemorest.util.JWTUtility;
 
 @WithMockUser(username = "4444444444", roles = "CLIENT")
-@WebMvcTest(controllers = BankController.class)
+@WebMvcTest(BankController.class)
 @Import(value = {SecurityConfig.class, SecurityBeans.class, 
 			BillMapperImpl.class, AccountMapperImpl.class})
 class BankControllerTest {
@@ -169,7 +169,7 @@ class BankControllerTest {
 		currencies.add(rub);*/
 		
 		entity = new Account
-				("Kylie", "Bunbury", "4444444444", LocalDate.of(1989, 01, 30), "blackmamba", true);
+				("Kylie", "Bunbury", "4444444444", "bunbury@greenmail.io", LocalDate.of(1989, 01, 30), "blackmamba", true);
 		entity.setCreatedAt(OffsetDateTime.now());
 		entity.setUpdatedAt(OffsetDateTime.now());
 		entity.setId(0);

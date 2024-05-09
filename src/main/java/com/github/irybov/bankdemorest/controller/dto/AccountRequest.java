@@ -2,6 +2,7 @@ package com.github.irybov.bankdemorest.controller.dto;
 
 import java.time.LocalDate;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
@@ -39,6 +40,12 @@ public class AccountRequest {
 	@NotBlank(message = "Phone number must not be blank")
 	@Pattern(regexp = "^\\d{10}$", message = "Please input phone number like a row of 10 digits")
 	private String phone;
+	
+	@JsonProperty("email")
+	@NotBlank(message = "Email address must not be blank")
+	@Email(message = "Email address is not valid")
+	@Size(min=10, max=60, message = "Email address should be 10-60 symbols length")
+	private String email;
 
 	@JsonProperty("birthday")
 	@NotNull(message = "Please select your date of birth")

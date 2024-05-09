@@ -25,7 +25,7 @@ class BillMapperTest {
 	@Autowired
 	private BillMapper mapStruct;
 	private static Account entity = new Account
-			("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
+			("Admin", "Adminov", "0000000000", "@greenmail.io", LocalDate.of(2001, 01, 01), "superadmin", true);
 
 	@Test
 	void test() {

@@ -14,6 +14,8 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,15 +33,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import java.time.LocalDate;
+import java.util.Map;
 
+import javax.mail.MessagingException;
 import javax.persistence.PersistenceException;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 
 //import java.io.File;
 //import java.nio.file.Files;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 //import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -47,6 +54,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
@@ -65,12 +73,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.Validator;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.irybov.bankdemorest.security.EmailService;
 import com.github.irybov.bankdemorest.config.SecurityBeans;
 import com.github.irybov.bankdemorest.config.SecurityConfig;
 import com.github.irybov.bankdemorest.controller.AuthController;
@@ -87,9 +97,12 @@ import com.github.irybov.bankdemorest.service.AccountServiceDAO;
 import com.github.irybov.bankdemorest.service.AccountServiceJPA;
 import com.github.irybov.bankdemorest.util.JWTUtility;
 
+import net.bytebuddy.utility.RandomString;
+
 @WebMvcTest(AuthController.class)
 @Import(value = {SecurityConfig.class, SecurityBeans.class})
 @TestPropertySource(locations = "classpath:jwt.properties")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthControllerTest {
 
 	@MockBean
@@ -115,7 +128,33 @@ class AuthControllerTest {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
 	*/
-
+	@Autowired
+	ApplicationContext context;
+	
+	@MockBean
+	private EmailService emailService;
+	private Map<String, AccountRequest> accounts;
+	private String mailbox;
+	
+	@BeforeAll
+	void set_up() {
+		mailbox = "@greenmail.io";
+		accounts = mock(Map.class);
+		ReflectionTestUtils.setField(context.getBean(AuthController.class), "accounts", accounts);
+		ReflectionTestUtils.setField(context.getBean(AuthController.class), "accountService", accountService);
+	}
+	
+	private AccountRequest buildCorrectAccountRequest() {
+		AccountRequest accountRequest = new AccountRequest();
+		accountRequest.setBirthday(LocalDate.of(2001, 01, 01));
+		accountRequest.setName("Admin");
+		accountRequest.setPassword("superadmin");
+		accountRequest.setPhone("0000000000");
+		accountRequest.setSurname("Adminov");
+		accountRequest.setEmail(accountRequest.getSurname().toLowerCase() + mailbox);
+		return accountRequest;
+	}
+	
 /*	@Test
 	void can_get_start_html() throws Exception {
 		
@@ -239,25 +278,23 @@ class AuthControllerTest {
 	@Test
 	void accepted_registration() throws Exception {
 		
-		AccountRequest accountRequest = new AccountRequest();
-//		accountRequestDTO.setBirthday("2001-01-01");
-		accountRequest.setBirthday(LocalDate.of(2001, 01, 01));
-		accountRequest.setName("Admin");
-		accountRequest.setPassword("superadmin");
-		accountRequest.setPhone("0000000000");
-		accountRequest.setSurname("Adminov");
+		AccountRequest accountRequest = buildCorrectAccountRequest();
+		String tail = RandomString.make();
 
+		when(emailService.sendActivationLink(accountRequest.getEmail())).thenReturn(tail);
+		
 		mockMVC.perform(post("/confirm")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(accountRequest)))
-			.andExpect(status().isCreated())
+			.andExpect(status().isOk())
 /*	        .andExpect(model().size(2))
 	        .andExpect(model().attributeExists("account"))
 	        .andExpect(model().attribute("success", "Your account has been created"))
 			.andExpect(view().name("auth/login"));*/
-			.andExpect(content().string("Your account has been created"));
+			.andExpect(content().string("Check you email"));
 		
-	    verify(accountService).saveAccount(refEq(accountRequest));
+		verify(emailService).sendActivationLink(accountRequest.getEmail());
+		assertEquals(tail, emailService.sendActivationLink(accountRequest.getEmail()));
 	}
 	
 	@Test
@@ -279,7 +316,7 @@ class AuthControllerTest {
 	        .andExpect(model().hasErrors())
 			.andExpect(view().name("auth/register"));*/
 			.andExpect(jsonPath("$", hasItem("Please select your date of birth")))
-			.andExpect(jsonPath("$.length()", equalTo(7)))
+			.andExpect(jsonPath("$.length()", equalTo(8)))
 			.andExpect(jsonPath("$").isArray());
 		
 		accountRequest.setBirthday(LocalDate.now().plusYears(10L));
@@ -292,10 +329,10 @@ class AuthControllerTest {
 	        .andExpect(model().hasErrors())
 			.andExpect(view().name("auth/register"));*/
 			.andExpect(jsonPath("$", hasItem("Birthday can't be future time")))
-			.andExpect(jsonPath("$.length()", equalTo(7)))
+			.andExpect(jsonPath("$.length()", equalTo(8)))
 			.andExpect(jsonPath("$").isArray());
 		
-		accountRequest.setBirthday(LocalDate.now().minusYears(17L));
+		accountRequest.setBirthday(LocalDate.now().minusYears(10L));
 		mockMVC.perform(post("/confirm")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(accountRequest)))
@@ -304,87 +341,103 @@ class AuthControllerTest {
 	        .andExpect(model().attributeExists("account"))
 	        .andExpect(model().hasErrors())
 			.andExpect(view().name("auth/register"));*/
-			.andExpect(jsonPath("$.length()", equalTo(6)))
+			.andExpect(jsonPath("$.length()", equalTo(7)))
 			.andExpect(jsonPath("$").isArray());
+		
+		verify(emailService, never()).sendActivationLink(accountRequest.getEmail());
 	}
 	
 	@Test
 	void interrupted_registration() throws Exception {
 		
-		AccountRequest accountRequest = new AccountRequest();
-		accountRequest.setBirthday(LocalDate.now().minusYears(17L));
-		accountRequest.setName("Admin");
-		accountRequest.setPassword("superadmin");
-		accountRequest.setPhone("5555555555");
-		accountRequest.setSurname("Adminov");
+		AccountRequest accountRequest = buildCorrectAccountRequest();
 		
-		doThrow(new RegistrationException("You must be 18+ to register"))
-		.when(accountService).saveAccount(refEq(accountRequest));
-
+		doThrow(new MessagingException("Shit happens")).when(emailService).sendActivationLink(accountRequest.getEmail());
+		
 		mockMVC.perform(post("/confirm")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(accountRequest)))
-			.andExpect(status().isConflict())
-/*	        .andExpect(model().size(2))
-	        .andExpect(model().attributeExists("account"))
-        	.andExpect(model().attribute("message", "You must be 18+ to register"))
-			.andExpect(view().name("auth/register"));*/
-			.andExpect(content().string("You must be 18+ to register"));
+			.andExpect(status().isInternalServerError())
+			.andExpect(content().string("Shit happens"));
 		
-	    verify(accountService).saveAccount(refEq(accountRequest));
-	    
-//		accountRequestDTO.setBirthday("2001-01-01");
-		accountRequest.setBirthday(LocalDate.of(2001, 01, 01));
-		accountRequest.setPhone("0000000000");
-		
-		doThrow(new RuntimeException("This number is already in use"))
-		.when(accountService).saveAccount(refEq(accountRequest));
-
-		mockMVC.perform(post("/confirm")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(mapper.writeValueAsString(accountRequest)))
-			.andExpect(status().isConflict())
-/*	        .andExpect(model().size(2))
-	        .andExpect(model().attributeExists("account"))
-        	.andExpect(model().attribute("message", "This number is already in use."))
-			.andExpect(view().name("auth/register"));*/
-			.andExpect(content().string("This number is already in use"));
-		
-	    verify(accountService).saveAccount(refEq(accountRequest));
+		verify(emailService).sendActivationLink(accountRequest.getEmail());
 	}
 	
-	@Disabled
 	@Test
-	void violated_registration() throws Exception {
+	void successful_activation() throws Exception {
 		
-		AccountRequest accountRequest = new AccountRequest();
-//		accountRequestDTO.setBirthday("2001-01-01");
-		accountRequest.setBirthday(LocalDate.of(2001, 01, 01));
-		accountRequest.setName("Admin");
-		accountRequest.setPassword("superadmin");
-		accountRequest.setPhone("0000000000");
-		accountRequest.setSurname("Adminov");
+		AccountRequest accountRequest = buildCorrectAccountRequest();
+		String tail = RandomString.make();
+		
+		doNothing().when(accountService).saveAccount(refEq(accountRequest));
+		when(accounts.containsKey(tail)).thenReturn(true);
+		when(accounts.get(tail)).thenReturn(accountRequest);
+		when(accounts.remove(tail)).thenReturn(accountRequest);
+		
+		mockMVC.perform(get("/activate/{tail}", tail))
+			.andExpect(status().isCreated())
+			.andExpect(content().string("Your account has been created"));
+		
+	    verify(accountService).saveAccount(refEq(accountRequest));
+		verify(accounts).containsKey(tail);
+	    verify(accounts).get(tail);
+	    verify(accounts).remove(tail);
+	}
+	
+	@Test
+	void failed_activation() throws Exception {
+		
+		AccountRequest accountRequest = buildCorrectAccountRequest();
+		String tail = RandomString.make();
 		
 		doThrow(new RuntimeException("This number is already in use"))
-		.when(accountService).saveAccount(refEq(accountRequest));
-
-		mockMVC.perform(post("/confirm")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(mapper.writeValueAsString(accountRequest)))
+			.when(accountService).saveAccount(refEq(accountRequest));
+		when(accounts.containsKey(tail)).thenReturn(true);
+		when(accounts.get(tail)).thenReturn(accountRequest);
+		
+		mockMVC.perform(get("/activate/{tail}", tail))
 			.andExpect(status().isConflict())
-/*	        .andExpect(model().size(2))
-	        .andExpect(model().attributeExists("account"))
-        	.andExpect(model().attribute("message", "This number is already in use."))
-			.andExpect(view().name("auth/register"));*/
 			.andExpect(content().string("This number is already in use"));
 		
 	    verify(accountService).saveAccount(refEq(accountRequest));
+	    verify(accounts).get(tail);
+		
+		
+	    when(accounts.containsKey(tail)).thenReturn(false);
+	    
+		mockMVC.perform(get("/activate/{tail}", tail))
+			.andExpect(status().isGone())
+			.andExpect(content().string("Link has been expired, try to register again"));
+	    
+		verify(accounts, times(2)).containsKey(tail);
+	}
+	
+	@Test
+	void violated_activation() throws Exception {
+		
+		String tail = "tail";
+		mockMVC.perform(get("/activate/{tail}", tail))
+			.andExpect(status().isBadRequest())
+			.andExpect(content().string(containsString("Path variable should be 8 chars length")));
+		
+		tail = " ";
+		mockMVC.perform(get("/activate/{tail}", tail))
+			.andExpect(status().isBadRequest())
+			.andExpect(content().string(containsString("Path variable must not be blank")));
+		
+		tail = "";
+		mockMVC.perform(get("/activate/{tail}", tail))
+			.andExpect(status().isNotFound());
+		
+		tail = null;
+		mockMVC.perform(get("/activate/{tail}", tail))
+			.andExpect(status().isNotFound());
 	}
 	
 	@Test
 	void correct_creds_jwt() throws Exception {
 		
-		Account account = new Account("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
+		Account account = new Account("Admin", "Adminov", "0000000000", "@greenmail.io", LocalDate.of(2001, 01, 01),
 				 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
 		account.addRole(Role.ADMIN);
 		UserDetails details = new AccountDetails(account);
@@ -456,7 +509,7 @@ class AuthControllerTest {
 	@Test
 	void abscent_creds_jwt() throws Exception {
 		
-		Account account = new Account("Kylie", "Bunbury", "4444444444", LocalDate.of(1989, 01, 30),
+		Account account = new Account("Kylie", "Bunbury", "4444444444", "@greenmail.io", LocalDate.of(1989, 01, 30),
 				 BCrypt.hashpw("blackmamba", BCrypt.gensalt(4)), true);
 		account.addRole(Role.CLIENT);
 //		UserDetails details = new AccountDetails(account);
@@ -503,4 +556,9 @@ class AuthControllerTest {
 		    		(result.getResolvedException() instanceof MethodArgumentNotValidException));
 	}
 	
+    @AfterAll
+    void tear_down() {
+    	accounts = null;
+    	mailbox = null;
+    }
 }

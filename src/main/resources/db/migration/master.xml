@@ -13,7 +13,8 @@ http://www.liquibase.org/xml/ns/pro
 http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
 
 <include file="init-db.xml" relativeToChangelogFile="true"/>
-<include file="check-login.xml" relativeToChangelogFile="true"/>
+<include file="create-login.xml" relativeToChangelogFile="true"/>
 <include file="insert-data.xml" relativeToChangelogFile="true"/>
+<include file="alter-email.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

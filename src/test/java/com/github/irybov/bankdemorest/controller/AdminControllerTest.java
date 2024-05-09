@@ -97,7 +97,7 @@ import com.github.irybov.bankdemorest.util.JWTUtility;
 import com.opencsv.CSVWriter;
 
 @WithMockUser(username = "0000000000", roles = "ADMIN")
-@WebMvcTest(controllers = AdminController.class)
+@WebMvcTest(AdminController.class)
 @Import(value = {SecurityConfig.class, SecurityBeans.class, 
 		OperationMapperImpl.class,  BillMapperImpl.class, AccountMapperImpl.class})
 class AdminControllerTest {
@@ -157,7 +157,7 @@ class AdminControllerTest {
 	static void prepare() {
 		
 		entity = new Account
-				("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01), "superadmin", true);
+				("Admin", "Adminov", "0000000000", "adminov@greenmail.io", LocalDate.of(2001, 01, 01), "superadmin", true);
 		entity.setCreatedAt(OffsetDateTime.now());
 		entity.setUpdatedAt(OffsetDateTime.now());
 		entity.setId(0);
@@ -206,7 +206,7 @@ class AdminControllerTest {
 	void can_get_clients_list() throws Exception {
 		
 		List<AccountResponse> clients = new ArrayList<>();
-		Account entity = new Account("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
+		Account entity = new Account("Admin", "Adminov", "0000000000", "adminov@greenmail.io", LocalDate.of(2001, 01, 01),
 				 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
 //		clients.add(modelMapper.map(entity, AccountResponse.class));
 		clients.add(accountMapper.toDTO(entity, new CycleAvoidingMappingContext()));

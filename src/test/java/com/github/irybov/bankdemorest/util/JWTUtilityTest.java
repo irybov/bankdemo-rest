@@ -33,7 +33,7 @@ class JWTUtilityTest {
 	@Test
 	void test() {
 		
-		Account account = new Account("Admin", "Adminov", "0000000000", LocalDate.of(2001, 01, 01),
+		Account account = new Account("Admin", "Adminov", "0000000000", "@greenmail.io", LocalDate.of(2001, 01, 01),
 				 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
 		account.addRole(Role.ADMIN);
 		UserDetails details = new AccountDetails(account);

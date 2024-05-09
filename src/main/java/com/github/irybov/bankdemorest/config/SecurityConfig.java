@@ -78,6 +78,7 @@ public class SecurityConfig {
     		"/login", 
     		"/register", 
     		"/confirm", 
+    		"/activate/*", 
     		"/token", 
 //    		"/webjars/**", 
 //    		"/css/**", 
@@ -107,7 +108,7 @@ public class SecurityConfig {
 //			"**/swagger*/**", 
 //			"/**/api-docs/**", 
 //    		"/actuator/**"
-//    };	
+//    };
 	
 /*	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -313,7 +314,7 @@ public class SecurityConfig {
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(Arrays.asList("http://" + uri +":" + port));
+		configuration.setAllowedOrigins(Arrays.asList("http://" + uri + ":" + port));
 //		configuration.setAllowedOriginPatterns(Arrays.asList("http://" + uri +":" + port));
 		configuration.setAllowedMethods(Arrays.asList("*"));
 		configuration.setAllowCredentials(true);
@@ -344,7 +345,7 @@ public class SecurityConfig {
 				.allowCredentials(true);
 
         		registry.addMapping("/**")
-				.allowedOrigins("http://" + uri +":" + port)
+				.allowedOrigins("http://" + uri + ":" + port)
 				.allowedMethods("*")
 				.allowedHeaders("*")
 				.exposedHeaders("*")

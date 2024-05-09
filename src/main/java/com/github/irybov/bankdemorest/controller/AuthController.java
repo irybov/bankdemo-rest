@@ -2,11 +2,15 @@ package com.github.irybov.bankdemorest.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import javax.mail.MessagingException;
 import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 //import javax.validation.Valid;
 
@@ -23,12 +27,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-//import org.springframework.validation.annotation.Validated;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.validation.Validator;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -37,6 +43,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
 import com.github.irybov.bankdemorest.controller.dto.LoginRequest;
+import com.github.irybov.bankdemorest.security.EmailService;
 import com.github.irybov.bankdemorest.service.AccountService;
 import com.github.irybov.bankdemorest.util.JWTUtility;
 
@@ -48,7 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Api(description = "Controller for users authorization and registration")
 @Slf4j
-//@Validated
+@Validated
 @Controller
 public class AuthController extends BaseController {
 	
@@ -68,6 +75,10 @@ public class AuthController extends BaseController {
 	public AuthController(Validator accountValidator) {
 		this.accountValidator = accountValidator;
 	}
+	
+	@Autowired
+	private EmailService emailService;
+	private Map<String, AccountRequest> accounts = new ConcurrentReferenceHashMap<>();
 
 /*	@ApiOperation("Returns apllication's start html-page")
 	@GetMapping("/home")
@@ -130,9 +141,9 @@ public class AuthController extends BaseController {
 	
 	@ApiOperation("Registers new account")
 	@ApiResponses(value = 
-		{@ApiResponse(code = 201, message = "Your account has been created", response = String.class), 
+		{@ApiResponse(code = 200, message = "Check you email", response = String.class), 
 		 @ApiResponse(code = 400, message = "", responseContainer = "List", response = String.class),
-		 @ApiResponse(code = 409, message = "", response = String.class)})
+		 @ApiResponse(code = 500, message = "", response = String.class)})
 	@PostMapping("/confirm")
 	public ResponseEntity<?> confirmRegistration(@RequestBody AccountRequest accountRequest,
 			BindingResult result) {
@@ -148,6 +159,17 @@ public class AuthController extends BaseController {
 			return ResponseEntity.badRequest().body(errors);
 		}
 		
+		String key = null;
+		try {
+			key = emailService.sendActivationLink(accountRequest.getEmail());
+		}
+		catch (MessagingException exc) {
+			log.error(exc.getMessage(), exc);
+			return ResponseEntity.internalServerError().body(exc.getMessage());
+		}
+		accounts.putIfAbsent(key, accountRequest);
+		return ResponseEntity.ok("Check you email");
+/*		
 		try {
 			accountService.saveAccount(accountRequest);
 			return new ResponseEntity<String>("Your account has been created", HttpStatus.CREATED);
@@ -155,7 +177,37 @@ public class AuthController extends BaseController {
 		catch (RuntimeException exc) {
 			log.error(exc.getMessage(), exc);
 			return new ResponseEntity<String>(exc.getMessage(), HttpStatus.CONFLICT);
+		}*/
+	}
+
+	@ApiOperation("Acivates account by email link")
+	@ApiResponses(value = 
+		{@ApiResponse(code = 201, message = "Your account has been created", response = String.class), 
+		 @ApiResponse(code = 400, message = "", responseContainer = "List", response = String.class),
+		 @ApiResponse(code = 409, message = "", response = String.class),
+		 @ApiResponse(code = 410, message = "Link has been expired, try to register again", response = String.class)})
+	@GetMapping("/activate/{tail}")
+//	@Validated
+	public ResponseEntity<String> activateAccount(@PathVariable 
+			@NotBlank(message = "Path variable must not be blank") 
+			@Size(min=8, max=8, message = "Path variable should be 8 chars length") String tail) {
+		
+		if(accounts.containsKey(tail)) {
+			AccountRequest accountRequest = accounts.get(tail);
+		
+			try {
+				accountService.saveAccount(accountRequest);
+				accounts.remove(tail);
+				return new ResponseEntity<String>("Your account has been created", HttpStatus.CREATED);
+			}
+			catch (RuntimeException exc) {
+				log.error(exc.getMessage(), exc);
+				accounts.remove(tail);
+				return new ResponseEntity<String>(exc.getMessage(), HttpStatus.CONFLICT);
+			}
 		}
+		
+		return new ResponseEntity<String>("Link has been expired, try to register again", HttpStatus.GONE);
 	}
 
 }
