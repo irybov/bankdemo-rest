@@ -32,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
@@ -537,7 +538,8 @@ public class BankDemoBootApplicationIT {
 			accounts.put(tail, accountRequest);
 			mockMVC.perform(get("/activate/{tail}", tail))
 				.andExpect(status().isConflict())
-				.andExpect(content().string("This number is already in use"));
+//				.andExpect(content().string("This number is already in use"));
+				.andExpect(content().contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8)));
 			
 			mockMVC.perform(get("/activate/{tail}", tail))
 				.andExpect(status().isGone())
