@@ -440,7 +440,7 @@ public class BankDemoBootApplicationIT {
 				assertTrue(GreenMailUtil.getBody(receivedMessage)
 						.startsWith("<a href='http://" + uri + ":" + port + path + "/activate/"));
 				assertTrue(GreenMailUtil.getBody(receivedMessage)
-						.endsWith("'>Activate your account</a>"));
+						.endsWith("' target=\"_blank\">Activate your account</a>"));
 				assertFalse(GreenMailUtil.getBody(receivedMessage).contains("Shit happens"));
 			});
 		}
