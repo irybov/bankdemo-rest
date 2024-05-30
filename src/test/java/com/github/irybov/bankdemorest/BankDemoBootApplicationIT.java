@@ -298,6 +298,8 @@ public class BankDemoBootApplicationIT {
 		private int port;
 		@Value("${server.servlet.context-path}")
 		private String path;
+		@Value("${external.payment-service}")
+		private String externalURL;
 	    
 		@RegisterExtension
 		GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.SMTP)
@@ -513,7 +515,7 @@ public class BankDemoBootApplicationIT {
 			List<String> keys = new ArrayList<>(accounts.keySet());
 			String tail = keys.get(0);
 			
-			mockMVC.perform(get("/activate/{tail}", tail))
+			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 				.andExpect(status().isCreated())
 				.andExpect(content().string("Your account has been created"));
 		}
@@ -536,12 +538,12 @@ public class BankDemoBootApplicationIT {
 			accountRequest.setPhone(PHONE);
 			
 			accounts.put(tail, accountRequest);
-			mockMVC.perform(get("/activate/{tail}", tail))
+			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 				.andExpect(status().isConflict())
 //				.andExpect(content().string("This number is already in use"));
 				.andExpect(content().contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8)));
 			
-			mockMVC.perform(get("/activate/{tail}", tail))
+			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 				.andExpect(status().isGone())
 				.andExpect(content().string("Link has been expired, try to register again"));
 		}
@@ -550,21 +552,21 @@ public class BankDemoBootApplicationIT {
 		void violated_activation() throws Exception {
 			
 			String tail = "tail";
-			mockMVC.perform(get("/activate/{tail}", tail))
+			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 				.andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString("Path variable should be 8 chars length")));
 			
 			tail = " ";
-			mockMVC.perform(get("/activate/{tail}", tail))
+			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 				.andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString("Path variable must not be blank")));
 			
 			tail = "";
-			mockMVC.perform(get("/activate/{tail}", tail))
+			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 				.andExpect(status().isNotFound());
 			
 			tail = null;
-			mockMVC.perform(get("/activate/{tail}", tail))
+			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 				.andExpect(status().isNotFound());
 		}
 				

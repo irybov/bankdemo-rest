@@ -90,7 +90,7 @@ public class SecurityConfig {
     		"/accounts/show", 
     		"/accounts/password"
     };
-    private static final String[] ADMIN_LIST_URLS = {
+    private static final String[] ADMINS_LIST_URLS = {
 			"/control", 
     		"/accounts/search/*", 
     		"/accounts/status/{id}", 
@@ -242,7 +242,7 @@ public class SecurityConfig {
 			.authorizeRequests()
 			.mvcMatchers(WHITE_LIST_URLS).permitAll()
 			.mvcMatchers(SHARED_LIST_URLS).hasAnyRole("ADMIN", "CLIENT")
-			.mvcMatchers(ADMIN_LIST_URLS).hasRole("ADMIN")
+			.mvcMatchers(ADMINS_LIST_URLS).hasRole("ADMIN")
 //			.antMatchers("/actuator/**").hasRole("REMOTE")
 			.anyRequest().authenticated()
 				.and()
@@ -344,6 +344,14 @@ public class SecurityConfig {
 //				.maxAge(1800L)
 				.allowCredentials(true);
 
+        		registry.addMapping("/activate/*")
+				.allowedOriginPatterns("*")
+				.allowedMethods(RequestMethod.GET.name())
+				.allowedHeaders("*")
+				.exposedHeaders("*")
+//				.maxAge(1800L)
+				.allowCredentials(true);
+        		
         		registry.addMapping("/**")
 				.allowedOrigins("http://" + uri + ":" + port)
 				.allowedMethods("*")

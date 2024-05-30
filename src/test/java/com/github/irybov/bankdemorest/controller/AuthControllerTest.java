@@ -50,6 +50,7 @@ import org.junit.jupiter.api.TestInstance;
 //import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -135,6 +136,9 @@ class AuthControllerTest {
 	private EmailService emailService;
 	private Map<String, AccountRequest> accounts;
 	private String mailbox;
+	
+	@Value("${external.payment-service}")
+	private String externalURL;
 	
 	@BeforeAll
 	void set_up() {
@@ -374,7 +378,7 @@ class AuthControllerTest {
 		when(accounts.get(tail)).thenReturn(accountRequest);
 		when(accounts.remove(tail)).thenReturn(accountRequest);
 		
-		mockMVC.perform(get("/activate/{tail}", tail))
+		mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 			.andExpect(status().isCreated())
 			.andExpect(content().string("Your account has been created"));
 		
@@ -395,7 +399,7 @@ class AuthControllerTest {
 		when(accounts.containsKey(tail)).thenReturn(true);
 		when(accounts.get(tail)).thenReturn(accountRequest);
 		
-		mockMVC.perform(get("/activate/{tail}", tail))
+		mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 			.andExpect(status().isConflict())
 			.andExpect(content().string("This number is already in use"));
 		
@@ -416,21 +420,21 @@ class AuthControllerTest {
 	void violated_activation() throws Exception {
 		
 		String tail = "tail";
-		mockMVC.perform(get("/activate/{tail}", tail))
+		mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 			.andExpect(status().isBadRequest())
 			.andExpect(content().string(containsString("Path variable should be 8 chars length")));
 		
 		tail = " ";
-		mockMVC.perform(get("/activate/{tail}", tail))
+		mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 			.andExpect(status().isBadRequest())
 			.andExpect(content().string(containsString("Path variable must not be blank")));
 		
 		tail = "";
-		mockMVC.perform(get("/activate/{tail}", tail))
+		mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 			.andExpect(status().isNotFound());
 		
 		tail = null;
-		mockMVC.perform(get("/activate/{tail}", tail))
+		mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
 			.andExpect(status().isNotFound());
 	}
 	
