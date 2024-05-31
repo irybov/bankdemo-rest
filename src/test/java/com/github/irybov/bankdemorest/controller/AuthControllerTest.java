@@ -59,6 +59,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -378,7 +379,7 @@ class AuthControllerTest {
 		when(accounts.get(tail)).thenReturn(accountRequest);
 		when(accounts.remove(tail)).thenReturn(accountRequest);
 		
-		mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+		mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 			.andExpect(status().isCreated())
 			.andExpect(content().string("Your account has been created"));
 		
@@ -399,7 +400,7 @@ class AuthControllerTest {
 		when(accounts.containsKey(tail)).thenReturn(true);
 		when(accounts.get(tail)).thenReturn(accountRequest);
 		
-		mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+		mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 			.andExpect(status().isConflict())
 			.andExpect(content().string("This number is already in use"));
 		
@@ -409,7 +410,7 @@ class AuthControllerTest {
 		
 	    when(accounts.containsKey(tail)).thenReturn(false);
 	    
-		mockMVC.perform(get("/activate/{tail}", tail))
+		mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 			.andExpect(status().isGone())
 			.andExpect(content().string("Link has been expired, try to register again"));
 	    
@@ -420,21 +421,21 @@ class AuthControllerTest {
 	void violated_activation() throws Exception {
 		
 		String tail = "tail";
-		mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+		mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 			.andExpect(status().isBadRequest())
 			.andExpect(content().string(containsString("Path variable should be 8 chars length")));
 		
 		tail = " ";
-		mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+		mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 			.andExpect(status().isBadRequest())
 			.andExpect(content().string(containsString("Path variable must not be blank")));
 		
 		tail = "";
-		mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+		mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 			.andExpect(status().isNotFound());
 		
 		tail = null;
-		mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+		mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 			.andExpect(status().isNotFound());
 	}
 	

@@ -74,9 +74,9 @@ public class SecurityConfig {
 	}
 	
     private static final String[] WHITE_LIST_URLS = {
-    		"/home", 
-    		"/login", 
-    		"/register", 
+//    		"/home", 
+//    		"/login", 
+//    		"/register", 
     		"/confirm", 
     		"/activate/*", 
     		"/token", 
@@ -154,7 +154,8 @@ public class SecurityConfig {
 	}
 	
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(
+    		AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
     

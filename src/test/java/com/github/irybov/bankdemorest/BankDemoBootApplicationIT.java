@@ -1,8 +1,8 @@
 package com.github.irybov.bankdemorest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.CoreMatchers.any;
@@ -10,7 +10,6 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-//import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -42,6 +41,7 @@ import java.util.Set;
 
 import javax.mail.internet.MimeMessage;
 
+import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
@@ -97,6 +97,7 @@ import com.github.irybov.bankdemorest.controller.dto.OperationRequest;
 import com.github.irybov.bankdemorest.controller.dto.PasswordRequest;
 import com.github.irybov.bankdemorest.dao.AccountDAO;
 import com.github.irybov.bankdemorest.entity.Account;
+import com.github.irybov.bankdemorest.exception.RegistrationException;
 import com.github.irybov.bankdemorest.jpa.AccountJPA;
 import com.github.irybov.bankdemorest.service.AccountService;
 import com.github.irybov.bankdemorest.service.AccountServiceDAO;
@@ -515,7 +516,7 @@ public class BankDemoBootApplicationIT {
 			List<String> keys = new ArrayList<>(accounts.keySet());
 			String tail = keys.get(0);
 			
-			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+			mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 				.andExpect(status().isCreated())
 				.andExpect(content().string("Your account has been created"));
 		}
@@ -538,12 +539,12 @@ public class BankDemoBootApplicationIT {
 			accountRequest.setPhone(PHONE);
 			
 			accounts.put(tail, accountRequest);
-			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+			mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 				.andExpect(status().isConflict())
 //				.andExpect(content().string("This number is already in use"));
 				.andExpect(content().contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8)));
 			
-			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+			mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 				.andExpect(status().isGone())
 				.andExpect(content().string("Link has been expired, try to register again"));
 		}
@@ -552,21 +553,21 @@ public class BankDemoBootApplicationIT {
 		void violated_activation() throws Exception {
 			
 			String tail = "tail";
-			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+			mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 				.andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString("Path variable should be 8 chars length")));
 			
 			tail = " ";
-			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+			mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 				.andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString("Path variable must not be blank")));
 			
 			tail = "";
-			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+			mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 				.andExpect(status().isNotFound());
 			
 			tail = null;
-			mockMVC.perform(get("/activate/{tail}", tail).header("Origin", externalURL))
+			mockMVC.perform(get("/activate/{tail}", tail).header(HttpHeaders.ORIGIN, externalURL))
 				.andExpect(status().isNotFound());
 		}
 				
@@ -854,10 +855,9 @@ public class BankDemoBootApplicationIT {
 		void check_security_restriction() throws Exception {
 			
 			mockMVC.perform(get("/accounts/show/{phone}", "5555555555"))
-			.andExpect(status().isForbidden());
-/*			.andExpect(model().size(1))
-			.andExpect(model().attribute("message", "Security restricted information"))
-			.andExpect(forwardedUrl("/accounts/show/" + PHONE));*/
+			.andExpect(status().isForbidden())
+			.andExpect(result -> assertEquals("Security restricted information", 
+					   result.getResolvedException().getMessage()));
 		}
 		
 		@Test
@@ -865,16 +865,27 @@ public class BankDemoBootApplicationIT {
 			
 			mockMVC.perform(post("/bills/add")
 					.contentType(MediaType.APPLICATION_JSON)
-					.content(mapper.writeValueAsString(new BillRequest(PHONE, "SEA"))))
+					.content(mapper.writeValueAsString(new BillRequest(PHONE, "RUB"))))
 					.andExpect(status().isCreated())
 					.andExpect(jsonPath("$.id").isNumber())
 					.andExpect(jsonPath("$.createdAt").exists())
 					.andExpect(jsonPath("$.updatedAt").isEmpty())
 					.andExpect(jsonPath("$.active").value(true))
 					.andExpect(jsonPath("$.balance").value("0.0"))
-					.andExpect(jsonPath("$.currency").value("SEA"));
+					.andExpect(jsonPath("$.currency").value("RUB"));
 //					.andExpect(jsonPath("$.owner").exists());
 		}
+		
+		@Test
+		void bill_creation_failed() throws Exception {
+			
+			Assertions.assertThatThrownBy(() ->
+			mockMVC.perform(post("/bills/add")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(new BillRequest(PHONE, "SCR"))))
+				.andExpect(status().isBadRequest()))
+				.hasCause(new RegistrationException("Wrong currency provided"));
+		}	
 		
 		@Test
 		void can_delete_own_bill() throws Exception {
@@ -1482,29 +1493,29 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void check_cors_and_xml_support() throws Exception {
 			
-			mockMVC.perform(options("/bills/external").header("Origin", externalURL))
+			mockMVC.perform(options("/bills/external").header(HttpHeaders.ORIGIN, externalURL))
 				.andExpect(status().isOk());
 			
-			mockMVC.perform(post("/bills/external").header("Origin", externalURL)
+			mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, externalURL)
 													.contentType(MediaType.APPLICATION_XML))
 				.andExpect(status().isBadRequest());
 			
-			mockMVC.perform(post("/bills/external").header("Origin", "http://" + uri +":" + port)
+			mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, "http://" + uri +":" + port)
 													.contentType(MediaType.APPLICATION_XML))
 				.andExpect(status().isForbidden());
 			
-			mockMVC.perform(get("/bills/notify").header("Origin", externalURL))
+			mockMVC.perform(get("/bills/notify").header(HttpHeaders.ORIGIN, externalURL))
 				.andExpect(status().isForbidden());
 			
-			mockMVC.perform(get("/bills/notify").header("Origin", "http://" + uri +":" + port))
+			mockMVC.perform(get("/bills/notify").header(HttpHeaders.ORIGIN, "http://" + uri +":" + port))
 				.andExpect(status().isOk());
 			
-			mockMVC.perform(post("/bills/external").header("Origin", externalURL))
+			mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, externalURL))
 				.andExpect(status().isUnsupportedMediaType());
 			
 			XmlMapper xmlMapper = new XmlMapper();
 			OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01, "Demo");
-			mockMVC.perform(post("/bills/external").header("Origin", externalURL)
+			mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, externalURL)
 													.accept(MediaType.APPLICATION_XML)
 													.contentType(MediaType.APPLICATION_XML)
 													.content(xmlMapper.writeValueAsString(dto))
@@ -1558,7 +1569,8 @@ public class BankDemoBootApplicationIT {
 			UnlockService unlock = (UnlockService) context.getBean("unlockService");
 			
 			String impl = "DAO";			
-			mockMVC.perform(put("/control").header("Authorization", "Bearer " + token).param("impl", impl))
+			mockMVC.perform(put("/control").header(
+					HttpHeaders.AUTHORIZATION, "Bearer " + token).param("impl", impl))
 				.andExpect(status().isOk())
 				.andExpect(content()
 					.string(containsString("Services impementation has been switched to " + impl)));			
@@ -1570,7 +1582,8 @@ public class BankDemoBootApplicationIT {
 			assertThat(unlock.getImpl()).isEqualTo("DAO");
 			
 			impl = "JPA";
-			mockMVC.perform(put("/control").header("Authorization", "Bearer " + token).param("impl", impl))
+			mockMVC.perform(put("/control").header(
+					HttpHeaders.AUTHORIZATION, "Bearer " + token).param("impl", impl))
 				.andExpect(status().isOk())
 				.andExpect(content()
 					.string(containsString("Services impementation has been switched to " + impl)));
@@ -1597,7 +1610,8 @@ public class BankDemoBootApplicationIT {
 			
 			String token = result.getResponse().getContentAsString();			
 			String impl = "XXX";
-			mockMVC.perform(put("/control").header("Authorization", "Bearer " + token).param("impl", impl))
+			mockMVC.perform(put("/control").header(
+					HttpHeaders.AUTHORIZATION, "Bearer " + token).param("impl", impl))
 				.andExpect(status().isBadRequest())
 				.andExpect(content()
 				.string(containsString("Wrong implementation type " + impl + " specified, retry")));
@@ -1618,7 +1632,7 @@ public class BankDemoBootApplicationIT {
 				.andReturn();
 			
 			String token = result.getResponse().getContentAsString();
-	        mockMVC.perform(put("/control").header("Authorization", "Bearer " + token))
+	        mockMVC.perform(put("/control").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 				.andExpect(status().isForbidden());
 		}
 		
@@ -1665,7 +1679,7 @@ public class BankDemoBootApplicationIT {
 				.andReturn();
 			
 			String token = result.getResponse().getContentAsString();
-	        mockMVC.perform(put("/control").header("Authorization", "Bear " + token))
+	        mockMVC.perform(put("/control").header(HttpHeaders.AUTHORIZATION, "Bear " + token))
 				.andExpect(status().isForbidden());
 	        
 	        mockMVC.perform(put("/control"))
@@ -1698,7 +1712,8 @@ public class BankDemoBootApplicationIT {
 				.andReturn();
 			
 			String token = result.getResponse().getContentAsString();
-		    mockMVC.perform(put("/control").header("Authorization", "Bearer " + token + "fake"))
+		    mockMVC.perform(put("/control").header(
+		    		HttpHeaders.AUTHORIZATION, "Bearer " + token + "fake"))
 		    	.andExpect(jsonPath("$").isString())
 		    	.andExpect(content().string(containsString("Invalid token provided")))
 				.andExpect(status().isExpectationFailed());			

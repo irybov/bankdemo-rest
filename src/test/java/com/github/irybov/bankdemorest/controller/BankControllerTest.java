@@ -1,12 +1,10 @@
 package com.github.irybov.bankdemorest.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-//import static org.junit.Assert.assertEquals;
-//import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyDouble;
@@ -14,6 +12,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,6 +35,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Currency;
+import java.util.HashSet;
 import java.util.List;
 //import java.util.ArrayList;
 //import java.util.Currency;
@@ -47,6 +48,7 @@ import java.util.concurrent.Executor;
 
 import javax.persistence.EntityNotFoundException;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -62,9 +64,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpHeaders;
 //import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -75,6 +79,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.client.RestTemplate;
@@ -93,6 +98,7 @@ import com.github.irybov.bankdemorest.entity.Account;
 import com.github.irybov.bankdemorest.entity.Bill;
 import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.exception.PaymentException;
+import com.github.irybov.bankdemorest.exception.RegistrationException;
 import com.github.irybov.bankdemorest.mapper.AccountMapper;
 import com.github.irybov.bankdemorest.mapper.AccountMapperImpl;
 import com.github.irybov.bankdemorest.mapper.BillMapper;
@@ -137,7 +143,7 @@ class BankControllerTest {
 	}
 	private String phone;
 	
-//	private static Set<Currency> currencies;
+	private Set<Currency> currencies;
 	private static Account entity;
 	
 	private static Operation operation;	
@@ -154,19 +160,12 @@ class BankControllerTest {
 	private int port;
 	@Value("${external.payment-service}")
 	private String externalURL;
+	
+	@Autowired
+	ApplicationContext context;
 
 	@BeforeAll
 	static void prepare() {
-		
-/*		currencies = new HashSet<>();
-		Currency usd = Currency.getInstance("USD");
-		currencies.add(usd);
-		Currency eur = Currency.getInstance("EUR");
-		currencies.add(eur);
-		Currency gbp = Currency.getInstance("GBP");
-		currencies.add(gbp);
-		Currency rub = Currency.getInstance("RUB");
-		currencies.add(rub);*/
 		
 		entity = new Account
 				("Kylie", "Bunbury", "4444444444", "bunbury@greenmail.io", LocalDate.of(1989, 01, 30), "blackmamba", true);
@@ -185,6 +184,19 @@ class BankControllerTest {
 	
 	@BeforeEach
 	void set_up() {
+		
+		currencies = new HashSet<>();
+		Currency usd = Currency.getInstance("USD");
+		currencies.add(usd);
+		Currency eur = Currency.getInstance("EUR");
+		currencies.add(eur);
+		Currency gbp = Currency.getInstance("GBP");
+		currencies.add(gbp);
+		Currency rub = Currency.getInstance("RUB");
+		currencies.add(rub);
+		
+		ReflectionTestUtils.setField(context.getBean(BankController.class), "currencies", currencies);
+		
 		phone = authentication().getName();		
 	}
 	
@@ -226,37 +238,51 @@ class BankControllerTest {
 	void check_security_restriction() throws Exception {
 		
 		mockMVC.perform(get("/accounts/show/{phone}", "5555555555"))
-			.andExpect(status().isForbidden());
-//			.andExpect(model().size(1))
-//			.andExpect(model().attribute("message", "Security restricted information"));
-//			.andExpect(forwardedUrl("/accounts/show/" + phone));
+			.andExpect(status().isForbidden())
+			.andExpect(result -> assertEquals("Security restricted information", 
+					   result.getResolvedException().getMessage()));
+		
+		verify(accountService, never()).getFullDTO(any(String.class));
 	}
 	
 	@Test
 	void can_create_new_bill() throws Exception {
 		
-		Bill bill = new Bill("SEA", true, entity);
+		Bill bill = new Bill("RUB", true, entity);
 		bill.setBalance(BigDecimal.valueOf(0.00));
 		bill.setCreatedAt(OffsetDateTime.now());
 		bill.setUpdatedAt(OffsetDateTime.now());
 		bill.setId(0);
-		when(accountService.addBill(org.mockito.ArgumentMatchers.any(BillRequest.class)))
+		when(accountService.addBill(any(BillRequest.class)))
 //			.thenReturn(modelMapper.map(bill, BillResponse.class));
 			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		
 		mockMVC.perform(post("/bills/add")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(mapper.writeValueAsString(new BillRequest(phone, "SEA"))))
+				.content(mapper.writeValueAsString(new BillRequest(phone, "RUB"))))
 			.andExpect(status().isCreated())
 			.andExpect(jsonPath("$.id").exists())
 			.andExpect(jsonPath("$.createdAt").exists())
 			.andExpect(jsonPath("$.updatedAt").exists())
 			.andExpect(jsonPath("$.active").value(true))
 			.andExpect(jsonPath("$.balance").value("0.0"))
-			.andExpect(jsonPath("$.currency").value("SEA"));
+			.andExpect(jsonPath("$.currency").value("RUB"));
 //			.andExpect(jsonPath("$.owner").exists());
 		
-		verify(accountService).addBill(org.mockito.ArgumentMatchers.any(BillRequest.class));
+		verify(accountService).addBill(any(BillRequest.class));
+	}
+	
+	@Test
+	void bill_creation_failed() throws Exception {
+		
+		Assertions.assertThatThrownBy(() ->
+		mockMVC.perform(post("/bills/add")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(new BillRequest(phone, "NOK"))))
+			.andExpect(status().isBadRequest()))
+			.hasCause(new RegistrationException("Wrong currency provided"));
+		
+		verify(accountService, never()).addBill(any(BillRequest.class));
 	}
 	
 	@Test
@@ -483,8 +509,7 @@ class BankControllerTest {
 		when(billService.getBillDTO(anyInt()))
 //			.thenReturn(modelMapper.map(bill, BillResponse.class));
 			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
-		when(restTemplate.postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class)))
+		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>("No bill with serial 33 found", HttpStatus.NOT_FOUND));
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0")
@@ -505,8 +530,7 @@ class BankControllerTest {
 			.andExpect(view().name("bill/external"));*/
 		
 		verify(billService).getBillDTO(anyInt());
-		verify(restTemplate).postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class));
+		verify(restTemplate).postForEntity(anyString(), anyString(), any(Class.class));
 	}
 	
 	@Test
@@ -515,8 +539,7 @@ class BankControllerTest {
 		when(billService.getBillDTO(anyInt()))
 //			.thenReturn(modelMapper.map(bill, BillResponse.class));
 			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
-		when(restTemplate.postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class)))
+		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>("No bank with name Demo found", HttpStatus.NOT_FOUND));
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0")
@@ -537,8 +560,7 @@ class BankControllerTest {
 			.andExpect(view().name("bill/external"));*/
 		
 		verify(billService).getBillDTO(anyInt());
-		verify(restTemplate).postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class));
+		verify(restTemplate).postForEntity(anyString(), anyString(), any(Class.class));
 	}
 	
 	@Test
@@ -547,8 +569,7 @@ class BankControllerTest {
 		when(billService.getBillDTO(anyInt()))
 //			.thenReturn(modelMapper.map(bill, BillResponse.class));
 			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
-		when(restTemplate.postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class)))
+		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>("Service is temporary unavailable", HttpStatus.SERVICE_UNAVAILABLE));
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0")
@@ -569,8 +590,7 @@ class BankControllerTest {
 			.andExpect(view().name("bill/external"));*/
 		
 		verify(billService).getBillDTO(anyInt());
-		verify(restTemplate).postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class));		
+		verify(restTemplate).postForEntity(anyString(), anyString(), any(Class.class));		
 	}
 	
 	@Test
@@ -580,8 +600,7 @@ class BankControllerTest {
 		when(billService.getBillDTO(anyInt()))
 //			.thenReturn(modelMapper.map(bill, BillResponse.class));
 			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
-		doNothing().when(executorService).execute(
-				org.mockito.ArgumentMatchers.any(Runnable.class));
+		doNothing().when(executorService).execute(any(Runnable.class));
 		
 		doNothing().when(billService).deposit(operation);
 		doNothing().when(billService).withdraw(operation);
@@ -596,8 +615,7 @@ class BankControllerTest {
 				anyString()))
 			.thenReturn(operation);
 		
-		when(restTemplate.postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class)))
+		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>("Data has been verified", HttpStatus.OK));
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0")
@@ -664,8 +682,7 @@ class BankControllerTest {
 				anyString());
 		verify(operationService, times(3)).transfer(anyDouble(), anyString(), anyString(), 
 				anyInt(), anyInt(), anyString());
-		verify(restTemplate).postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class));
+		verify(restTemplate).postForEntity(anyString(), anyString(), any(Class.class));
 	}
 	
 	@Test
@@ -692,8 +709,7 @@ class BankControllerTest {
 		doThrow(new PaymentException("Amount of money should be higher than zero"))
 			.when(billService).outward(operation);
 		
-		when(restTemplate.postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class)))
+		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>(new String(), HttpStatus.OK));
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0")
@@ -783,8 +799,7 @@ class BankControllerTest {
 		verify(billService).withdraw(operation);
 		verify(billService).transfer(operation);
 		verify(billService).outward(operation);
-		verify(restTemplate).postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class));
+		verify(restTemplate).postForEntity(anyString(), anyString(), any(Class.class));
 	}
 	
 	@Test
@@ -807,8 +822,7 @@ class BankControllerTest {
 		doThrow(new PaymentException("Not enough money to complete operation"))
 			.when(billService).outward(operation);
 		
-		when(restTemplate.postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class)))
+		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>(new String(), HttpStatus.OK));
 				
 		mockMVC.perform(patch("/bills/launch/{id}", "0")
@@ -870,8 +884,7 @@ class BankControllerTest {
 		verify(billService).withdraw(operation);
 		verify(billService).transfer(operation);
 		verify(billService).outward(operation);
-		verify(restTemplate).postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class));
+		verify(restTemplate).postForEntity(anyString(), anyString(), any(Class.class));
 	}
 
 	@Test
@@ -892,8 +905,7 @@ class BankControllerTest {
 		doThrow(new PaymentException("Source and target bills should not be the same"))
 			.when(billService).outward(operation);
 		
-		when(restTemplate.postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class)))
+		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>(new String(), HttpStatus.OK));
 		
 		mockMVC.perform(patch("/bills/launch/{id}", "0")
@@ -945,8 +957,7 @@ class BankControllerTest {
 		verify(billService).transfer(operation);
 		verify(billService).external(operation);
 		verify(billService).outward(operation);
-		verify(restTemplate).postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class));
+		verify(restTemplate).postForEntity(anyString(), anyString(), any(Class.class));
 	}
 	
 	@Test
@@ -965,8 +976,7 @@ class BankControllerTest {
 		doThrow(new PaymentException("Wrong currency type of the target bill"))
 			.when(billService).external(operation);
 		
-		when(restTemplate.postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class)))
+		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>(new String
 					("Wrong currency type SEA for the target bill 22"), HttpStatus.BAD_REQUEST));
 				
@@ -1019,8 +1029,7 @@ class BankControllerTest {
 		verify(billService, times(3)).getBillDTO(anyInt());
 		verify(billService).transfer(operation);
 		verify(billService).external(operation);
-		verify(restTemplate).postForEntity(anyString(), anyString(), 
-				org.mockito.ArgumentMatchers.any(Class.class));
+		verify(restTemplate).postForEntity(anyString(), anyString(), any(Class.class));
 	}
 	
 	@Test
@@ -1060,30 +1069,29 @@ class BankControllerTest {
 	@Test
 	void check_cors_and_xml_support() throws Exception {
 		
-		mockMVC.perform(options("/bills/external").header("Origin", externalURL))
+		mockMVC.perform(options("/bills/external").header(HttpHeaders.ORIGIN, externalURL))
 			.andExpect(status().isOk());
 		
-		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
+		mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, externalURL)
 												.contentType(MediaType.APPLICATION_XML))
 			.andExpect(status().isBadRequest());
 		
-		mockMVC.perform(post("/bills/external").header("Origin", "http://" + uri +":" + port)
+		mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, "http://" + uri +":" + port)
 												.contentType(MediaType.APPLICATION_XML))
 			.andExpect(status().isForbidden());
 		
-		mockMVC.perform(get("/bills/notify").header("Origin", externalURL))
+		mockMVC.perform(get("/bills/notify").header(HttpHeaders.ORIGIN, externalURL))
 			.andExpect(status().isForbidden());
 		
-		mockMVC.perform(get("/bills/notify").header("Origin", "http://" + uri +":" + port))
+		mockMVC.perform(get("/bills/notify").header(HttpHeaders.ORIGIN, "http://" + uri +":" + port))
 			.andExpect(status().isOk());
 		
-		mockMVC.perform(post("/bills/external").header("Origin", externalURL))
+		mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, externalURL))
 			.andExpect(status().isUnsupportedMediaType());
 		
 		
 		when(builder.build()).thenReturn(operation);
-		doNothing().when(executorService).execute(
-				org.mockito.ArgumentMatchers.any(Runnable.class));
+		doNothing().when(executorService).execute(any(Runnable.class));
 		doNothing().when(billService).external(operation);
 		when(operationService.transfer(anyDouble(), anyString(), anyString(), anyInt(), anyInt(), 
 				anyString()))
@@ -1091,7 +1099,7 @@ class BankControllerTest {
 		
 		XmlMapper xmlMapper = new XmlMapper();
 		OperationRequest dto = new OperationRequest(777, 3, "USD", 0.01, "Demo");
-		mockMVC.perform(post("/bills/external").header("Origin", externalURL)
+		mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, externalURL)
 												.accept(MediaType.APPLICATION_XML)
 												.contentType(MediaType.APPLICATION_XML)
 												.content(xmlMapper.writeValueAsString(dto))
@@ -1107,12 +1115,12 @@ class BankControllerTest {
 	
 	@AfterEach
 	void tear_down() {
+		currencies = null;
 		phone = null;
 	}
 	
 	@AfterAll
 	static void clear() {
-//		currencies = null;
 		entity = null;
     	operation = null;
     	builder = null;

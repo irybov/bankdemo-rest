@@ -73,6 +73,8 @@ import com.github.irybov.bankdemorest.controller.dto.OperationRequest;
 import com.github.irybov.bankdemorest.controller.dto.PasswordRequest;
 import com.github.irybov.bankdemorest.entity.Operation;
 import com.github.irybov.bankdemorest.exception.PaymentException;
+import com.github.irybov.bankdemorest.exception.PrivacyException;
+import com.github.irybov.bankdemorest.exception.RegistrationException;
 import com.github.irybov.bankdemorest.misc.Action;
 import com.github.irybov.bankdemorest.misc.EmitterPayload;
 import com.github.irybov.bankdemorest.service.AccountService;
@@ -157,7 +159,9 @@ public class BankController extends BaseController {
 	}
 	
 	@ApiOperation("Returns client's private information")
-	@ApiResponse(code = 200, message = "", response = AccountResponse.class)
+	@ApiResponses(value = 
+		{@ApiResponse(code = 200, message = "", response = AccountResponse.class), 
+		 @ApiResponse(code = 403, message = "Security restricted information", response = String.class)})
 	@PreAuthorize("hasRole('CLIENT')")
 	@GetMapping("/accounts/show/{phone}")
 	@ResponseBody
@@ -166,8 +170,8 @@ public class BankController extends BaseController {
 		String current = authentication().getName();
 		if(!current.equals(phone)) {
 			log.warn("User {} tries to get protected information about {}", current, phone);
-			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-			throw new AccessDeniedException("Security restricted information");
+//			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			throw new PrivacyException("Security restricted information");
 		}
 
 /*		try {
@@ -206,25 +210,34 @@ public class BankController extends BaseController {
 		return "redirect:/accounts/show/{phone}";
 	}*/
 	@ApiOperation("Creates a new bill in database")
-	@ApiResponse(code = 201, message = "", response = BillResponse.class)
+	@ApiResponses(value = 
+		{@ApiResponse(code = 201, message = "", response = BillResponse.class), 
+		 @ApiResponse(code = 400, message = "Wrong currency provided", response = String.class)})
 	@PreAuthorize("hasRole('CLIENT')")
 	@PostMapping("/bills/add")
 	@ResponseBody
 	public BillResponse createBill(@Valid @RequestBody BillRequest billRequest,
 			HttpServletResponse response) {
 
-		log.info("Client {} creates new {} bill", billRequest.getPhone(), billRequest.getCurrency());
-//		if(params.get("currency").isEmpty()) return "Please choose currency type";
-//		if(params.get("phone").isEmpty()) phone = authentication().getName();		
-		BillResponse billResponse = null;
-//		try {
-			billResponse = accountService.addBill(billRequest);
-/*		}
-		catch (PersistenceException exc) {
-			log.error(exc.getMessage(), exc);
-		}*/
-		response.setStatus(HttpServletResponse.SC_CREATED);
-		return billResponse;
+		String currency = billRequest.getCurrency().toUpperCase();
+		if(currencies.contains(Currency.getInstance(currency))) {
+			log.info("Client {} creates new {} bill", billRequest.getPhone(), currency);
+	//		if(params.get("currency").isEmpty()) return "Please choose currency type";
+	//		if(params.get("phone").isEmpty()) phone = authentication().getName();		
+			BillResponse billResponse = null;
+	//		try {
+				billResponse = accountService.addBill(billRequest);
+	/*		}
+			catch (PersistenceException exc) {
+				log.error(exc.getMessage(), exc);
+			}*/
+			response.setStatus(HttpServletResponse.SC_CREATED);
+			return billResponse;
+		}
+		else {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			throw new RegistrationException("Wrong currency provided");
+		}
 	}
 	
 /*	@PreAuthorize("hasRole('CLIENT')")

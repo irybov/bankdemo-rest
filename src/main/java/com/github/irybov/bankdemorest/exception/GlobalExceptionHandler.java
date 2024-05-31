@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -33,13 +34,13 @@ import com.github.irybov.bankdemorest.validation.Violation;
 import lombok.extern.slf4j.Slf4j;
 
 //@ControllerAdvice(basePackages = "com.github.irybov.bankdemorest.controller")
-@ControllerAdvice(basePackageClasses = {BankController.class, AuthController.class})
+@RestControllerAdvice(basePackageClasses = {BankController.class, AuthController.class})
 @Slf4j
 public class GlobalExceptionHandler {
 
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(ConstraintViolationException.class)
-	@ResponseBody
+//	@ResponseBody
 //	ValidationErrorResponse onConstraintValidationException(ConstraintViolationException exc) {
 	List<Violation> handleConstraintValidation(ConstraintViolationException exc) {		
 				
@@ -53,7 +54,7 @@ public class GlobalExceptionHandler {
 	
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	@ResponseBody
+//	@ResponseBody
 	List<String> handleMethodArgumentNotValid(MethodArgumentNotValidException exc) {		
 				
 	    List<String> errors = new ArrayList<String>();
@@ -65,7 +66,7 @@ public class GlobalExceptionHandler {
 	
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ExceptionHandler(value = {PaymentException.class, PersistenceException.class})
-	@ResponseBody
+//	@ResponseBody
 	String handleRuntimeException(RuntimeException exc) {
 		log.warn(exc.getMessage(), exc);
 		return exc.getMessage();
@@ -73,7 +74,7 @@ public class GlobalExceptionHandler {
 	
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	@ExceptionHandler(value = {BadCredentialsException.class, DisabledException.class})
-	@ResponseBody
+//	@ResponseBody
 	String handleAuthenticationException(AuthenticationException exc) {
 		log.warn(exc.getMessage(), exc);
 		return exc.getMessage();
@@ -81,7 +82,7 @@ public class GlobalExceptionHandler {
 	
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	@ExceptionHandler(UsernameNotFoundException.class)
-	@ResponseBody
+//	@ResponseBody
 	String handleUsernameNotFoundException(UsernameNotFoundException exc) {
 		log.warn(exc.getMessage(), exc);
 		return exc.getMessage();
