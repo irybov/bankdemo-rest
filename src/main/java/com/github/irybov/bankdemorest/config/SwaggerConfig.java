@@ -21,6 +21,7 @@ import org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandl
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -45,8 +46,8 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 public class SwaggerConfig {
 	
-    public static final String AUTHORIZATION_HEADER = "Authorization";
-    private ApiKey apiKey() {return new ApiKey("JWT", AUTHORIZATION_HEADER, "header");}
+//    public static final String AUTHORIZATION_HEADER = "Authorization";
+    private ApiKey apiKey() {return new ApiKey("JWT", HttpHeaders.AUTHORIZATION, "header");}
 
     @Bean
     public Docket api() {

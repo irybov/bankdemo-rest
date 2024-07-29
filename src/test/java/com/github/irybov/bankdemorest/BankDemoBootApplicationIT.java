@@ -68,6 +68,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -574,9 +575,9 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void correct_creds_jwt() throws Exception {
 			
-			hashPassword(PHONE);
+			hashPassword(PHONE);			
+			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");
 			
-			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");			
 			mockMVC.perform(post("/token")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
@@ -587,7 +588,7 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void wrong_password_jwt() throws Exception {
 			
-			hashPassword(PHONE);			
+			hashPassword(PHONE);
 			LoginRequest loginRequest = new LoginRequest(PHONE, "localadmin");
 			
 			for(int i = 1; i < 4; i++) {
@@ -1714,13 +1715,17 @@ public class BankDemoBootApplicationIT {
 			String token = result.getResponse().getContentAsString();
 		    mockMVC.perform(put("/control").header(
 		    		HttpHeaders.AUTHORIZATION, "Bearer " + token + "fake"))
-		    	.andExpect(jsonPath("$").isString())
+//		    	.andExpect(jsonPath("$").isString())
 		    	.andExpect(content().string(containsString("Invalid token provided")))
+				.andExpect(error -> assertThat
+						(error.getResolvedException() instanceof AuthenticationException))
 				.andExpect(status().isExpectationFailed());			
 			
 		    mockMVC.perform(put("/control").header("Authorization", "Bearer "))
-	    		.andExpect(jsonPath("$").isString())
+//	    		.andExpect(jsonPath("$").isString())
 	    		.andExpect(content().string(containsString("No token provided with Bearer")))
+				.andExpect(error -> assertThat
+						(error.getResolvedException() instanceof AuthenticationException))
 				.andExpect(status().isExpectationFailed());
 		}
 		

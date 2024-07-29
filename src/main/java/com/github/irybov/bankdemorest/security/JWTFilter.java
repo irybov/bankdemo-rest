@@ -27,8 +27,8 @@ import com.github.irybov.bankdemorest.util.JWTUtility;
 @Component
 public class JWTFilter extends OncePerRequestFilter {
 	
-	@Autowired
-	private ObjectMapper mapper;
+//	@Autowired
+//	private ObjectMapper mapper;
 	
 	private final JWTUtility jwtUtility;
 	public JWTFilter(JWTUtility jwtUtility) {
@@ -40,10 +40,10 @@ public class JWTFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
 			FilterChain filterChain) throws ServletException, IOException {
 		
-        if (this.ignoredPaths.matches(request)) { 
+        if (this.ignoredPaths.matches(request)) {
             filterChain.doFilter(request, response);
             return;
-       }
+        }
 		
 		String username = null;
 		List<String> roles = null;
@@ -55,11 +55,9 @@ public class JWTFilter extends OncePerRequestFilter {
 			
 			if(jwt.isEmpty()) {
 			    response.resetBuffer();
-				response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED, 
-						"No token provided with Bearer");
+				response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);
 //			    response.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-			    response.getOutputStream().print
-			    	(mapper.writeValueAsString("No token provided with Bearer"));
+			    response.getOutputStream().print("No token provided with Bearer");
 			    response.flushBuffer();
 				return;
 			}
@@ -82,11 +80,9 @@ public class JWTFilter extends OncePerRequestFilter {
 				}
 				catch (JWTVerificationException exc) {
 				    response.resetBuffer();
-					response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED, 
-							"Invalid token provided");
+					response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);
 //				    response.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-				    response.getOutputStream().print
-				    	(mapper.writeValueAsString("Invalid token provided"));
+				    response.getOutputStream().print("Invalid token provided");
 				    response.flushBuffer();
 					return;
 				}

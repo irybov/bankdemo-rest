@@ -53,8 +53,8 @@ public class UnlockService {
 		}
 		template.setReadOnly(false);
 		
-		if(locked.size() > 0) {
-			List<Account> accounts = new ArrayList<>(locked);
+		if(!locked.isEmpty()) {
+			final List<Account> accounts = new ArrayList<>(locked);
 			
 			if(impl.equals("JPA")) {
 				accounts.forEach(account -> account.setActive(true));

@@ -120,6 +120,7 @@ public class AuthController extends BaseController {
 	@ApiOperation("Returns JWT")
 	@ApiResponses(value = 
 		{@ApiResponse(code = 200, message = "", response = String.class), 
+		 @ApiResponse(code = 400, message = "", responseContainer = "List", response = String.class), 
 		 @ApiResponse(code = 401, message = "", response = String.class), 
 		 @ApiResponse(code = 404, message = "", response = String.class)})
 	@PostMapping("/token")
@@ -142,7 +143,7 @@ public class AuthController extends BaseController {
 	@ApiOperation("Registers new account")
 	@ApiResponses(value = 
 		{@ApiResponse(code = 200, message = "Check you email", response = String.class), 
-		 @ApiResponse(code = 400, message = "", responseContainer = "List", response = String.class),
+		 @ApiResponse(code = 400, message = "", responseContainer = "List", response = String.class), 
 		 @ApiResponse(code = 500, message = "", response = String.class)})
 	@PostMapping("/confirm")
 	public ResponseEntity<?> confirmRegistration(@RequestBody AccountRequest accountRequest,

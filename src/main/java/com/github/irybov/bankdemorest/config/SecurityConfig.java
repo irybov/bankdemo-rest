@@ -148,7 +148,7 @@ public class SecurityConfig {
 		auth.authenticationProvider(dao);
 			 
 //	    return auth.build();
-	}	
+	}
 	private InMemoryUserDetailsManagerConfigurer<AuthenticationManagerBuilder> inMemoryConfigurer() {
 		return new InMemoryUserDetailsManagerConfigurer<>();
 	}

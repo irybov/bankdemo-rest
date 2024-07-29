@@ -60,20 +60,21 @@ public class EmailService {
 //	@Async
 	public String sendVerificationCode(String recipient) {
 		
-		StringBuilder code = new StringBuilder();
+		StringBuilder sb = new StringBuilder();
 		for (int i = 1; i < 5; i++) {
-		    code.append(String.valueOf(digit.nextInt(10)));
+		    sb.append(String.valueOf(digit.nextInt(10)));
 		}
+		String code = sb.toString();
 		
 		SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(recipient);
         message.setFrom("noreply@bankdemo.com"); 
         message.setSubject("Login verification code"); 
         message.setSentDate(Date.from(Instant.now()));
-        message.setText(code.toString());
+        message.setText(code);
         
         mailSender.send(message);
-        return code.toString();
+        return code;
 	}
 	
 }
