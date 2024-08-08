@@ -114,7 +114,7 @@ class AuthControllerTest {
 	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
 	@MockBean
-	private UserDetailsService accountDetailsService;
+	private AccountDetailsService accountDetailsService;
 	
 	@Autowired
 	private MockMvc mockMVC;
@@ -296,7 +296,7 @@ class AuthControllerTest {
 	        .andExpect(model().attributeExists("account"))
 	        .andExpect(model().attribute("success", "Your account has been created"))
 			.andExpect(view().name("auth/login"));*/
-			.andExpect(content().string("Check you email"));
+			.andExpect(content().string("Check your email"));
 		
 		verify(emailService).sendActivationLink(accountRequest.getEmail());
 		assertEquals(tail, emailService.sendActivationLink(accountRequest.getEmail()));

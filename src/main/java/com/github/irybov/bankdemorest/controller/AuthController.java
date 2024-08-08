@@ -23,6 +23,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
@@ -43,6 +44,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
 import com.github.irybov.bankdemorest.controller.dto.LoginRequest;
+import com.github.irybov.bankdemorest.security.AccountDetails;
+import com.github.irybov.bankdemorest.security.AccountDetailsService;
 import com.github.irybov.bankdemorest.security.EmailService;
 import com.github.irybov.bankdemorest.service.AccountService;
 import com.github.irybov.bankdemorest.util.JWTUtility;
@@ -68,7 +71,7 @@ public class AuthController extends BaseController {
 	@Autowired
 	private AuthenticationManager authenticationManager;
 	@Autowired
-	private UserDetailsService accountDetailsService;
+	private AccountDetailsService accountDetailsService;
 	
 	@Qualifier("beforeCreateAccountValidator")
 	private final Validator accountValidator;
@@ -117,27 +120,32 @@ public class AuthController extends BaseController {
 		}
 	}
 */
-	@ApiOperation("Returns JWT")
+	@ApiOperation("Sends OTP to email")
 	@ApiResponses(value = 
 		{@ApiResponse(code = 200, message = "", response = String.class), 
 		 @ApiResponse(code = 400, message = "", responseContainer = "List", response = String.class), 
 		 @ApiResponse(code = 401, message = "", response = String.class), 
 		 @ApiResponse(code = 404, message = "", response = String.class)})
+	@PostMapping("/login")
+	@ResponseBody
+	public String getCode(@Valid @RequestBody LoginRequest loginRequest) {
+		
+		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken
+				 (loginRequest.getPhone(), loginRequest.getPassword()));
+		
+		AccountDetails details = accountDetailsService.loadUserByUsername(loginRequest.getPhone());
+		String code = emailService.sendVerificationCode(details.getAccount().getEmail());
+		return "Check your email";
+	}
+	
+	@ApiOperation("Returns JWT")
+	@ApiResponses(value = 
+		{@ApiResponse(code = 200, message = "", response = String.class), 
+		 @ApiResponse(code = 417, message = "", response = String.class)})
 	@PostMapping("/token")
 	@ResponseBody
-	public String getToken(@Valid @RequestBody LoginRequest loginRequest) {
-		
-//		try {
-			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken
-								 (loginRequest.getPhone(), loginRequest.getPassword()));
-//		}
-//		catch(AuthenticationException exc) {
-//			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//			return exc.getMessage();
-//		}
-		
-		UserDetails details = accountDetailsService.loadUserByUsername(loginRequest.getPhone());		
-		return jwtUtility.generate(details);
+	public String getToken(@AuthenticationPrincipal UserDetails userDetails) {		
+		return jwtUtility.generate(userDetails);
 	}
 	
 	@ApiOperation("Registers new account")
@@ -169,7 +177,7 @@ public class AuthController extends BaseController {
 			return ResponseEntity.internalServerError().body(exc.getMessage());
 		}
 		accounts.putIfAbsent(key, accountRequest);
-		return ResponseEntity.ok("Check you email");
+		return ResponseEntity.ok("Check your email");
 /*		
 		try {
 			accountService.saveAccount(accountRequest);

@@ -61,9 +61,7 @@ public class EmailService {
 	public String sendVerificationCode(String recipient) {
 		
 		StringBuilder sb = new StringBuilder();
-		for (int i = 1; i < 5; i++) {
-		    sb.append(String.valueOf(digit.nextInt(10)));
-		}
+		for (int i = 1; i < 5; i++) {sb.append(String.valueOf(digit.nextInt(10)));}
 		String code = sb.toString();
 		
 		SimpleMailMessage message = new SimpleMailMessage();

@@ -26,7 +26,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-//import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -40,8 +39,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-//import org.springframework.web.servlet.config.annotation.CorsRegistry;
-//import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -75,17 +72,17 @@ public class SecurityConfig {
 	
     private static final String[] WHITE_LIST_URLS = {
 //    		"/home", 
-//    		"/login", 
+    		"/login", 
 //    		"/register", 
     		"/confirm", 
     		"/activate/*", 
-    		"/token", 
 //    		"/webjars/**", 
 //    		"/css/**", 
 //    		"/js/**", 
 			"/bills/external"
     };
     private static final String[] SHARED_LIST_URLS = {
+    		"/token", 
     		"/bills/**", 
     		"/accounts/show", 
     		"/accounts/password"
@@ -332,29 +329,30 @@ public class SecurityConfig {
     }
 */
     @Bean
-    public WebMvcConfigurer corsBean() {
+    public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
             	
         		registry.addMapping("/bills/external")
 				.allowedOrigins(externalURL)
+//				.allowedOriginPatterns("http://localhost:[4567]")
 				.allowedMethods(RequestMethod.OPTIONS.name(), RequestMethod.POST.name())
 				.allowedHeaders("*")
 				.exposedHeaders("*")
 //				.maxAge(1800L)
-				.allowCredentials(true);
+				.allowCredentials(false);
 
         		registry.addMapping("/activate/*")
-				.allowedOriginPatterns("*")
+				.allowedOrigins("*")
 				.allowedMethods(RequestMethod.GET.name())
 				.allowedHeaders("*")
 				.exposedHeaders("*")
 //				.maxAge(1800L)
-				.allowCredentials(true);
+				.allowCredentials(false);
         		
         		registry.addMapping("/**")
-				.allowedOrigins("http://" + uri + ":" + port)
+				.allowedOriginPatterns("http://" + uri + ":" + "[*]")
 				.allowedMethods("*")
 				.allowedHeaders("*")
 				.exposedHeaders("*")

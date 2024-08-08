@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -72,6 +73,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.jdbc.Sql;
@@ -81,6 +83,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -431,7 +434,7 @@ public class BankDemoBootApplicationIT {
 		        .andExpect(model().attribute("account", any(AccountRequest.class)))
 		        .andExpect(model().attribute("success", "Your account has been created"))
 				.andExpect(view().name("auth/login"));*/
-				.andExpect(content().string("Check you email"));
+				.andExpect(content().string("Check your email"));
 			
 			Awaitility.await().untilAsserted(() -> {
 				assertEquals(true, greenMail.isRunning());
@@ -1490,27 +1493,35 @@ public class BankDemoBootApplicationIT {
 			assertThat(emitter).isNotNull();*/
 		}
 		
-//		@WithMockUser
+		@WithAnonymousUser
 		@Test
 		void check_cors_and_xml_support() throws Exception {
 			
-			mockMVC.perform(options("/bills/external").header(HttpHeaders.ORIGIN, externalURL))
+			mockMVC.perform(options("/bills/external")
+					.header(HttpHeaders.ORIGIN, "http://localhorse:4567")
+					.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, RequestMethod.OPTIONS.name())
+					)
+				.andExpect(status().isForbidden());
+			
+			mockMVC.perform(options("/bills/external")
+					.header(HttpHeaders.ORIGIN, externalURL)
+					.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, RequestMethod.OPTIONS.name())
+					)
+				.andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, externalURL))
+				.andExpect(header().stringValues(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, 
+						RequestMethod.OPTIONS.name() + "," + RequestMethod.POST.name()))
 				.andExpect(status().isOk());
 			
 			mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, externalURL)
 													.contentType(MediaType.APPLICATION_XML))
 				.andExpect(status().isBadRequest());
 			
-			mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, "http://" + uri +":" + port)
+			mockMVC.perform(post("/bills/external")
+					.header(HttpHeaders.ORIGIN, "http://"+uri+":"+port)
+					.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, RequestMethod.POST.name())
 													.contentType(MediaType.APPLICATION_XML))
 				.andExpect(status().isForbidden());
-			
-			mockMVC.perform(get("/bills/notify").header(HttpHeaders.ORIGIN, externalURL))
-				.andExpect(status().isForbidden());
-			
-			mockMVC.perform(get("/bills/notify").header(HttpHeaders.ORIGIN, "http://" + uri +":" + port))
-				.andExpect(status().isOk());
-			
+		
 			mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, externalURL))
 				.andExpect(status().isUnsupportedMediaType());
 			
@@ -1633,7 +1644,8 @@ public class BankDemoBootApplicationIT {
 				.andReturn();
 			
 			String token = result.getResponse().getContentAsString();
-	        mockMVC.perform(put("/control").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+	        mockMVC.perform(put("/control").header(
+	        		HttpHeaders.AUTHORIZATION, "Bearer " + token).param("impl", "XXX"))
 				.andExpect(status().isForbidden());
 		}
 		

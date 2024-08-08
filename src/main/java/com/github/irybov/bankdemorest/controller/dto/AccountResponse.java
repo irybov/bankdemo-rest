@@ -26,9 +26,9 @@ public class AccountResponse {
 	
 	private Integer id;
 	private OffsetDateTime createdAt;
-	private OffsetDateTime updatedAt;	
-	private boolean isActive;	
-	private String name;	
+	private OffsetDateTime updatedAt;
+	private boolean isActive;
+	private String name;
 	private String surname;
 	private String phone;
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")

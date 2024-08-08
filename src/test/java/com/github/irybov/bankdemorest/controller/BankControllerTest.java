@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -78,10 +79,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -197,7 +200,7 @@ class BankControllerTest {
 		
 		ReflectionTestUtils.setField(context.getBean(BankController.class), "currencies", currencies);
 		
-		phone = authentication().getName();		
+		phone = authentication().getName();
 	}
 	
 	@Test
@@ -1065,26 +1068,34 @@ class BankControllerTest {
 		mockMVC.perform(get("/bills/notify")).andExpect(status().isOk());
 	}
 	
-//	@WithMockUser
+	@WithAnonymousUser
 	@Test
 	void check_cors_and_xml_support() throws Exception {
 		
-		mockMVC.perform(options("/bills/external").header(HttpHeaders.ORIGIN, externalURL))
+		mockMVC.perform(options("/bills/external")
+				.header(HttpHeaders.ORIGIN, "http://localhorse:4567")
+				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, RequestMethod.OPTIONS.name())
+				)
+			.andExpect(status().isForbidden());
+		
+		mockMVC.perform(options("/bills/external")
+				.header(HttpHeaders.ORIGIN, externalURL)
+				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, RequestMethod.OPTIONS.name())
+				)
+			.andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, externalURL))
+			.andExpect(header().stringValues(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, 
+					RequestMethod.OPTIONS.name() + "," + RequestMethod.POST.name()))
 			.andExpect(status().isOk());
 		
 		mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, externalURL)
 												.contentType(MediaType.APPLICATION_XML))
 			.andExpect(status().isBadRequest());
 		
-		mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, "http://" + uri +":" + port)
+		mockMVC.perform(post("/bills/external")
+				.header(HttpHeaders.ORIGIN, "http://"+uri+":"+port)
+				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, RequestMethod.POST.name())
 												.contentType(MediaType.APPLICATION_XML))
 			.andExpect(status().isForbidden());
-		
-		mockMVC.perform(get("/bills/notify").header(HttpHeaders.ORIGIN, externalURL))
-			.andExpect(status().isForbidden());
-		
-		mockMVC.perform(get("/bills/notify").header(HttpHeaders.ORIGIN, "http://" + uri +":" + port))
-			.andExpect(status().isOk());
 		
 		mockMVC.perform(post("/bills/external").header(HttpHeaders.ORIGIN, externalURL))
 			.andExpect(status().isUnsupportedMediaType());
@@ -1106,12 +1117,12 @@ class BankControllerTest {
 						)
 			.andExpect(status().isOk())
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_XML))
-			.andExpect(content().string(containsString("Successful")));
+			.andExpect(content().string(containsString("Successfully received")));
 		
 		verify(billService).external(operation);
 		verify(operationService).transfer(anyDouble(), anyString(), anyString(), 
 				anyInt(), anyInt(), anyString());
-	}
+	}	
 	
 	@AfterEach
 	void tear_down() {

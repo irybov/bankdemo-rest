@@ -40,7 +40,7 @@ public class JWTFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
 			FilterChain filterChain) throws ServletException, IOException {
 		
-        if (this.ignoredPaths.matches(request)) {
+        if(this.ignoredPaths.matches(request)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -50,9 +50,9 @@ public class JWTFilter extends OncePerRequestFilter {
 		String header = request.getHeader(HttpHeaders.AUTHORIZATION);
 		
 		if(header != null && header.startsWith("Bearer ")) {
-			String jwt = header.substring(7);
-			jwt.trim();
 			
+			String jwt = header.substring(7);
+			jwt.trim();			
 			if(jwt.isEmpty()) {
 			    response.resetBuffer();
 				response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);

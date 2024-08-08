@@ -96,7 +96,7 @@ class MegaControllerTest {
 	@Test
 	void credentials_forbidden() throws Exception {
 		
-        mockMVC.perform(put("/control"))
+        mockMVC.perform(put("/control").with(csrf()).param("impl", "XXX"))
 			.andExpect(status().isForbidden());
 	}
 	
