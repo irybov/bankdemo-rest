@@ -41,6 +41,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
 import com.github.irybov.bankdemorest.controller.dto.LoginRequest;
@@ -82,6 +83,8 @@ public class AuthController extends BaseController {
 	@Autowired
 	private EmailService emailService;
 	private Map<String, AccountRequest> accounts = new ConcurrentReferenceHashMap<>();
+	@Autowired
+	private Cache<String, UserDetails> cache;
 
 /*	@ApiOperation("Returns apllication's start html-page")
 	@GetMapping("/home")
@@ -135,6 +138,7 @@ public class AuthController extends BaseController {
 		
 		AccountDetails details = accountDetailsService.loadUserByUsername(loginRequest.getPhone());
 		String code = emailService.sendVerificationCode(details.getAccount().getEmail());
+		cache.put(code, details);
 		return "Check your email";
 	}
 	

@@ -45,6 +45,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.github.irybov.bankdemorest.security.AccountDetailsService;
 import com.github.irybov.bankdemorest.security.JWTFilter;
+import com.github.irybov.bankdemorest.security.OTPFilter;
 
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -61,6 +62,8 @@ public class SecurityConfig {
 
 	@Autowired
 	private JWTFilter jwtFilter;
+	@Autowired
+	private OTPFilter otpFilter;
 //	@Autowired
 //	private DataSource dataSource;
 	private final PasswordEncoder passwordEncoder;
@@ -244,7 +247,8 @@ public class SecurityConfig {
 //			.antMatchers("/actuator/**").hasRole("REMOTE")
 			.anyRequest().authenticated()
 				.and()
-			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+			.addFilterAfter(otpFilter, UsernamePasswordAuthenticationFilter.class);
 //			.httpBasic();
 /*		    .csrf().csrfTokenRepository(csrfTokenRepository)
 		    .sessionAuthenticationStrategy(new CsrfAuthenticationStrategy(csrfTokenRepository))

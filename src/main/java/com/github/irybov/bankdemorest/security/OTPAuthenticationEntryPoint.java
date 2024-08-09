@@ -12,8 +12,9 @@ public class OTPAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
 	@Override
 	public void commence(HttpServletRequest request, HttpServletResponse response,
-			AuthenticationException authException) throws IOException {
+			AuthenticationException exc) throws IOException {
 		
+		response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED, exc.getMessage());
 	}
 
 }

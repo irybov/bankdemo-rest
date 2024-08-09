@@ -10,25 +10,33 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.github.benmanes.caffeine.cache.Cache;
 
 @Component
 public class OTPFilter extends OncePerRequestFilter {
 	
 	@Autowired
 	private AuthenticationManager authenticationManager;
-	
-	private final JSONAuthenticationConverter authenticationConverter = new JSONAuthenticationConverter();
-	
-	private final RequestMatcher allowedPath = new AntPathRequestMatcher("/token");
+	private final AuthenticationEntryPoint authenticationEntryPoint = new OTPAuthenticationEntryPoint();
+	private final RequestMatcher allowedPath = new AntPathRequestMatcher("/token");	
+	@Autowired
+	private Cache<String, UserDetails> cache;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -47,36 +55,56 @@ public class OTPFilter extends OncePerRequestFilter {
 			
 			String code = header.substring(4);
 			code.trim();			
-			if(code.isEmpty()) {
-			    response.resetBuffer();
-				response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);
-			    response.getOutputStream().print("No code provided with header");
-			    response.flushBuffer();
+			if(code.isEmpty() || code == null) {
+				this.authenticationEntryPoint.commence(request, response, 
+						new InsufficientAuthenticationException("No code provided with header"));
+//			    response.resetBuffer();
+//				response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);
+//			    response.getOutputStream().print("No code provided with header");
+//			    response.flushBuffer();
 				return;
-			}
-			
+			}			
 			Pattern pattern = Pattern.compile("^\\d{4}$");
 			if(!pattern.matcher(code).matches()) {
-			    response.resetBuffer();
-				response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);
-			    response.getOutputStream().print("Invalid code provided");
-			    response.flushBuffer();
+				this.authenticationEntryPoint.commence(request, response, 
+						new BadCredentialsException("Invalid format of code"));
+//			    response.resetBuffer();
+//				response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);
+//			    response.getOutputStream().print("Invalid format of code");
+//			    response.flushBuffer();
 				return;
 			}
 			
+			UserDetails details = cache.getIfPresent(code);
+			if(details == null) {
+				this.authenticationEntryPoint.commence(request, response, 
+						new AuthenticationCredentialsNotFoundException("Wrong or expired code"));
+//			    response.resetBuffer();
+//				response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);
+//			    response.getOutputStream().print("Wrong or expired code");
+//			    response.flushBuffer();
+				return;
+			}
 			try {
-				UsernamePasswordAuthenticationToken authRequest = this.authenticationConverter.convert(request);
-				Authentication authResult = this.authenticationManager.authenticate(authRequest);
+				Authentication authentication = this.authenticationManager.authenticate(
+						new UsernamePasswordAuthenticationToken
+						(details.getUsername(), details.getPassword()));				
+				SecurityContextHolder.getContext().setAuthentication(authentication);
 			}
-			catch (AuthenticationException ex) {
-				
+			catch (AuthenticationException exc) {
+				SecurityContextHolder.clearContext();
+				this.authenticationEntryPoint.commence(request, response, exc);
 			}
-			
-		}		
+		}
 //		filterChain.doFilter(request, response);
-	    response.resetBuffer();
-		response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED, "No OTP header present");
-	    response.flushBuffer();
+		else {
+			this.authenticationEntryPoint.commence(request, response, 
+					new InsufficientAuthenticationException("No OTP header present"));
+//		    response.resetBuffer();
+//			response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);
+//			response.getOutputStream().print("No OTP header present");
+//		    response.flushBuffer();
+		}
 	}
 
 }

@@ -42,7 +42,7 @@ public class JSONAuthenticationConverter implements AuthenticationConverter {
 				loginRequest = mapper.readValue(body, LoginRequest.class);
 			}
 			catch(JsonProcessingException exc) {
-				throw new BadCredentialsException("Invalid authentication json");
+				throw new RuntimeException("Invalid authentication json");
 			}
 			
 			return UsernamePasswordAuthenticationToken.unauthenticated
