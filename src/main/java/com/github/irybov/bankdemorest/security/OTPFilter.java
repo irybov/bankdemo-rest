@@ -27,16 +27,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.github.benmanes.caffeine.cache.Cache;
+import com.github.irybov.bankdemorest.controller.dto.LoginRequest;
 
-@Component
+//@Component
 public class OTPFilter extends OncePerRequestFilter {
 	
 	@Autowired
 	private AuthenticationManager authenticationManager;
 	private final AuthenticationEntryPoint authenticationEntryPoint = new OTPAuthenticationEntryPoint();
-	private final RequestMatcher allowedPath = new AntPathRequestMatcher("/token");	
+	private final RequestMatcher allowedPath = new AntPathRequestMatcher("/token");
 	@Autowired
-	private Cache<String, UserDetails> cache;
+	private Cache<String, LoginRequest> cache;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -75,8 +76,8 @@ public class OTPFilter extends OncePerRequestFilter {
 				return;
 			}
 			
-			UserDetails details = cache.getIfPresent(code);
-			if(details == null) {
+			LoginRequest loginRequest = cache.getIfPresent(code);
+			if(loginRequest == null) {
 				this.authenticationEntryPoint.commence(request, response, 
 						new AuthenticationCredentialsNotFoundException("Wrong or expired code"));
 //			    response.resetBuffer();
@@ -88,8 +89,10 @@ public class OTPFilter extends OncePerRequestFilter {
 			try {
 				Authentication authentication = this.authenticationManager.authenticate(
 						new UsernamePasswordAuthenticationToken
-						(details.getUsername(), details.getPassword()));				
+						(loginRequest.getPhone(), loginRequest.getPassword()));				
 				SecurityContextHolder.getContext().setAuthentication(authentication);
+//				cache.invalidate(code);
+				filterChain.doFilter(request, response);
 			}
 			catch (AuthenticationException exc) {
 				SecurityContextHolder.clearContext();

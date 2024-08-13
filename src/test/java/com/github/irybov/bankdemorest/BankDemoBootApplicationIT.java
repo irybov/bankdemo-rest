@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.mail.internet.MimeMessage;
 
@@ -71,6 +70,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.test.context.support.WithAnonymousUser;
@@ -89,9 +89,11 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.github.irybov.bankdemorest.security.AccountDetails;
 import com.github.irybov.bankdemorest.security.AccountDetailsService;
 import com.github.irybov.bankdemorest.security.LoginListener;
 import com.github.irybov.bankdemorest.security.UnlockService;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.github.irybov.bankdemorest.controller.AuthController;
 import com.github.irybov.bankdemorest.controller.dto.AccountRequest;
 import com.github.irybov.bankdemorest.controller.dto.AccountResponse;
@@ -296,6 +298,10 @@ public class BankDemoBootApplicationIT {
 	    @Autowired
 	    ApplicationContext context;
 	    private Map<String, AccountRequest> accounts = new ConcurrentReferenceHashMap<>();
+	    @Autowired
+		private Cache<String, LoginRequest> cache;
+	    @Autowired
+	    private AccountDetailsService accountDetailsService;
 	    
 		@Value("${server.address}")
 		private String uri;
@@ -424,8 +430,9 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void accepted_registration() throws Exception {
 			
-			AccountRequest accountRequest = buildCorrectAccountRequest();
+			greenMail.purgeEmailFromAllMailboxes();
 			
+			AccountRequest accountRequest = buildCorrectAccountRequest();			
 			mockMVC.perform(post("/confirm")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(accountRequest)))
@@ -515,7 +522,7 @@ public class BankDemoBootApplicationIT {
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(accountRequest)))
 				.andExpect(status().isOk())
-				.andExpect(content().string("Check you email"));
+				.andExpect(content().string("Check your email"));
 			
 			List<String> keys = new ArrayList<>(accounts.keySet());
 			String tail = keys.get(0);
@@ -535,7 +542,7 @@ public class BankDemoBootApplicationIT {
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(accountRequest)))
 				.andExpect(status().isOk())
-				.andExpect(content().string("Check you email"));
+				.andExpect(content().string("Check your email"));
 			
 			List<String> keys = new ArrayList<>(accounts.keySet());
 			String tail = keys.get(0);
@@ -576,26 +583,45 @@ public class BankDemoBootApplicationIT {
 		}
 				
 		@Test
-		void correct_creds_jwt() throws Exception {
+		void correct_creds() throws Exception {
+			
+			greenMail.purgeEmailFromAllMailboxes();
 			
 			hashPassword(PHONE);			
-			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");
-			
-			mockMVC.perform(post("/token")
+			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");			
+			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$").isString());
+				.andExpect(jsonPath("$").isString())
+				.andExpect(content().string("Check your email"));
+			
+			Map<String, LoginRequest> map = cache.asMap();
+			List<String> keys = new ArrayList<>(map.keySet());
+			String code = keys.get(0);
+			AccountDetails details = accountDetailsService.loadUserByUsername(loginRequest.getPhone());
+//			cache.invalidateAll();
+			
+			Awaitility.await().untilAsserted(() -> {
+				assertEquals(true, greenMail.isRunning());
+				MimeMessage receivedMessage = greenMail.getReceivedMessages()[0];
+				assertEquals(1, receivedMessage.getAllRecipients().length);
+				assertEquals(details.getAccount().getEmail(), receivedMessage.getAllRecipients()[0].toString());
+				assertEquals("noreply@bankdemo.com", receivedMessage.getFrom()[0].toString());
+				assertEquals("Login verification code", receivedMessage.getSubject());
+				assertFalse(GreenMailUtil.getBody(receivedMessage).isEmpty());
+				assertTrue(GreenMailUtil.getBody(receivedMessage).equals(code));
+			});
 		}
 		
 		@Test
-		void wrong_password_jwt() throws Exception {
+		void wrong_password() throws Exception {
 			
 			hashPassword(PHONE);
 			LoginRequest loginRequest = new LoginRequest(PHONE, "localadmin");
 			
 			for(int i = 1; i < 4; i++) {
-			mockMVC.perform(post("/token")
+			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isUnauthorized())
@@ -608,7 +634,7 @@ public class BankDemoBootApplicationIT {
 			}
 			
 			loginRequest = new LoginRequest(PHONE, "superadmin");
-			mockMVC.perform(post("/token")
+			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isUnauthorized())
@@ -621,10 +647,10 @@ public class BankDemoBootApplicationIT {
 		}
 		
 		@Test
-		void abscent_creds_jwt() throws Exception {
+		void abscent_creds() throws Exception {
 			
 			LoginRequest loginRequest = new LoginRequest("4444444444", "blackmamba");
-			mockMVC.perform(post("/token")
+			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isNotFound())
@@ -637,10 +663,10 @@ public class BankDemoBootApplicationIT {
 		}
 		
 		@Test
-		void invalid_creds_jwt() throws Exception {
+		void invalid_creds() throws Exception {
 			
 			LoginRequest loginRequest = new LoginRequest("00000", "super");
-			mockMVC.perform(post("/token")
+			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isBadRequest())
@@ -1543,38 +1569,51 @@ public class BankDemoBootApplicationIT {
 		}
 		
 	}
-	
+
+	@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 //	@WithUserDetails("0000000000")
 	@Nested
 	class MegaControllerIT{
 		
 	    @Autowired
-	    ApplicationContext context;
-/*		
-		@Autowired
-		@Qualifier("accountServiceAlias")
-		private AccountService accountService;
-		@Autowired
-		private AccountJPA jpa;
-		@Autowired
-		private AccountDAO dao;
-	*/
+	    ApplicationContext context;		
+	    @Autowired
+		private Cache<String, LoginRequest> cache;
+	    
+		@RegisterExtension
+		GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.SMTP)
+		        .withConfiguration(GreenMailConfiguration.aConfig().withUser("irybov", "bankdemo"))
+		        .withPerMethodLifecycle(false);
+		
 		private static final String PHONE = "0000000000";
 		
-		@Test
-		void can_change_implementation() throws Exception {
+		private String generateJWT(LoginRequest loginRequest) throws Exception {
 			
-			hashPassword(PHONE);
-			
-			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");			
-			MvcResult result = mockMVC.perform(post("/token")
+			hashPassword(loginRequest.getPhone());
+			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isString())
+				.andExpect(content().string("Check your email"));
+			
+			Map<String, LoginRequest> map = cache.asMap();
+			List<String> keys = new ArrayList<>(map.keySet());
+			String code = keys.get(0);
+			MvcResult result = mockMVC.perform(post("/token")
+					.header(HttpHeaders.AUTHORIZATION, "OTP " + code))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isString())
 				.andReturn();
 			
-			String token = result.getResponse().getContentAsString();
+			cache.invalidateAll();			
+			return result.getResponse().getContentAsString();
+		}
+		
+		@Test
+		void can_change_implementation() throws Exception {
+			
+			String token = generateJWT(new LoginRequest(PHONE, "superadmin"));
 
 			AccountDetailsService details = (AccountDetailsService) context.getBean("accountDetailsService");
 			LoginListener listener = (LoginListener) context.getBean("loginListener");
@@ -1610,17 +1649,8 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void wrong_implementation_type() throws Exception {
 						
-			hashPassword(PHONE);
+			String token = generateJWT(new LoginRequest(PHONE, "superadmin"));
 			
-			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");			
-			MvcResult result = mockMVC.perform(post("/token")
-					.contentType(MediaType.APPLICATION_JSON)
-					.content(mapper.writeValueAsString(loginRequest)))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$").isString())
-				.andReturn();
-			
-			String token = result.getResponse().getContentAsString();			
 			String impl = "XXX";
 			mockMVC.perform(put("/control").header(
 					HttpHeaders.AUTHORIZATION, "Bearer " + token).param("impl", impl))
@@ -1633,17 +1663,8 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void credentials_forbidden() throws Exception {
 			
-			hashPassword("1111111111");
+			String token = generateJWT(new LoginRequest("1111111111", "supervixen"));
 			
-			LoginRequest loginRequest = new LoginRequest("1111111111", "supervixen");			
-			MvcResult result = mockMVC.perform(post("/token")
-					.contentType(MediaType.APPLICATION_JSON)
-					.content(mapper.writeValueAsString(loginRequest)))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$").isString())
-				.andReturn();
-			
-			String token = result.getResponse().getContentAsString();
 	        mockMVC.perform(put("/control").header(
 	        		HttpHeaders.AUTHORIZATION, "Bearer " + token).param("impl", "XXX"))
 				.andExpect(status().isForbidden());
@@ -1651,42 +1672,42 @@ public class BankDemoBootApplicationIT {
 		
 	}
 		
+	@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 	@Nested
-	class JWTFilterIT{
-/*		
-		@Autowired
-		@Qualifier("accountServiceAlias")
-		private AccountService accountService;
-		@Autowired
-		private AccountJPA jpa;
-		@Autowired
-		private AccountDAO dao;
-		*/		
-//		private Account account;
+	class CustomFiltersIT{
+		
+	    @Autowired
+		private Cache<String, LoginRequest> cache;	    
+	    
+		@RegisterExtension
+		GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.SMTP)
+		        .withConfiguration(GreenMailConfiguration.aConfig().withUser("irybov", "bankdemo"))
+		        .withPerMethodLifecycle(false);
+		
 		private LoginRequest loginRequest;
 		private static final String PHONE = "1111111111";
 		
-		@Test
-		void incorrect_or_abscent_header() throws Exception {
-/*						
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone("1111111111").get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount("1111111111");
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
-			*/
+		@BeforeEach
+		void set_up() throws Exception {
+						
 			hashPassword(PHONE);
-			loginRequest = new LoginRequest(PHONE, "supervixen");
-			
-			MvcResult result = mockMVC.perform(post("/token")
+			loginRequest = new LoginRequest(PHONE, "supervixen");			
+			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isString())
+				.andExpect(content().string("Check your email"));
+		}
+		
+		@Test
+		void incorrect_or_abscent_bearer() throws Exception {
+			
+			Map<String, LoginRequest> map = cache.asMap();
+			List<String> keys = new ArrayList<>(map.keySet());
+			String code = keys.get(0);
+			MvcResult result = mockMVC.perform(post("/token")
+					.header(HttpHeaders.AUTHORIZATION, "OTP " + code))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isString())
 				.andReturn();
@@ -1701,25 +1722,12 @@ public class BankDemoBootApplicationIT {
 
 		@Test
 		void corrupted_or_abscent_token() throws Exception {
-/*			
-			Account account = null;
-			if(accountService instanceof AccountServiceJPA) {
-				account = jpa.findByPhone("1111111111").get();
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				jpa.saveAndFlush(account);
-			}
-			else if(accountService instanceof AccountServiceDAO) {
-				account = dao.getAccount("1111111111");
-				account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
-				dao.updateAccount(account);
-			}
-			*/
-			hashPassword(PHONE);
-			loginRequest = new LoginRequest(PHONE, "supervixen");
 			
+			Map<String, LoginRequest> map = cache.asMap();
+			List<String> keys = new ArrayList<>(map.keySet());
+			String code = keys.get(0);
 			MvcResult result = mockMVC.perform(post("/token")
-					.contentType(MediaType.APPLICATION_JSON)
-					.content(mapper.writeValueAsString(loginRequest)))
+					.header(HttpHeaders.AUTHORIZATION, "OTP " + code))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isString())
 				.andReturn();

@@ -83,6 +83,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.irybov.bankdemorest.security.EmailService;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.github.irybov.bankdemorest.config.SecurityBeans;
 import com.github.irybov.bankdemorest.config.SecurityConfig;
 import com.github.irybov.bankdemorest.controller.AuthController;
@@ -137,6 +138,8 @@ class AuthControllerTest {
 	private EmailService emailService;
 	private Map<String, AccountRequest> accounts;
 	private String mailbox;
+	@MockBean
+	private Cache<String, LoginRequest> cache;
 	
 	@Value("${external.payment-service}")
 	private String externalURL;
@@ -440,12 +443,13 @@ class AuthControllerTest {
 	}
 	
 	@Test
-	void correct_creds_jwt() throws Exception {
+	void correct_creds() throws Exception {
 		
 		Account account = new Account("Admin", "Adminov", "0000000000", "@greenmail.io", LocalDate.of(2001, 01, 01),
 				 BCrypt.hashpw("superadmin", BCrypt.gensalt(4)), true);
 		account.addRole(Role.ADMIN);
-		UserDetails details = new AccountDetails(account);
+		AccountDetails details = new AccountDetails(account);
+		String code = "1234";
 		
 		LoginRequest loginRequest = new LoginRequest("0000000000", "superadmin");
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken
@@ -454,20 +458,25 @@ class AuthControllerTest {
 		doReturn(auth).when(authenticationManager).authenticate(refEq(auth));
 		doReturn(details).when(accountDetailsService).loadUserByUsername(refEq(loginRequest.getPhone()));
 //		doReturn(new String("XXL")).when(jwtUtility).generate(refEq(details));
+		doReturn(code).when(emailService).sendVerificationCode(details.getAccount().getEmail());
+		doNothing().when(cache).put(code, loginRequest);
 			
-		mockMVC.perform(post("/token")
+		mockMVC.perform(post("/login")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(loginRequest)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$").isString());
+			.andExpect(jsonPath("$").isString())
+			.andExpect(content().string("Check your email"));
 		
 		verify(authenticationManager).authenticate(refEq(auth));
 		verify(accountDetailsService).loadUserByUsername(refEq(loginRequest.getPhone()));
 //		verify(jwtUtility).generate(refEq(details));
+		verify(emailService).sendVerificationCode(details.getAccount().getEmail());
+		verify(cache).put(code, loginRequest);
 	}
 	
 	@Test
-	void wrong_password_jwt() throws Exception {
+	void wrong_password() throws Exception {
 		
 		LoginRequest loginRequest = new LoginRequest("0000000000", "localadmin");
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken
@@ -476,7 +485,7 @@ class AuthControllerTest {
 		doThrow(new BadCredentialsException("Bad credentials"))
 			.when(authenticationManager).authenticate(refEq(auth));
 		for(int i = 1; i < 4; i++) {
-			mockMVC.perform(post("/token")
+			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 			.andExpect(status().isUnauthorized())
@@ -496,7 +505,7 @@ class AuthControllerTest {
 		
 		doThrow(new DisabledException("User is disabled"))
 			.when(authenticationManager).authenticate(refEq(auth));
-		mockMVC.perform(post("/token")
+		mockMVC.perform(post("/login")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(loginRequest)))
 			.andExpect(status().isUnauthorized())
@@ -512,7 +521,7 @@ class AuthControllerTest {
 	}
 	
 	@Test
-	void abscent_creds_jwt() throws Exception {
+	void abscent_creds() throws Exception {
 		
 		Account account = new Account("Kylie", "Bunbury", "4444444444", "@greenmail.io", LocalDate.of(1989, 01, 30),
 				 BCrypt.hashpw("blackmamba", BCrypt.gensalt(4)), true);
@@ -529,7 +538,7 @@ class AuthControllerTest {
 //		doThrow(new UsernameNotFoundException("User " + loginRequest.getPhone() + " not found"))
 //			.when(accountDetailsService).loadUserByUsername(loginRequest.getPhone());
 		
-		mockMVC.perform(post("/token")
+		mockMVC.perform(post("/login")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(loginRequest)))
 			.andExpect(status().isNotFound())
@@ -546,10 +555,10 @@ class AuthControllerTest {
 	}
 	
 	@Test
-	void invalid_creds_jwt() throws Exception {
+	void invalid_creds() throws Exception {
 		
 		LoginRequest loginRequest = new LoginRequest("00000", "super");
-		mockMVC.perform(post("/token")
+		mockMVC.perform(post("/login")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(loginRequest)))
 			.andExpect(status().isBadRequest())

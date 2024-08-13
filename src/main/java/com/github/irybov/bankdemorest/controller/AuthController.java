@@ -84,7 +84,7 @@ public class AuthController extends BaseController {
 	private EmailService emailService;
 	private Map<String, AccountRequest> accounts = new ConcurrentReferenceHashMap<>();
 	@Autowired
-	private Cache<String, UserDetails> cache;
+	private Cache<String, LoginRequest> cache;
 
 /*	@ApiOperation("Returns apllication's start html-page")
 	@GetMapping("/home")
@@ -138,7 +138,7 @@ public class AuthController extends BaseController {
 		
 		AccountDetails details = accountDetailsService.loadUserByUsername(loginRequest.getPhone());
 		String code = emailService.sendVerificationCode(details.getAccount().getEmail());
-		cache.put(code, details);
+		cache.put(code, loginRequest);
 		return "Check your email";
 	}
 	

@@ -11,13 +11,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.irybov.bankdemorest.controller.dto.LoginRequest;
 
 @EnableCaching
 @Configuration
-public class CacheConfig {
+public class CaffeineConfig {
 	
 	@Bean
-	public Cache<String, UserDetails> cacheConfig() {
+	public Cache<String, LoginRequest> cacheConfig() {
 	    return Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
 	}
 /*	

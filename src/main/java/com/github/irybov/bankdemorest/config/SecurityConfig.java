@@ -62,8 +62,8 @@ public class SecurityConfig {
 
 	@Autowired
 	private JWTFilter jwtFilter;
-	@Autowired
-	private OTPFilter otpFilter;
+//	@Autowired
+//	private OTPFilter otpFilter;
 //	@Autowired
 //	private DataSource dataSource;
 	private final PasswordEncoder passwordEncoder;
@@ -145,6 +145,7 @@ public class SecurityConfig {
 			.withUser(remote)
 			.passwordEncoder(passwordEncoder)
 			.configure(auth);
+        
 		auth.authenticationProvider(dao);
 			 
 //	    return auth.build();
@@ -248,7 +249,7 @@ public class SecurityConfig {
 			.anyRequest().authenticated()
 				.and()
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-			.addFilterAfter(otpFilter, UsernamePasswordAuthenticationFilter.class);
+			.addFilterAfter(otpFilter(), UsernamePasswordAuthenticationFilter.class);
 //			.httpBasic();
 /*		    .csrf().csrfTokenRepository(csrfTokenRepository)
 		    .sessionAuthenticationStrategy(new CsrfAuthenticationStrategy(csrfTokenRepository))
@@ -279,6 +280,11 @@ public class SecurityConfig {
 //		http.headers().frameOptions().disable();
 
         return http.build();
+    }
+    
+    @Bean
+    public OTPFilter otpFilter() {
+    	return new OTPFilter();
     }
 	
 //    @Override
