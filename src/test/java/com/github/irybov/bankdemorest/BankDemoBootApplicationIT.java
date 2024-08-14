@@ -65,8 +65,11 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -647,7 +650,7 @@ public class BankDemoBootApplicationIT {
 		}
 		
 		@Test
-		void abscent_creds() throws Exception {
+		void absent_creds() throws Exception {
 			
 			LoginRequest loginRequest = new LoginRequest("4444444444", "blackmamba");
 			mockMVC.perform(post("/login")
@@ -1684,24 +1687,18 @@ public class BankDemoBootApplicationIT {
 		        .withConfiguration(GreenMailConfiguration.aConfig().withUser("irybov", "bankdemo"))
 		        .withPerMethodLifecycle(false);
 		
-		private LoginRequest loginRequest;
+		private LoginRequest loginRequest = new LoginRequest(PHONE, "supervixen");
 		private static final String PHONE = "1111111111";
 		
-		@BeforeEach
-		void set_up() throws Exception {
+		private String generateJWT() throws Exception {
 						
 			hashPassword(PHONE);
-			loginRequest = new LoginRequest(PHONE, "supervixen");			
 			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isString())
 				.andExpect(content().string("Check your email"));
-		}
-		
-		@Test
-		void incorrect_or_abscent_bearer() throws Exception {
 			
 			Map<String, LoginRequest> map = cache.asMap();
 			List<String> keys = new ArrayList<>(map.keySet());
@@ -1712,7 +1709,14 @@ public class BankDemoBootApplicationIT {
 				.andExpect(jsonPath("$").isString())
 				.andReturn();
 			
-			String token = result.getResponse().getContentAsString();
+			cache.invalidateAll();			
+			return result.getResponse().getContentAsString();
+		}
+		
+		@Test
+		void incorrect_or_abscent_bearer() throws Exception {
+			
+			String token = generateJWT();
 	        mockMVC.perform(put("/control").header(HttpHeaders.AUTHORIZATION, "Bear " + token))
 				.andExpect(status().isForbidden());
 	        
@@ -1723,16 +1727,7 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void corrupted_or_abscent_token() throws Exception {
 			
-			Map<String, LoginRequest> map = cache.asMap();
-			List<String> keys = new ArrayList<>(map.keySet());
-			String code = keys.get(0);
-			MvcResult result = mockMVC.perform(post("/token")
-					.header(HttpHeaders.AUTHORIZATION, "OTP " + code))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$").isString())
-				.andReturn();
-			
-			String token = result.getResponse().getContentAsString();
+			String token = generateJWT();
 		    mockMVC.perform(put("/control").header(
 		    		HttpHeaders.AUTHORIZATION, "Bearer " + token + "fake"))
 //		    	.andExpect(jsonPath("$").isString())
@@ -1747,6 +1742,88 @@ public class BankDemoBootApplicationIT {
 				.andExpect(error -> assertThat
 						(error.getResolvedException() instanceof AuthenticationException))
 				.andExpect(status().isExpectationFailed());
+		}
+		
+		@Test
+		void wrong_request_method() throws Exception {
+			
+			Assertions.assertThatThrownBy(() ->
+			mockMVC.perform(put("/token").header(HttpHeaders.AUTHORIZATION, "OTP " + "1234"))
+				.andExpect(status().isMethodNotAllowed())
+				.andExpect(result -> assertThat
+					(result.getResolvedException() instanceof AuthenticationServiceException))
+				.andExpect(result -> assertEquals
+					("Authentication method not supported: " + result.getRequest().getMethod(), 
+								result.getResolvedException().getMessage())));
+		}
+		
+		@Test
+		void absent_otp_header() throws Exception {
+			
+			Assertions.assertThatThrownBy(() ->
+			mockMVC.perform(post("/token"))
+				.andExpect(status().isExpectationFailed())
+				.andExpect(result -> assertThat
+					(result.getResolvedException() instanceof InsufficientAuthenticationException))
+				.andExpect(result -> assertEquals
+					("No OTP header present", result.getResolvedException().getMessage())));
+		}
+		
+		@Test
+		void empty_code_provided() throws Exception {
+			
+			Assertions.assertThatThrownBy(() ->
+			mockMVC.perform(post("/token").header(HttpHeaders.AUTHORIZATION, "OTP " + " "))
+				.andExpect(status().isExpectationFailed())
+				.andExpect(result -> assertThat
+					(result.getResolvedException() instanceof InsufficientAuthenticationException))
+				.andExpect(result -> assertEquals
+					("No code provided with header", result.getResolvedException().getMessage())));
+		}
+		
+		@Test
+		void invalid_code_format() throws Exception {
+			
+			Assertions.assertThatThrownBy(() ->
+			mockMVC.perform(post("/token").header(HttpHeaders.AUTHORIZATION, "OTP " + "xyz"))
+				.andExpect(status().isExpectationFailed())
+				.andExpect(result -> assertThat
+					(result.getResolvedException() instanceof BadCredentialsException))
+				.andExpect(result -> assertEquals
+					("Invalid format of code", result.getResolvedException().getMessage())));
+		}
+		
+		@Test
+		void wrong_or_expired_code() throws Exception {
+			
+			Assertions.assertThatThrownBy(() ->
+			mockMVC.perform(post("/token").header(HttpHeaders.AUTHORIZATION, "OTP " + "1234"))
+				.andExpect(status().isExpectationFailed())
+				.andExpect(result -> assertThat
+					(result.getResolvedException() instanceof AuthenticationCredentialsNotFoundException))
+				.andExpect(result -> assertEquals
+					("Wrong or expired code", result.getResolvedException().getMessage())));
+			
+			hashPassword(PHONE);
+			mockMVC.perform(post("/login")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isString())
+				.andExpect(content().string("Check your email"));
+			
+			Map<String, LoginRequest> map = cache.asMap();
+			List<String> keys = new ArrayList<>(map.keySet());
+			String code = keys.get(0);
+			cache.invalidate(code);
+			
+			Assertions.assertThatThrownBy(() ->
+			mockMVC.perform(post("/token").header(HttpHeaders.AUTHORIZATION, "OTP " + code))
+				.andExpect(status().isExpectationFailed())
+				.andExpect(result -> assertThat
+					(result.getResolvedException() instanceof AuthenticationCredentialsNotFoundException))
+				.andExpect(result -> assertEquals
+					("Wrong or expired code", result.getResolvedException().getMessage())));
 		}
 		
 	}

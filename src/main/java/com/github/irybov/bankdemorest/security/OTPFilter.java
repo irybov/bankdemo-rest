@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -48,6 +49,7 @@ public class OTPFilter extends OncePerRequestFilter {
             return;
         }		
 		if(!request.getMethod().equals("POST")) {
+//			response.setStatus(HttpStatus.METHOD_NOT_ALLOWED.value());
 			throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
 		}
 		
@@ -56,7 +58,7 @@ public class OTPFilter extends OncePerRequestFilter {
 			
 			String code = header.substring(4);
 			code.trim();			
-			if(code.isEmpty() || code == null) {
+			if(code == null || code.isEmpty()) {
 				this.authenticationEntryPoint.commence(request, response, 
 						new InsufficientAuthenticationException("No code provided with header"));
 //			    response.resetBuffer();
