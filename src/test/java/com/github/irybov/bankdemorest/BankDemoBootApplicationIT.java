@@ -1592,6 +1592,8 @@ public class BankDemoBootApplicationIT {
 		
 		private String generateJWT(LoginRequest loginRequest) throws Exception {
 			
+			cache.invalidateAll();
+			
 			hashPassword(loginRequest.getPhone());
 			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
@@ -1608,8 +1610,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isString())
 				.andReturn();
-			
-			cache.invalidateAll();			
+						
 			return result.getResponse().getContentAsString();
 		}
 		
@@ -1687,10 +1688,12 @@ public class BankDemoBootApplicationIT {
 		        .withConfiguration(GreenMailConfiguration.aConfig().withUser("irybov", "bankdemo"))
 		        .withPerMethodLifecycle(false);
 		
-		private LoginRequest loginRequest = new LoginRequest(PHONE, "supervixen");
 		private static final String PHONE = "1111111111";
+		private final LoginRequest loginRequest = new LoginRequest(PHONE, "supervixen");
 		
 		private String generateJWT() throws Exception {
+			
+			cache.invalidateAll();
 						
 			hashPassword(PHONE);
 			mockMVC.perform(post("/login")
@@ -1709,7 +1712,6 @@ public class BankDemoBootApplicationIT {
 				.andExpect(jsonPath("$").isString())
 				.andReturn();
 			
-			cache.invalidateAll();			
 			return result.getResponse().getContentAsString();
 		}
 		
@@ -1736,7 +1738,7 @@ public class BankDemoBootApplicationIT {
 						(error.getResolvedException() instanceof AuthenticationException))
 				.andExpect(status().isExpectationFailed());			
 			
-		    mockMVC.perform(put("/control").header("Authorization", "Bearer "))
+		    mockMVC.perform(put("/control").header(HttpHeaders.AUTHORIZATION, "Bearer "))
 //	    		.andExpect(jsonPath("$").isString())
 	    		.andExpect(content().string(containsString("No token provided with Bearer")))
 				.andExpect(error -> assertThat

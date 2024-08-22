@@ -73,6 +73,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.irybov.bankdemorest.config.CaffeineConfig;
 import com.github.irybov.bankdemorest.config.SecurityBeans;
 import com.github.irybov.bankdemorest.config.SecurityConfig;
 import com.github.irybov.bankdemorest.controller.AdminController;
@@ -98,7 +99,7 @@ import com.opencsv.CSVWriter;
 
 @WithMockUser(username = "0000000000", roles = "ADMIN")
 @WebMvcTest(AdminController.class)
-@Import(value = {SecurityConfig.class, SecurityBeans.class, 
+@Import(value = {SecurityConfig.class, SecurityBeans.class, CaffeineConfig.class, 
 		OperationMapperImpl.class,  BillMapperImpl.class, AccountMapperImpl.class})
 class AdminControllerTest {
 
