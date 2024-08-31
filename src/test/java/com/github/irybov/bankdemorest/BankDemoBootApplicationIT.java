@@ -137,11 +137,11 @@ public class BankDemoBootApplicationIT {
 	@Autowired
 	@Qualifier("accountServiceAlias")
 	private AccountService accountService;
-	@Autowired
+/*	@Autowired
 	private AccountJPA jpa;
 	@Autowired
 	private AccountDAO dao;
-	
+	*/
 	private static WireMockServer wireMockServer;
 	@Value("${external.payment-service}")
 	private static String externalURL;
@@ -156,8 +156,10 @@ public class BankDemoBootApplicationIT {
 	private Authentication authentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
-	private void hashPassword(String phone) {
+	private void hashPassword(String phone, String password) {
 		
+		accountService.changePassword(phone, password);
+/*		
 		Account account = null;
 		if(accountService instanceof AccountServiceJPA) {
 			account = jpa.findByPhone(phone).get();
@@ -168,7 +170,7 @@ public class BankDemoBootApplicationIT {
 			account = dao.getAccount(phone);
 			account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt(4)));
 			dao.updateAccount(account);
-		}
+		}*/
 	}
 
 	@Test
@@ -178,15 +180,7 @@ public class BankDemoBootApplicationIT {
 	
     @Nested
     class ActuatorAccessIT{
-/*    	
-		@Autowired
-		@Qualifier("accountServiceAlias")
-		private AccountService accountService;
-		@Autowired
-		private AccountJPA jpa;
-		@Autowired
-		private AccountDAO dao;
-	*/
+    	
 //		@WithMockUser(username = "remote", roles = "REMOTE")
 		@Test
 		void actuator_allowed() throws Exception {
@@ -206,7 +200,7 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void actuator_forbidden() throws Exception {
 			
-			hashPassword("3333333333");
+			hashPassword("3333333333", "gingerchick");
 			
 	        mockMVC.perform(get("/actuator/").with(httpBasic("3333333333", "gingerchick")))
 	    		.andExpect(status().isForbidden());
@@ -217,22 +211,14 @@ public class BankDemoBootApplicationIT {
 //	@WithMockUser(username = "3333333333", roles = {"ADMIN", "CLIENT"})
     @Nested
     class SwaggerAccessIT{
-/*		
-		@Autowired
-		@Qualifier("accountServiceAlias")
-		private AccountService accountService;
-		@Autowired
-		private AccountJPA jpa;
-		@Autowired
-		private AccountDAO dao;
-	*/	
+    	
 		private static final String ADMIN_PHONE = "3333333333";
 		private static final String CLIENT_PHONE = "1111111111";
     	
 		@Test
 		void swagger_allowed() throws Exception {
 			
-			hashPassword(ADMIN_PHONE);
+			hashPassword(ADMIN_PHONE, "gingerchick");
 			
 	        mockMVC.perform(get("/dox/swagger-ui/").with(httpBasic(ADMIN_PHONE, "gingerchick")))
 	    		.andExpect(status().isOk());
@@ -242,7 +228,7 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void swagger_denied() throws Exception {
 			
-			hashPassword(CLIENT_PHONE);
+			hashPassword(CLIENT_PHONE, "supervixen");
 			
 	        mockMVC.perform(get("/dox/swagger-ui/").with(httpBasic(CLIENT_PHONE, "supervixen")))
 				.andExpect(status().isForbidden());
@@ -259,7 +245,7 @@ public class BankDemoBootApplicationIT {
 	    @Test
 	    void can_get_api_docs() throws Exception {
 	    	
-	    	hashPassword(ADMIN_PHONE);
+	    	hashPassword(ADMIN_PHONE, "gingerchick");
 
 	        mockMVC.perform(get("/dox/v3/api-docs").with(httpBasic(ADMIN_PHONE, "gingerchick")))
 				.andExpect(status().isOk())
@@ -269,7 +255,7 @@ public class BankDemoBootApplicationIT {
 	    @Test
 	    void denied_api_docs() throws Exception {
 	    	
-	    	hashPassword(CLIENT_PHONE);
+	    	hashPassword(CLIENT_PHONE, "supervixen");
 
 	        mockMVC.perform(get("/dox/v3/api-docs").with(httpBasic(CLIENT_PHONE, "supervixen")))
 				.andExpect(status().isForbidden());		
@@ -289,15 +275,7 @@ public class BankDemoBootApplicationIT {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 	@Nested
 	class AuthControllerIT{
-/*		
-		@Autowired
-		@Qualifier("accountServiceAlias")
-		private AccountService accountService;
-		@Autowired
-		private AccountJPA jpa;
-		@Autowired
-		private AccountDAO dao;
-	*/	
+    	
 	    @Autowired
 	    ApplicationContext context;
 	    private Map<String, AccountRequest> accounts = new ConcurrentReferenceHashMap<>();
@@ -590,7 +568,7 @@ public class BankDemoBootApplicationIT {
 			
 			greenMail.purgeEmailFromAllMailboxes();
 			
-			hashPassword(PHONE);			
+			hashPassword(PHONE, "superadmin");			
 			LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");			
 			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
@@ -620,7 +598,7 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void wrong_password() throws Exception {
 			
-			hashPassword(PHONE);
+			hashPassword(PHONE, "localadmin");
 			LoginRequest loginRequest = new LoginRequest(PHONE, "localadmin");
 			
 			for(int i = 1; i < 4; i++) {
@@ -849,15 +827,7 @@ public class BankDemoBootApplicationIT {
 		private ObjectMapper mapper;
 		@Autowired
 		private TestRestTemplate testRestTemplate;
-/*		
-		@Autowired
-		@Qualifier("accountServiceAlias")
-		private AccountService accountService;
-		@Autowired
-		private AccountJPA jpa;
-		@Autowired
-		private AccountDAO dao;
-		*/
+		
 		private static final String PHONE = "1111111111";
 		
 		@Value("${server.address}")
@@ -1046,7 +1016,7 @@ public class BankDemoBootApplicationIT {
 		void success_password_change() throws Exception {
 			
 			PasswordRequest pwDTO = new PasswordRequest("supervixen", "japanrocks");			
-			hashPassword(PHONE);
+			hashPassword(PHONE, "supervixen");
 			
 			mockMVC.perform(patch("/accounts/password/{phone}", PHONE)
 						.contentType(MediaType.APPLICATION_JSON)
@@ -1063,7 +1033,7 @@ public class BankDemoBootApplicationIT {
 		void failure_password_change() throws Exception {
 			
 			PasswordRequest pwDTO = new PasswordRequest("superjapan", "vixenrocks");
-			hashPassword(PHONE);
+			hashPassword(PHONE, "supervixen");
 			
 			mockMVC.perform(patch("/accounts/password/{phone}", PHONE)
 						.contentType(MediaType.APPLICATION_JSON)
@@ -1594,7 +1564,7 @@ public class BankDemoBootApplicationIT {
 			
 			cache.invalidateAll();
 			
-			hashPassword(loginRequest.getPhone());
+			hashPassword(loginRequest.getPhone(), loginRequest.getPassword());
 			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
@@ -1695,7 +1665,7 @@ public class BankDemoBootApplicationIT {
 			
 			cache.invalidateAll();
 						
-			hashPassword(PHONE);
+			hashPassword(loginRequest.getPhone(), loginRequest.getPassword());
 			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
@@ -1806,7 +1776,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(result -> assertEquals
 					("Wrong or expired code", result.getResolvedException().getMessage())));
 			
-			hashPassword(PHONE);
+			hashPassword(loginRequest.getPhone(), loginRequest.getPassword());
 			mockMVC.perform(post("/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(mapper.writeValueAsString(loginRequest)))
