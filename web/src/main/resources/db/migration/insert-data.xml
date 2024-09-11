@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+xsi:schemaLocation=
+"http://www.liquibase.org/xml/ns/dbchangelog
+http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd
+http://www.liquibase.org/xml/ns/dbchangelog-ext
+http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+http://www.liquibase.org/xml/ns/pro
+http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
+
+<changeSet id="3" author="irybov">
+
+	<preConditions onFail="MARK_RAN">
+		<not>
+		    <primaryKeyExists primaryKeyName="accounts_pkey" schemaName="bankdemo" tableName="accounts"/>
+	    </not>
+	</preConditions>
+<!--     <sqlFile dbms="postgresql" path="classpath:db/migration/insert-data.sql"/> -->
+
+    <sql dbms="postgresql" splitStatements="true" stripComments="true">
+		INSERT INTO bankdemo.accounts(id, is_active, birthday, name, password, phone, surname, created_at, updated_at)
+		VALUES('0', '1', '2001-01-01', 'Admin', crypt('superadmin', gen_salt('bf', 4)), '0000000000', 'Adminov', now(), now());
+		INSERT INTO bankdemo.accounts(is_active, birthday, name, password, phone, surname, created_at, updated_at)
+		VALUES('1', '1985-08-31', 'Kae', crypt('supervixen', gen_salt('bf', 4)), '1111111111', 'Yukawa', now(), now()),
+		('1', '1974-07-28', 'Hannah', crypt('bustyblonde', gen_salt('bf', 4)), '2222222222', 'Waddingham', now(), now()),
+		('1', '1995-06-13', 'Ella', crypt('gingerchick', gen_salt('bf', 4)), '3333333333', 'Hughes', now(), now())
+		ON CONFLICT ON CONSTRAINT accounts_phone_key DO NOTHING;
+		INSERT INTO bankdemo.roles(account_id, role) SELECT id, 'ADMIN' FROM bankdemo.accounts WHERE phone='0000000000'
+		UNION SELECT id, 'CLIENT' FROM bankdemo.accounts WHERE phone='1111111111'
+		UNION SELECT id, 'CLIENT' FROM bankdemo.accounts WHERE phone='2222222222'
+		UNION SELECT id, 'CLIENT' FROM bankdemo.accounts WHERE phone='3333333333'
+		UNION SELECT id, 'ADMIN' FROM bankdemo.accounts WHERE phone='3333333333';
+    </sql>
+<!-- 
+	<insert schemaName="bankdemo" tableName="bills">
+		<column name="is_active" value="1"/>
+		<column name="balance" value="10.00"/>
+		<column name="currency" value="USD"/>
+		<column name="account_id" value="1"/>
+		<column name="created_at" valueDate="CURRENT_TIMESTAMP"/>
+	</insert>
+		<insert schemaName="bankdemo" tableName="bills">
+		<column name="is_active" value="1"/>
+		<column name="balance" value="10.00"/>
+		<column name="currency" value="NOK"/>
+		<column name="account_id" value="3"/>
+		<column name="created_at" valueDate="CURRENT_TIMESTAMP"/>
+	</insert>
+	<insert schemaName="bankdemo" tableName="bills">
+		<column name="is_active" value="1"/>
+		<column name="balance" value="10.00"/>
+		<column name="currency" value="USD"/>
+		<column name="account_id" value="1"/>
+		<column name="created_at" valueDate="CURRENT_TIMESTAMP"/>
+	</insert>
+ -->
+</changeSet>
+
+</databaseChangeLog>
