@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
@@ -42,6 +43,7 @@ import com.github.irybov.service.domain.OperationEvent;
 import com.github.irybov.service.exception.PaymentException;
 import com.github.irybov.service.service.BillServiceDAO;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 //@ExtendWith(MockitoExtension.class)
 class BillServiceDAOTest {
 	

@@ -24,6 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 //import org.junit.jupiter.api.parallel.Execution;
 //import org.junit.jupiter.api.parallel.ExecutionMode;
 //import org.junit.jupiter.api.TestInstance;
@@ -56,7 +57,7 @@ import com.github.irybov.database.entity.Role;
 import com.github.irybov.service.service.AccountServiceDAO;
 import com.github.irybov.service.service.BillService;
 
-//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 //@ExtendWith(MockitoExtension.class)
 //@Execution(ExecutionMode.CONCURRENT)
 class AccountServiceDAOTest {
