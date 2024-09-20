@@ -146,7 +146,7 @@ public class AuthController extends BaseController {
 	@ApiResponses(value = 
 		{@ApiResponse(code = 200, message = "", response = String.class), 
 		 @ApiResponse(code = 417, message = "", response = String.class)})
-	@PostMapping("/token")
+	@GetMapping("/token")
 	@ResponseBody
 	public String getToken(@AuthenticationPrincipal UserDetails userDetails) {		
 		return jwtUtility.generate(userDetails);

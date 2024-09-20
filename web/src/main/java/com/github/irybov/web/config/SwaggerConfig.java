@@ -46,7 +46,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @Configuration
 @EnableSwagger2
-@Import(SpringDataRestConfiguration.class)
+//@Import(SpringDataRestConfiguration.class)
 public class SwaggerConfig {
 	
 //    public static final String AUTHORIZATION_HEADER = "Authorization";
@@ -63,7 +63,7 @@ public class SwaggerConfig {
 //        return new Docket(DocumentationType.SWAGGER_2)
         return new Docket(DocumentationType.OAS_30)
           .select()
-          .apis(RequestHandlerSelectors.basePackage("com.github.irybov.bankdemorest.controller"))
+          .apis(RequestHandlerSelectors.basePackage("com.github.irybov.web.controller"))
           .paths(PathSelectors.any())
           .build()
           .apiInfo(metaData())

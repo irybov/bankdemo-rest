@@ -48,7 +48,7 @@ public class OTPFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }		
-		if(!request.getMethod().equals("POST")) {
+		if(!request.getMethod().equals("GET")) {
 //			response.setStatus(HttpStatus.METHOD_NOT_ALLOWED.value());
 			throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
 		}

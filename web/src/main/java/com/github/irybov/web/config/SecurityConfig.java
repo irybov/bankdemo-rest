@@ -98,12 +98,12 @@ public class SecurityConfig {
 			"/operations/**", 
 			"/h2-console/**"
     };
-    private static final String[] SWAGGER_LIST_URLS = {
-//    		"/configuration/**", 
-			"/dox/swagger-ui/**", 
-			"/dox/v*/api-docs/**"
-//    		"/webjars/**"
-    };
+//    private static final String[] SWAGGER_LIST_URLS = {
+////    		"/configuration/**", 
+//			"/dox/swagger-ui/**", 
+//			"/dox/v*/api-docs/**"
+////    		"/webjars/**"
+//    };
 //    private static final String[] REMOTE_LIST_URLS = {
 //			"**/swagger*/**", 
 //			"/**/api-docs/**", 
@@ -195,7 +195,7 @@ public class SecurityConfig {
 				.and()
 			.antMatcher("/dox/**")
 			.authorizeRequests()
-			.mvcMatchers(SWAGGER_LIST_URLS).hasRole("ADMIN")
+			.antMatchers("/dox/**").hasRole("ADMIN")
 			.anyRequest().authenticated()
 				.and()
 			.httpBasic();

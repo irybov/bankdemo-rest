@@ -68,6 +68,7 @@ import com.github.irybov.service.dto.OperationResponse;
 import com.github.irybov.service.service.AccountService;
 import com.github.irybov.service.service.BillService;
 import com.github.irybov.service.service.OperationService;
+import com.github.irybov.web.misc.PagebleAPI;
 import com.opencsv.CSVWriter;
 
 import io.swagger.annotations.Api;
@@ -76,6 +77,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import springfox.documentation.annotations.ApiIgnore;
 
 @Api(description = "Controller for admin's actions ")
 @Slf4j
@@ -316,6 +318,7 @@ public class AdminController extends BaseController {
 		return "account/history";
 	}*/
 	@ApiOperation("Returns filtered pageable list of bill's operations")
+	@PagebleAPI
 	@GetMapping("/operations/list/{id}")
 	@ResponseBody
 	public Page<OperationResponse> getOperationsList(@PathVariable int id,
@@ -328,7 +331,11 @@ public class AdminController extends BaseController {
 	Optional<LocalDate> maxdate,
 			@RequestParam(required = false) Double minval, 
 			@RequestParam(required = false) Double maxval,
-			@RequestParam(required = false) String action, Pageable pageable) {
+			@RequestParam(required = false) String action, 
+			@ApiIgnore(
+                    "Ignored because swagger ui shows the wrong params, " +
+                    "instead they are explained in the implicit params"
+            )Pageable pageable) {
 		
 //		final String FROM = mindate.orElse("1900-01-01");
 //		final String TO = maxdate.orElse(LocalDate.now().toString());

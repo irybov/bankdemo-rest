@@ -1576,7 +1576,7 @@ public class BankDemoBootApplicationIT {
 			Map<String, LoginRequest> map = cache.asMap();
 			List<String> keys = new ArrayList<>(map.keySet());
 			String code = keys.get(0);
-			MvcResult result = mockMVC.perform(post("/token")
+			MvcResult result = mockMVC.perform(get("/token")
 					.header(HttpHeaders.AUTHORIZATION, "OTP " + code))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isString())
@@ -1677,7 +1677,7 @@ public class BankDemoBootApplicationIT {
 			Map<String, LoginRequest> map = cache.asMap();
 			List<String> keys = new ArrayList<>(map.keySet());
 			String code = keys.get(0);
-			MvcResult result = mockMVC.perform(post("/token")
+			MvcResult result = mockMVC.perform(get("/token")
 					.header(HttpHeaders.AUTHORIZATION, "OTP " + code))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isString())
