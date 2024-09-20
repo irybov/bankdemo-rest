@@ -14,11 +14,11 @@ http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
 
 <changeSet id="3" author="irybov">
 
-<!-- 	<preConditions onFail="HALT">
+	<preConditions onFail="MARK_RAN">
 		<not>
 		    <primaryKeyExists primaryKeyName="accounts_pkey" schemaName="bankdemo" tableName="accounts"/>
 	    </not>
-	</preConditions> -->
+	</preConditions>
 <!--     <sqlFile dbms="postgresql" path="classpath:db/migration/insert-data.sql"/> -->
 
     <sql dbms="postgresql" splitStatements="true" stripComments="true">

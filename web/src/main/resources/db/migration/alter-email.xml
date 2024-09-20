@@ -14,6 +14,12 @@ http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
 
 <changeSet id="4" author="irybov">
 
+	<preConditions onFail="MARK_RAN">
+		<not>
+			<columnExists schemaName="bankdemo" tableName="accounts" columnName="email"/>
+		</not>
+	</preConditions>
+
 	<addColumn schemaName="bankdemo" tableName="accounts">
 		<column name="email" type="varchar(60)">
 			<constraints unique="true"/>

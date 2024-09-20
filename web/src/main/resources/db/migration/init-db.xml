@@ -14,7 +14,7 @@ http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.9.xsd">
 
 <changeSet id="1" author="irybov">
 
-	<preConditions onFail="HALT">
+	<preConditions onFail="MARK_RAN">
 		<not>
 		    <tableExists schemaName="bankdemo" tableName="accounts"/>
 		    <tableExists schemaName="bankdemo" tableName="bills"/>
