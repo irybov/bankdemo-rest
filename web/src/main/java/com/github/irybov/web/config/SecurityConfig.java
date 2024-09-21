@@ -48,7 +48,7 @@ import com.github.irybov.web.security.JWTFilter;
 import com.github.irybov.web.security.OTPFilter;
 
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+//@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
 	@Value("${server.address}")
