@@ -292,7 +292,7 @@ class AuthControllerTest {
 
 		when(emailService.sendActivationLink(accountRequest.getEmail())).thenReturn(tail);
 		
-		mockMVC.perform(post("/confirm")
+		mockMVC.perform(post("/register")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(accountRequest)))
 			.andExpect(status().isOk())
@@ -316,7 +316,7 @@ class AuthControllerTest {
 		accountRequest.setPhone("xxx");
 		accountRequest.setSurname("a");
 
-		mockMVC.perform(post("/confirm")
+		mockMVC.perform(post("/register")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(accountRequest)))
 			.andExpect(status().isBadRequest())
@@ -329,7 +329,7 @@ class AuthControllerTest {
 			.andExpect(jsonPath("$").isArray());
 		
 		accountRequest.setBirthday(LocalDate.now().plusYears(10L));
-		mockMVC.perform(post("/confirm")
+		mockMVC.perform(post("/register")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(accountRequest)))
 			.andExpect(status().isBadRequest())
@@ -342,7 +342,7 @@ class AuthControllerTest {
 			.andExpect(jsonPath("$").isArray());
 		
 		accountRequest.setBirthday(LocalDate.now().minusYears(10L));
-		mockMVC.perform(post("/confirm")
+		mockMVC.perform(post("/register")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(accountRequest)))
 			.andExpect(status().isBadRequest())
@@ -363,7 +363,7 @@ class AuthControllerTest {
 		
 		doThrow(new MessagingException("Shit happens")).when(emailService).sendActivationLink(accountRequest.getEmail());
 		
-		mockMVC.perform(post("/confirm")
+		mockMVC.perform(post("/register")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(accountRequest)))
 			.andExpect(status().isInternalServerError())

@@ -216,7 +216,7 @@ class AdminControllerTest {
 		
 		byte[] output = data_2_gzip_converter(clients);
 		
-		MvcResult result = mockMVC.perform(get("/accounts/list/all"))
+		MvcResult result = mockMVC.perform(get("/accounts"))
 			.andExpect(request().asyncStarted())
 			.andReturn();
 			
@@ -263,7 +263,7 @@ class AdminControllerTest {
 		
 		when(accountService.getAll()).thenReturn(new ArrayList<AccountResponse>());
 		
-		MvcResult result = mockMVC.perform(get("/accounts/list/all"))
+		MvcResult result = mockMVC.perform(get("/accounts"))
 			.andExpect(request().asyncStarted())
 			.andReturn();
 			
@@ -273,7 +273,7 @@ class AdminControllerTest {
 		
 		when(accountService.getAll()).thenReturn(null);
 		
-		result = mockMVC.perform(get("/accounts/list/all"))
+		result = mockMVC.perform(get("/accounts"))
 			.andExpect(request().asyncStarted())
 			.andReturn();
 			
@@ -289,7 +289,7 @@ class AdminControllerTest {
 		
 		when(accountService.changeStatus(anyInt())).thenReturn(false);		
 		
-		mockMVC.perform(patch("/accounts/status/{id}", "0").with(csrf()))
+		mockMVC.perform(patch("/accounts/{id}/status", "0").with(csrf()))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("false")));
 		
@@ -301,7 +301,7 @@ class AdminControllerTest {
 		
 		when(billService.changeStatus(anyInt())).thenReturn(false);
 		
-		mockMVC.perform(patch("/bills/status/{id}", "0").with(csrf()))
+		mockMVC.perform(patch("/bills/{id}/status", "0").with(csrf()))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("false")));
 		
@@ -315,7 +315,7 @@ class AdminControllerTest {
 				.andExpect(status().isInternalServerError()))
 				.hasCause(new InputMismatchException("Phone number should be of 10 digits"));*/
 		
-		mockMVC.perform(get("/accounts/search/{phone}", "XXL"))
+		mockMVC.perform(get("/accounts/{phone}/search", "XXL"))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.report").value("Phone number should be of 10 digits"));
 	}
@@ -328,7 +328,7 @@ class AdminControllerTest {
 		when(accountService.getFullDTO(wrong))
 			.thenThrow(new PersistenceException("Account with phone " + wrong + " not found"));
 		
-		mockMVC.perform(get("/accounts/search/{phone}", wrong))
+		mockMVC.perform(get("/accounts/{phone}/search", wrong))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.report").value("Account with phone " + wrong + " not found"));
 		
@@ -351,7 +351,7 @@ class AdminControllerTest {
 		when(accountService.getFullDTO(phone)).thenReturn(account);
 //		when(accountService.getBills(anyInt())).thenReturn(bills);
 		
-		mockMVC.perform(get("/accounts/search/{phone}", phone))
+		mockMVC.perform(get("/accounts/{phone}/search", phone))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").isNumber())
 			.andExpect(jsonPath("$.createdAt").isNotEmpty())
@@ -384,7 +384,7 @@ class AdminControllerTest {
 				any(OffsetDateTime.class), any(OffsetDateTime.class), any(Pageable.class)))
 				.thenReturn(operationPage);
 		
-		mockMVC.perform(get("/operations/list/{id}", "0")
+		mockMVC.perform(get("/operations/{id}/list", "0")
 						.param("action", "unknown")
 						.param("minval", "0.01")
 						.param("maxval", "0.02")
@@ -431,7 +431,7 @@ class AdminControllerTest {
 		CompletableFuture<byte[]> futureByteArray = CompletableFuture.completedFuture
 				(data_2_csv_converter(futureBill.join(), futureOperations.join()));
 		
-		MvcResult result = mockMVC.perform(get("/operations/print/{id}", "0"))
+		MvcResult result = mockMVC.perform(get("/operations/{id}/print", "0"))
 			.andExpect(request().asyncStarted())
 			.andReturn();
 		
@@ -499,7 +499,7 @@ class AdminControllerTest {
 		when(billService.getBillDTO(anyInt())).thenThrow(new EntityNotFoundException());
 //		CompletableFuture<BillResponse> futureBill = CompletableFuture.completedFuture(null);
 		
-		MvcResult result = mockMVC.perform(get("/operations/print/{id}", "0"))
+		MvcResult result = mockMVC.perform(get("/operations/{id}/print", "0"))
 			.andExpect(request().asyncStarted())
 			.andReturn();
 			

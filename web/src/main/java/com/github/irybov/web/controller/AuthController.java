@@ -157,7 +157,7 @@ public class AuthController extends BaseController {
 		{@ApiResponse(code = 200, message = "Check you email", response = String.class), 
 		 @ApiResponse(code = 400, message = "", responseContainer = "List", response = String.class), 
 		 @ApiResponse(code = 500, message = "", response = String.class)})
-	@PostMapping("/confirm")
+	@PostMapping("/register")
 	public ResponseEntity<?> confirmRegistration(@RequestBody AccountRequest accountRequest,
 			BindingResult result) {
 		

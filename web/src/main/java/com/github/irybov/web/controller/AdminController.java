@@ -136,7 +136,7 @@ public class AdminController extends BaseController {
 		 @ApiResponse(code = 400, message = "", response = String.class),
 		 @ApiResponse(code = 404, message = "", response = String.class)})
 	@ApiParam(value = "Phone number should be of 10 digits", required = true, format = "^\\d{10}$")
-	@GetMapping("/accounts/search/{phone}")
+	@GetMapping("/accounts/{phone}/search")
 //	@ResponseBody
 	public ResponseEntity<?> searchAccount(@PathVariable String phone) {
 		
@@ -201,7 +201,7 @@ public class AdminController extends BaseController {
 		return "account/clients";
 	}*/
 	@ApiOperation("Returns list of all clients")
-	@GetMapping("/accounts/list/all")
+	@GetMapping("/accounts")
 	public CompletableFuture<ResponseEntity<byte[]>> getClientsList(){
 		
 		List<AccountResponse> clients = accountService.getAll();
@@ -260,7 +260,7 @@ public class AdminController extends BaseController {
 		return searchAccount(phone, modelMap);
 	}*/
 	@ApiOperation("Changes client status")
-	@PatchMapping("/accounts/status/{id}")
+	@PatchMapping("/accounts/{id}/status")
 	@ResponseBody
 	public String changeAccountStatus(@PathVariable int id) {		
 		Boolean status = null;
@@ -283,7 +283,7 @@ public class AdminController extends BaseController {
 		return searchAccount(phone, modelMap);
 	}*/	
 	@ApiOperation("Changes bill status")
-	@PatchMapping("/bills/status/{id}")
+	@PatchMapping("/bills/{id}/status")
 	@ResponseBody
 	public String changeBillStatus(@PathVariable int id) {
 		
@@ -319,7 +319,7 @@ public class AdminController extends BaseController {
 	}*/
 	@ApiOperation("Returns filtered pageable list of bill's operations")
 	@PagebleAPI
-	@GetMapping("/operations/list/{id}")
+	@GetMapping("/operations/{id}/list")
 	@ResponseBody
 	public Page<OperationResponse> getOperationsList(@PathVariable int id,
 //			@RequestParam Optional<String> mindate, @RequestParam Optional<String> maxdate,
@@ -362,7 +362,7 @@ public class AdminController extends BaseController {
 	
 	@ApiOperation("Exports bill's operations list to CSV file")
 //	@GetMapping("/operations/print/{id}")
-	@GetMapping(value = "/operations/print/{id}", 
+	@GetMapping(value = "/operations/{id}/print", 
 				produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	@ResponseBody
 //	public void export2csv(@PathVariable int id, HttpServletResponse response) throws IOException {

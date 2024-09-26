@@ -76,8 +76,8 @@ public class SecurityConfig {
     private static final String[] WHITE_LIST_URLS = {
 //    		"/home", 
     		"/login", 
-//    		"/register", 
-    		"/confirm", 
+    		"/register", 
+//    		"/confirm", 
     		"/activate/*", 
 //    		"/webjars/**", 
 //    		"/css/**", 
@@ -86,16 +86,16 @@ public class SecurityConfig {
     };
     private static final String[] SHARED_LIST_URLS = {
     		"/token", 
-    		"/bills/**", 
-    		"/accounts/show", 
-    		"/accounts/password"
+    		"/bills/*", 
+    		"/accounts/{phone}"
     };
     private static final String[] ADMINS_LIST_URLS = {
 			"/control", 
-    		"/accounts/search/*", 
-    		"/accounts/status/{id}", 
-    		"/accounts/list/*", 
-			"/operations/**", 
+    		"/accounts/{phone}/search", 
+    		"/accounts/{id}/status", 
+    		"/accounts", 
+    		"/bills/{id}/status", 
+			"/operations/{id}/*", 
 			"/h2-console/**"
     };
 //    private static final String[] SWAGGER_LIST_URLS = {

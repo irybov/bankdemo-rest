@@ -163,7 +163,7 @@ public class BankController extends BaseController {
 		{@ApiResponse(code = 200, message = "", response = AccountResponse.class), 
 		 @ApiResponse(code = 403, message = "Security restricted information", response = String.class)})
 	@PreAuthorize("hasRole('CLIENT')")
-	@GetMapping("/accounts/show/{phone}")
+	@GetMapping("/accounts/{phone}")
 	@ResponseBody
 	public AccountResponse getClientInfo(@PathVariable String phone, HttpServletResponse response) {
 
@@ -214,7 +214,7 @@ public class BankController extends BaseController {
 		{@ApiResponse(code = 201, message = "", response = BillResponse.class), 
 		 @ApiResponse(code = 400, message = "Wrong currency provided", response = String.class)})
 	@PreAuthorize("hasRole('CLIENT')")
-	@PostMapping("/bills/add")
+	@PostMapping("/bills")
 	@ResponseBody
 	public BillResponse createBill(@Valid @RequestBody BillRequest billRequest,
 			HttpServletResponse response) {
@@ -249,7 +249,7 @@ public class BankController extends BaseController {
 	
 	@ApiOperation("Deletes the existing bill from database")
 	@PreAuthorize("hasRole('CLIENT')")
-	@DeleteMapping("/bills/delete/{id}")
+	@DeleteMapping("/bills/{id}")
 	public void deleteBill(@PathVariable int id) {
 		log.info("Client {} deletes bill with id {}", authentication().getName(), id);
 		billService.deleteBill(id);
@@ -279,7 +279,7 @@ public class BankController extends BaseController {
 		 @ApiResponse(code = 404, message = "", response = String.class)})
 	@CrossOrigin(originPatterns = "*", methods = {RequestMethod.OPTIONS, RequestMethod.POST})
 	@PreAuthorize("hasRole('CLIENT')")
-	@GetMapping(value = "/bills/validate/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
+	@GetMapping(value = "/bills/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
 	@ResponseBody
 	public String checkOwner(@PathVariable int id, HttpServletResponse response) {
 		
@@ -302,7 +302,7 @@ public class BankController extends BaseController {
 		 @ApiResponse(code = 404, message = "", response = String.class), 
 		 @ApiResponse(code = 503, message = "", response = String.class)})
 	@PreAuthorize("hasRole('CLIENT')")
-	@PatchMapping("/bills/launch/{id}")
+	@PatchMapping("/bills/{id}")
 	public ResponseEntity<String> operateMoney(@PathVariable int id, 
 			@RequestParam(required=false) String recipient,
 			@RequestParam Map<String, String> params) {
@@ -569,7 +569,7 @@ public class BankController extends BaseController {
 		 @ApiResponse(code = 400, message = "", responseContainer = "List", response = String.class),
 		 @ApiResponse(code = 409, message = "Current password mismatch", response = String.class)})
 	@PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
-	@PatchMapping("/accounts/password/{phone}")
+	@PatchMapping("/accounts/{phone}")
 	@ResponseBody
 	public String submitPassword(@PathVariable String phone, 
 			@Valid @RequestBody PasswordRequest passwordRequest, HttpServletResponse response) {

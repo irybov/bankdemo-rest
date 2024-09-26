@@ -221,7 +221,7 @@ class BankControllerTest {
 //		when(accountService.getBills(account.getId())).thenReturn(bills);
 		when(accountService.getFullDTO(phone)).thenReturn(account);
 		
-		mockMVC.perform(get("/accounts/show/{phone}", phone))
+		mockMVC.perform(get("/accounts/{phone}", phone))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").isNumber())
 			.andExpect(jsonPath("$.createdAt").isNotEmpty())
@@ -242,7 +242,7 @@ class BankControllerTest {
 	@Test
 	void check_security_restriction() throws Exception {
 		
-		mockMVC.perform(get("/accounts/show/{phone}", "5555555555"))
+		mockMVC.perform(get("/accounts/{phone}", "5555555555"))
 			.andExpect(status().isForbidden())
 			.andExpect(result -> assertEquals("Security restricted information", 
 					   result.getResolvedException().getMessage()));
@@ -262,7 +262,7 @@ class BankControllerTest {
 //			.thenReturn(modelMapper.map(bill, BillResponse.class));
 			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		
-		mockMVC.perform(post("/bills/add")
+		mockMVC.perform(post("/bills")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(new BillRequest(phone, "RUB"))))
 			.andExpect(status().isCreated())
@@ -281,7 +281,7 @@ class BankControllerTest {
 	void bill_creation_failed() throws Exception {
 		
 		Assertions.assertThatThrownBy(() ->
-		mockMVC.perform(post("/bills/add")
+		mockMVC.perform(post("/bills")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(new BillRequest(phone, "NOK"))))
 			.andExpect(status().isBadRequest()))
@@ -295,7 +295,7 @@ class BankControllerTest {
 		
 		doNothing().when(billService).deleteBill(anyInt());
 		
-		mockMVC.perform(delete("/bills/delete/{id}", "0"))
+		mockMVC.perform(delete("/bills/{id}", "0"))
 			.andExpect(status().isOk());
 		
 		verify(billService).deleteBill(anyInt());
@@ -371,7 +371,7 @@ class BankControllerTest {
 //			.thenReturn(modelMapper.map(bill, BillResponse.class));
 			.thenReturn(billMapper.toDTO(bill, new CycleAvoidingMappingContext()));
 		
-		mockMVC.perform(get("/bills/validate/{id}", "4"))
+		mockMVC.perform(get("/bills/{id}", "4"))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.valueOf("text/plain;charset=UTF-8")))
 			.andExpect(content().string(equalTo
@@ -388,13 +388,13 @@ class BankControllerTest {
 		when(billService.getBillDTO(id)).thenThrow(new EntityNotFoundException
 				("Target bill with id: " + id + " not found"));
 		
-		mockMVC.perform(get("/bills/validate/{id}", String.valueOf(id)))
+		mockMVC.perform(get("/bills/{id}", String.valueOf(id)))
 			.andExpect(status().isNotFound())
 			.andExpect(content().contentType(MediaType.valueOf("text/plain;charset=UTF-8")))
 			.andExpect(content().string(containsString
 					  ("Target bill with id: " + id + " not found")));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 														.param("recipient", String.valueOf(id))
 //														.param("id", "0")
 														.param("action", "transfer")
@@ -418,7 +418,7 @@ class BankControllerTest {
 	@Test
 	void wrong_format_input() throws Exception {
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 														.param("recipient", "XXX")
 //													    .param("id", "0")
 													    .param("action", "transfer")
@@ -451,7 +451,7 @@ class BankControllerTest {
 		
 		when(accountService.comparePassword(pwDTO.getOldPassword(), phone)).thenReturn(true);
 		
-		mockMVC.perform(patch("/accounts/password/{phone}", phone)
+		mockMVC.perform(patch("/accounts/{phone}", phone)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(pwDTO)))
 			.andExpect(status().isOk())
@@ -471,7 +471,7 @@ class BankControllerTest {
 		
 		when(accountService.comparePassword(pwDTO.getOldPassword(), phone)).thenReturn(false);
 		
-		mockMVC.perform(patch("/accounts/password/{phone}", phone)
+		mockMVC.perform(patch("/accounts/{phone}", phone)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(pwDTO)))
 			.andExpect(status().isConflict())
@@ -489,7 +489,7 @@ class BankControllerTest {
 
 		PasswordRequest pwDTO = new PasswordRequest("black", "white");
 		
-		mockMVC.perform(patch("/accounts/password/{phone}", phone)
+		mockMVC.perform(patch("/accounts/{phone}", phone)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(pwDTO)))
 			.andExpect(status().isBadRequest())
@@ -517,7 +517,7 @@ class BankControllerTest {
 		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>("No bill with serial 33 found", HttpStatus.NOT_FOUND));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //														.param("id", "0")
 														.param("action", "external")
 														.param("balance", "0.00")
@@ -547,7 +547,7 @@ class BankControllerTest {
 		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>("No bank with name Demo found", HttpStatus.NOT_FOUND));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //														.param("id", "0")
 														.param("action", "external")
 														.param("balance", "0.00")
@@ -577,7 +577,7 @@ class BankControllerTest {
 		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>("Service is temporary unavailable", HttpStatus.SERVICE_UNAVAILABLE));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //														.param("id", "0")
 														.param("action", "external")
 														.param("balance", "0.00")
@@ -623,7 +623,7 @@ class BankControllerTest {
 		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>("Data has been verified", HttpStatus.OK));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //													    .param("id", "0")
 													    .param("action", "deposit")
 													    .param("balance", "0.00")
@@ -633,7 +633,7 @@ class BankControllerTest {
 			.andExpect(content().string(containsString("Done!")));
 //			.andExpect(redirectedUrl("/accounts/show/" + phone));
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //													    .param("id", "0")
 													    .param("action", "withdraw")
 													    .param("balance", "0.00")
@@ -643,7 +643,7 @@ class BankControllerTest {
 			.andExpect(content().string(containsString("Done!")));
 //			.andExpect(redirectedUrl("/accounts/show/" + phone));
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //														.param("id", "0")
 														.param("action", "transfer")
 														.param("balance", "0.00")
@@ -654,7 +654,7 @@ class BankControllerTest {
 			.andExpect(content().string(containsString("Done!")));
 //			.andExpect(redirectedUrl("/accounts/show/" + phone));
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //														.param("id", "0")
 														.param("action", "external")
 														.param("balance", "0.00")
@@ -717,7 +717,7 @@ class BankControllerTest {
 		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>(new String(), HttpStatus.OK));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //													    .param("id", "0")
 													    .param("action", "deposit")
 													    .param("balance", "0.00")
@@ -733,7 +733,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
 				.andExpect(view().name("bill/payment"));*/
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //													    .param("id", "0")
 													    .param("action", "withdraw")
 													    .param("balance", "0.00")
@@ -749,7 +749,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
 				.andExpect(view().name("bill/payment"));*/
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //														.param("id", "0")
 														.param("action", "transfer")
 														.param("balance", "0.00")
@@ -766,7 +766,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("message", "Amount of money should be higher than zero"))
 				.andExpect(view().name("bill/transfer"));*/
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //														.param("id", "0")
 														.param("action", "external")
 														.param("balance", "0.00")
@@ -830,7 +830,7 @@ class BankControllerTest {
 		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>(new String(), HttpStatus.OK));
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //													    .param("id", "0")
 													    .param("action", "withdraw")
 													    .param("balance", "0.00")
@@ -846,7 +846,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("message", "Not enough money to complete operation"))
 				.andExpect(view().name("bill/payment"));*/
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //														.param("id", "0")
 														.param("action", "transfer")
 														.param("balance", "0.00")
@@ -863,7 +863,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("message", "Not enough money to complete operation"))
 				.andExpect(view().name("bill/transfer"));*/
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //														.param("id", "0")
 														.param("action", "external")
 														.param("balance", "0.00")
@@ -913,7 +913,7 @@ class BankControllerTest {
 		when(restTemplate.postForEntity(anyString(), anyString(), any(Class.class)))
 			.thenReturn(new ResponseEntity<>(new String(), HttpStatus.OK));
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //													    .param("id", "0")
 													    .param("action", "transfer")
 													    .param("balance", "0.00")
@@ -930,7 +930,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("message", "Source and target bills should not be the same"))
 				.andExpect(view().name("bill/transfer"));*/
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 //			    										.param("id", "0")
 													    .param("action", "external")
 													    .param("balance", "0.00")
@@ -985,7 +985,7 @@ class BankControllerTest {
 			.thenReturn(new ResponseEntity<>(new String
 					("Wrong currency type SEA for the target bill 22"), HttpStatus.BAD_REQUEST));
 				
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 														.param("recipient", "22")
 //														.param("id", "0")
 														.param("action", "transfer")
@@ -1002,7 +1002,7 @@ class BankControllerTest {
 				.andExpect(model().attribute("message", "Wrong currency type of the target bill"))
 				.andExpect(view().name("bill/transfer"));*/
 		
-		mockMVC.perform(patch("/bills/launch/{id}", "0")
+		mockMVC.perform(patch("/bills/{id}", "0")
 														.param("recipient", "22")
 														.param("bank", "Demo")
 //														.param("id", "0")
