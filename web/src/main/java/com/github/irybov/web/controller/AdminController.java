@@ -321,7 +321,7 @@ public class AdminController extends BaseController {
 	}*/
 	@ApiOperation("Returns filtered pageable list of bill's operations")
 	@PagebleAPI
-	@GetMapping("/operations/{id}/page")
+	@GetMapping("/operations/{id}/pageable")
 	@ResponseBody
 	public Page<OperationResponse> getOperationsPage(@PathVariable int id,
 //			@RequestParam Optional<String> mindate, @RequestParam Optional<String> maxdate,

@@ -14,13 +14,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import com.github.irybov.database.common.QPredicate;
 import com.github.irybov.database.entity.Operation;
 import com.github.irybov.database.entity.QOperation;
 import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 
 @Repository
@@ -103,20 +107,34 @@ public class OperationDAO {
 				.buildAnd();
 		Predicate where = ExpressionUtils.allOf(or, and);
 //		Pageable page = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), 
-//		Sort.Direction.DESC, new OperationPage().getSortBy());		
-
+//		Sort.Direction.DESC, new OperationPage().getSortBy());	
+		
+		JPAQuery<Operation> query = new JPAQuery<>(entityManager);
+		query.from(QOperation.operation)
+			.where(where)
+			.limit(pageable.getPageSize())
+			.offset(pageable.getOffset());
+		PathBuilder<Operation> entityPath = new PathBuilder<>(Operation.class, "operation");
+        for(Sort.Order order : pageable.getSort()) {
+            PathBuilder<Object> path = entityPath.get(order.getProperty());
+            query.orderBy(new OrderSpecifier(Order.valueOf(order.getDirection().name()), path));
+        }
+        List<Operation> operations = query.createQuery().getResultList();
+/*		
 		List<Operation> operations = new JPAQuery<Operation>(entityManager)
 //									.select(QOperation.operation)
 									.from(QOperation.operation)
 									.where(where)
-/*									.where(QOperation.operation.action.like("%"+action+"%"), 
+									.where(QOperation.operation.action.like("%"+action+"%"), 
 										QOperation.operation.sender.eq(id).or
 										(QOperation.operation.recipient.eq(id)), 
 										QOperation.operation.amount.between(minval, maxval), 
-										QOperation.operation.createdAt.between(mindate, maxdate))*/
+										QOperation.operation.createdAt.between(mindate, maxdate))
 //									.orderBy(QOperation.operation.id.desc())
+									.limit(pageable.getPageSize())
+									.offset(pageable.getOffset())
 									.fetch();
-		
+*/		
 		long count = new JPAQuery<Operation>(entityManager)
 //					.select(QOperation.operation)
 					.from(QOperation.operation)

@@ -384,7 +384,7 @@ class AdminControllerTest {
 				any(OffsetDateTime.class), any(OffsetDateTime.class), any(Pageable.class)))
 				.thenReturn(operationPage);
 		
-		mockMVC.perform(get("/operations/{id}/page", "0")
+		mockMVC.perform(get("/operations/{id}/pageable", "0")
 						.param("action", "unknown")
 						.param("minval", "0.01")
 						.param("maxval", "0.02")
@@ -392,6 +392,8 @@ class AdminControllerTest {
 						.param("maxdate", "2020-01-01")
 						.param("sort", "amount,asc")
 						.param("sort", "id,desc")
+						.param("page", "0")
+						.param("size", "0")
 				)
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.pageable").exists())

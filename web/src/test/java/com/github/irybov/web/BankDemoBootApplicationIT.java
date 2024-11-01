@@ -22,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
@@ -778,7 +779,7 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void can_get_operations_page() throws Exception {
 			
-			mockMVC.perform(get("/operations/{id}/page", "1")
+			mockMVC.perform(get("/operations/{id}/pageable", "1")
 //							.param("action", "")
 //							.param("minval", "")
 //							.param("maxval", "")
@@ -786,13 +787,16 @@ public class BankDemoBootApplicationIT {
 //							.param("maxdate", "")
 							.param("sort", "amount,asc")
 							.param("sort", "id,desc")
+							.param("page", "0")
+							.param("size", "2")
 					)
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.pageable").exists())
 				.andExpect(jsonPath("$.sort").exists())
 				.andExpect(jsonPath("$['sort']['sorted']").value("true"))
 				.andExpect(jsonPath("$.content").isArray())
-				.andExpect(jsonPath("$.content.length()", is(3)));
+				.andExpect(jsonPath("$.content.length()", is(2)))
+				.andDo(print());
 		}
 		
 		@Test
