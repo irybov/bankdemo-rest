@@ -778,16 +778,19 @@ public class BankDemoBootApplicationIT {
 		@Test
 		void can_get_operations_page() throws Exception {
 			
-			mockMVC.perform(get("/operations/{id}/list", "1")
+			mockMVC.perform(get("/operations/{id}/page", "1")
 //							.param("action", "")
 //							.param("minval", "")
 //							.param("maxval", "")
 //							.param("mindate", "")
 //							.param("maxdate", "")
+							.param("sort", "amount,asc")
+							.param("sort", "id,desc")
 					)
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.pageable").exists())
 				.andExpect(jsonPath("$.sort").exists())
+				.andExpect(jsonPath("$['sort']['sorted']").value("true"))
 				.andExpect(jsonPath("$.content").isArray())
 				.andExpect(jsonPath("$.content.length()", is(3)));
 		}

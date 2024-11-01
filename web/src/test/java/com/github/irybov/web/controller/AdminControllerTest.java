@@ -289,7 +289,7 @@ class AdminControllerTest {
 		
 		when(accountService.changeStatus(anyInt())).thenReturn(false);		
 		
-		mockMVC.perform(patch("/accounts/{id}/status", "0").with(csrf()))
+		mockMVC.perform(patch("/accounts/{id}/status", "0"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("false")));
 		
@@ -301,7 +301,7 @@ class AdminControllerTest {
 		
 		when(billService.changeStatus(anyInt())).thenReturn(false);
 		
-		mockMVC.perform(patch("/bills/{id}/status", "0").with(csrf()))
+		mockMVC.perform(patch("/bills/{id}/status", "0"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("false")));
 		
@@ -384,12 +384,14 @@ class AdminControllerTest {
 				any(OffsetDateTime.class), any(OffsetDateTime.class), any(Pageable.class)))
 				.thenReturn(operationPage);
 		
-		mockMVC.perform(get("/operations/{id}/list", "0")
+		mockMVC.perform(get("/operations/{id}/page", "0")
 						.param("action", "unknown")
 						.param("minval", "0.01")
 						.param("maxval", "0.02")
 						.param("mindate", "1900-01-01")
 						.param("maxdate", "2020-01-01")
+						.param("sort", "amount,asc")
+						.param("sort", "id,desc")
 				)
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.pageable").exists())

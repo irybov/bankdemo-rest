@@ -44,6 +44,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.SortDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -319,9 +321,9 @@ public class AdminController extends BaseController {
 	}*/
 	@ApiOperation("Returns filtered pageable list of bill's operations")
 	@PagebleAPI
-	@GetMapping("/operations/{id}/list")
+	@GetMapping("/operations/{id}/page")
 	@ResponseBody
-	public Page<OperationResponse> getOperationsList(@PathVariable int id,
+	public Page<OperationResponse> getOperationsPage(@PathVariable int id,
 //			@RequestParam Optional<String> mindate, @RequestParam Optional<String> maxdate,
 //			@RequestParam Optional<Double> minval, @RequestParam Optional<Double> maxval,
 //			@RequestParam Optional<String> action, Pageable pageable) {
@@ -335,7 +337,7 @@ public class AdminController extends BaseController {
 			@ApiIgnore(
                     "Ignored because swagger ui shows the wrong params, " +
                     "instead they are explained in the implicit params"
-            )Pageable pageable) {
+            )@SortDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 		
 //		final String FROM = mindate.orElse("1900-01-01");
 //		final String TO = maxdate.orElse(LocalDate.now().toString());
