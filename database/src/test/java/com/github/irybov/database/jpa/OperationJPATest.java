@@ -60,7 +60,7 @@ class OperationJPATest {
 	//@Execution(ExecutionMode.CONCURRENT)
 	@ParameterizedTest
 	@MethodSource("params")
-	void test_findAllBySpecs(int id, String action, double minval, double maxval,
+	void test_findAllBySpecs(int id, String action, Double minval, Double maxval,
 			OffsetDateTime mindate, OffsetDateTime maxdate, int quantity) {
 		
 		OperationPage page = new OperationPage();
@@ -75,14 +75,19 @@ class OperationJPATest {
 //				(QOperation.operation.recipient.eq(id)));
 //		predicates.add(QOperation.operation.amount.between(minval, maxval));
 //		predicates.add(QOperation.operation.createdAt.between(mindate, maxdate));
+		
 		Predicate or = QPredicate.builder()
 				.add(id, QOperation.operation.sender::eq)
 				.add(id, QOperation.operation.recipient::eq)
 				.buildOr();
 		Predicate and = QPredicate.builder()
 				.add(action, QOperation.operation.action::like)
-				.add(minval, maxval, QOperation.operation.amount::between)
-				.add(mindate, maxdate, QOperation.operation.createdAt::between)
+//				.add(minval, maxval, QOperation.operation.amount::between)
+				.add(minval, QOperation.operation.amount::goe)
+				.add(maxval, QOperation.operation.amount::loe)
+//				.add(mindate, maxdate, QOperation.operation.createdAt::between)
+				.add(mindate, QOperation.operation.createdAt::goe)
+				.add(maxdate, QOperation.operation.createdAt::loe)
 				.buildAnd();
 		Predicate where = ExpressionUtils.allOf(or, and);
 		
@@ -95,10 +100,19 @@ class OperationJPATest {
 		assertThat(resultPage.getContent().size()).isEqualTo(quantity);
 	}
 	private static Stream<Arguments> params() {
-		return Stream.of(Arguments.of(1, "deposit",  100.00, 700.00,
-				OffsetDateTime.now().minusDays(1L), OffsetDateTime.now().plusDays(1L), 1),
-				Arguments.of(2, "transfer",  200.00, 900.00,
-						OffsetDateTime.now().minusDays(1L), OffsetDateTime.now().plusDays(1L), 2));
+		return Stream.of(
+				Arguments.of(1, "deposit", 100.00, 700.00,
+						OffsetDateTime.now().minusDays(1L), OffsetDateTime.now().plusDays(1L), 1),
+				Arguments.of(2, "transfer", 200.00, 900.00,
+						OffsetDateTime.now().minusDays(1L), OffsetDateTime.now().plusDays(1L), 2),
+				Arguments.of(3, null, null, null, 
+						OffsetDateTime.now().minusDays(1L), OffsetDateTime.now().plusDays(1L), 3),
+				Arguments.of(3, null, 500.00, null, null, null, 2),
+				Arguments.of(3, null, null, 700.00, null, null, 2),
+				Arguments.of(0, null, null, null, OffsetDateTime.now().plusDays(1L), null, 0),
+				Arguments.of(0, null, null, null, null, OffsetDateTime.now().minusDays(1L), 0),
+				Arguments.of(0, null, null, null, null, null, 4)
+			);
 	}
 	
 	@Test

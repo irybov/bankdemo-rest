@@ -102,8 +102,12 @@ public class OperationDAO {
 				.buildOr();
 		Predicate and = QPredicate.builder()
 				.add(action, QOperation.operation.action::like)
-				.add(minval, maxval, QOperation.operation.amount::between)
-				.add(mindate, maxdate, QOperation.operation.createdAt::between)
+//				.add(minval, maxval, QOperation.operation.amount::between)
+				.add(minval, QOperation.operation.amount::goe)
+				.add(maxval, QOperation.operation.amount::loe)
+//				.add(mindate, maxdate, QOperation.operation.createdAt::between)
+				.add(mindate, QOperation.operation.createdAt::goe)
+				.add(maxdate, QOperation.operation.createdAt::loe)
 				.buildAnd();
 		Predicate where = ExpressionUtils.allOf(or, and);
 //		Pageable page = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), 

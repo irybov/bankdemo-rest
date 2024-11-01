@@ -63,7 +63,7 @@ class OperationDAOTest {
 	//@Execution(ExecutionMode.CONCURRENT)
 	@ParameterizedTest
 	@MethodSource("params")
-	void test_getPage(int id, String action, double minval, double maxval,
+	void test_getPage(int id, String action, Double minval, Double maxval,
 			OffsetDateTime mindate, OffsetDateTime maxdate, int quantity) {
 		
 		OperationPage page = new OperationPage();
@@ -76,10 +76,19 @@ class OperationDAOTest {
 		assertThat(resultPage.getContent().size()).isEqualTo(quantity);
 	}
 	private static Stream<Arguments> params() {
-		return Stream.of(Arguments.of(1, "deposit",  100.00, 700.00,
-				OffsetDateTime.now().minusDays(1L), OffsetDateTime.now().plusDays(1L), 1),
-				Arguments.of(2, "transfer",  200.00, 900.00,
-						OffsetDateTime.now().minusDays(1L), OffsetDateTime.now().plusDays(1L), 2));
+		return Stream.of(
+				Arguments.of(1, "deposit", 100.00, 700.00,
+						OffsetDateTime.now().minusDays(1L), OffsetDateTime.now().plusDays(1L), 1),
+				Arguments.of(2, "transfer", 200.00, 900.00,
+						OffsetDateTime.now().minusDays(1L), OffsetDateTime.now().plusDays(1L), 2),
+				Arguments.of(3, null, null, null, 
+						OffsetDateTime.now().minusDays(1L), OffsetDateTime.now().plusDays(1L), 3),
+				Arguments.of(3, null, 500.00, null, null, null, 2),
+				Arguments.of(3, null, null, 700.00, null, null, 2),
+				Arguments.of(0, null, null, null, OffsetDateTime.now().plusDays(1L), null, 0),
+				Arguments.of(0, null, null, null, null, OffsetDateTime.now().minusDays(1L), 0),
+				Arguments.of(0, null, null, null, null, null, 4)
+			);
 	}
 	
 	@Test
