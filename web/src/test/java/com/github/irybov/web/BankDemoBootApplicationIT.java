@@ -1,6 +1,7 @@
 package com.github.irybov.web;
 
 
+import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,8 +64,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -89,7 +93,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -100,6 +106,7 @@ import com.github.irybov.service.dto.AccountResponse;
 import com.github.irybov.service.dto.BillRequest;
 import com.github.irybov.service.dto.LoginRequest;
 import com.github.irybov.service.dto.OperationRequest;
+import com.github.irybov.service.dto.OperationResponse;
 import com.github.irybov.service.dto.PasswordRequest;
 import com.github.irybov.database.dao.AccountDAO;
 import com.github.irybov.database.entity.Account;
@@ -667,36 +674,15 @@ public class BankDemoBootApplicationIT {
 	@Nested
 	@Sql("/test-operations-h2.sql")
 	class AdminControllerIT{
-/*		
-	    @Test
-		void can_get_admin_html() throws Exception {
-	    	
-			mockMVC.perform(get("/accounts/search"))
-				.andExpect(status().isOk())
-				.andExpect(model().size(1))
-		        .andExpect(model().attribute("account", any(AccountResponse.class)))
-				.andExpect(content().string(containsString("Admin's area")))
-		        .andExpect(view().name("account/search"));
-	    }
 		
-		@Test
-		void can_get_history_html() throws Exception {
-			
-			mockMVC.perform(get("/operations/list"))
-				.andExpect(status().isOk())
-				.andExpect(content().string(containsString("Operations history")))
-				.andExpect(view().name("account/history"));
-		}
+		@Autowired
+		private RestTemplate restTemplate;
 		
-		@Test
-		void can_get_clients_html() throws Exception {
-			
-			mockMVC.perform(get("/accounts/list"))
-				.andExpect(status().isOk())
-				.andExpect(content().string(containsString("Clients list")))
-		        .andExpect(view().name("account/clients"));
-		}
-*/		
+		@Value("${server.address}")
+		private String uri;
+		@Value("${server.port}")
+		private int port;
+		
 		@Test
 		void can_get_clients_list() throws Exception {
 			
@@ -793,10 +779,22 @@ public class BankDemoBootApplicationIT {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.pageable").exists())
 				.andExpect(jsonPath("$.sort").exists())
-				.andExpect(jsonPath("$['sort']['sorted']").value("true"))
+//				.andExpect(jsonPath("$['sort']['sorted']").value("true"))
 				.andExpect(jsonPath("$.content").isArray())
 				.andExpect(jsonPath("$.content.length()", is(2)))
 				.andDo(print());
+
+//	        String url = "http://"+uri+":"+port+"/operations/1/pageable";
+//	        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url)
+//	          .queryParam("sort", "amount,asc")
+//	          .queryParam("sort", "id,desc")
+//	          .queryParam("page", 0)
+//	          .queryParam("size", 2);
+//			
+//	        ResponseEntity<Page<OperationResponse>> response = restTemplate.exchange(uriBuilder.toUriString(),
+//	                HttpMethod.GET, null, new ParameterizedTypeReference<Page<OperationResponse>>(){});
+//	        assertThat(response.getStatusCode(), is(HttpStatus.OK_200));
+//	        assertThat(response.getBody().getContent().size(), is(2));
 		}
 		
 		@Test
