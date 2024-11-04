@@ -766,14 +766,11 @@ public class BankDemoBootApplicationIT {
 		void can_get_operations_page() throws Exception {
 			
 			mockMVC.perform(get("/operations/{id}/pageable", "1")
-//							.param("action", "")
-//							.param("minval", "")
-//							.param("maxval", "")
-//							.param("mindate", "")
-//							.param("maxdate", "")
+							.param("minval", "99.99")
+							.param("maxval", "500.01")
 							.param("sort", "amount,asc")
 							.param("sort", "id,desc")
-							.param("page", "0")
+							.param("page", "1")
 							.param("size", "2")
 					)
 				.andExpect(status().isOk())
@@ -781,7 +778,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(jsonPath("$.sort").exists())
 //				.andExpect(jsonPath("$['sort']['sorted']").value("true"))
 				.andExpect(jsonPath("$.content").isArray())
-				.andExpect(jsonPath("$.content.length()", is(2)))
+				.andExpect(jsonPath("$.content.length()", is(1)))
 				.andDo(print());
 
 //	        String url = "http://"+uri+":"+port+"/operations/1/pageable";
