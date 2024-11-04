@@ -142,6 +142,7 @@ public class OperationDAO {
 		long count = new JPAQuery<Operation>(entityManager)
 //					.select(QOperation.operation)
 					.from(QOperation.operation)
+					.where(where)
 					.fetchCount();
 		
 		return new PageImpl<>(operations, pageable, count);
