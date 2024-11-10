@@ -1,7 +1,6 @@
 package com.github.irybov.web;
 
 
-import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.mail.internet.MimeMessage;
+import javax.sql.DataSource;
 
 import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
@@ -55,6 +55,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -65,12 +66,14 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -132,7 +135,7 @@ import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.GreenMailUtil;
 import com.icegreen.greenmail.util.ServerSetupTest;
 
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 //@Sql("/test-data-h2.sql")
 @AutoConfigureMockMvc
 @Transactional
@@ -295,7 +298,7 @@ public class BankDemoBootApplicationIT {
 	    
 		@Value("${server.address}")
 		private String uri;
-		@Value("${server.port}")
+		@Value("${local.server.port}")
 		private int port;
 		@Value("${server.servlet.context-path}")
 		private String path;
@@ -672,16 +675,83 @@ public class BankDemoBootApplicationIT {
 	
 	@WithMockUser(username = "0000000000", roles = "ADMIN")
 	@Nested
-	@Sql("/test-operations-h2.sql")
+//	@Sql("/test-operations-h2.sql")
+	@TestInstance(Lifecycle.PER_CLASS)
 	class AdminControllerIT{
 		
 		@Autowired
-		private RestTemplate restTemplate;
+		private TestRestTemplate restTemplate;
+		
+		@Autowired
+		private DataSource dataSource;
+		private ResourceDatabasePopulator populator;
+		
+		@BeforeAll
+		void prepare() {		
+			populator = new ResourceDatabasePopulator();
+			populator.addScripts(new ClassPathResource("test-operations-h2.sql"));
+			populator.addScripts(new ClassPathResource("test-auth-h2.sql"));
+			populator.execute(dataSource);
+		}
 		
 		@Value("${server.address}")
 		private String uri;
-		@Value("${server.port}")
+		@Value("${local.server.port}")
 		private int port;
+		@Value("${server.servlet.context-path}")
+		private String path;
+		
+	    @Autowired
+		private Cache<String, LoginRequest> cache;	    
+	    
+		@RegisterExtension
+		GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.SMTP)
+		        .withConfiguration(GreenMailConfiguration.aConfig().withUser("irybov", "bankdemo"))
+		        .withPerMethodLifecycle(false);
+		
+//		private final LoginRequest loginRequest = new LoginRequest("0000000000", "superadmin");
+		
+		private String generateJWT() throws Exception {
+			
+			final String PHONE = "0000000000";
+			final LoginRequest loginRequest = new LoginRequest(PHONE, "superadmin");
+			hashPassword(PHONE, "superadmin");
+			cache.invalidateAll();
+/*						
+			hashPassword(loginRequest.getPhone(), loginRequest.getPassword());
+			mockMVC.perform(post("/login")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(mapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isString())
+				.andExpect(content().string("Check your email"));
+*/			
+			ResponseEntity<String> response = 
+					restTemplate.postForEntity("/login", loginRequest, String.class);
+			assertEquals(response.getStatusCode(), org.springframework.http.HttpStatus.OK);
+			assertEquals(response.getBody(), "Check your email");
+			
+			Map<String, LoginRequest> map = cache.asMap();
+			List<String> keys = new ArrayList<>(map.keySet());
+			String code = keys.get(0);
+//			MvcResult result = mockMVC.perform(get("/token")
+//					.header(HttpHeaders.AUTHORIZATION, "OTP " + code))
+//				.andExpect(status().isOk())
+//				.andExpect(jsonPath("$").isString())
+//				.andReturn();
+			
+		    HttpHeaders headers = new HttpHeaders();
+		    headers.add(HttpHeaders.AUTHORIZATION, "OTP " + code);
+	        String url = "http://" + uri + ":" + port + path + "/token";
+	        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+			response = restTemplate.exchange(
+					uriBuilder.toUriString(), HttpMethod.GET, new HttpEntity<>(headers), String.class);
+			assertEquals(response.getStatusCode(), org.springframework.http.HttpStatus.OK);
+		    assertEquals(response.getBody().getClass(), String.class);
+			
+//			return result.getResponse().getContentAsString();
+			return response.getBody();
+		}
 		
 		@Test
 		void can_get_clients_list() throws Exception {
@@ -764,7 +834,7 @@ public class BankDemoBootApplicationIT {
 
 		@Test
 		void can_get_operations_page() throws Exception {
-			
+/*			
 			mockMVC.perform(get("/operations/{id}/pageable", "1")
 							.param("minval", "99.99")
 							.param("maxval", "500.01")
@@ -780,18 +850,23 @@ public class BankDemoBootApplicationIT {
 				.andExpect(jsonPath("$.content").isArray())
 				.andExpect(jsonPath("$.content.length()", is(1)))
 				.andDo(print());
-
-//	        String url = "http://"+uri+":"+port+"/operations/1/pageable";
-//	        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url)
-//	          .queryParam("sort", "amount,asc")
-//	          .queryParam("sort", "id,desc")
-//	          .queryParam("page", 0)
-//	          .queryParam("size", 2);
-//			
-//	        ResponseEntity<Page<OperationResponse>> response = restTemplate.exchange(uriBuilder.toUriString(),
-//	                HttpMethod.GET, null, new ParameterizedTypeReference<Page<OperationResponse>>(){});
-//	        assertThat(response.getStatusCode(), is(HttpStatus.OK_200));
-//	        assertThat(response.getBody().getContent().size(), is(2));
+*/
+		    HttpHeaders headers = new HttpHeaders();
+		    String token = generateJWT();
+		    headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+	        String url = "http://" + uri + ":" + port + path + "/operations/1/pageable";
+	        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url)
+	          .queryParam("sort", "amount,asc")
+	          .queryParam("sort", "id,desc")
+	          .queryParam("page", 0)
+	          .queryParam("size", 2);
+			
+	        ResponseEntity<Page<OperationResponse>> response = 
+	        		restTemplate.exchange(uriBuilder.toUriString(),
+	        				HttpMethod.GET, new HttpEntity<>(headers), 
+	        				new ParameterizedTypeReference<Page<OperationResponse>>(){});
+	        assertEquals(response.getStatusCode(), org.springframework.http.HttpStatus.OK);
+	        assertEquals(response.getBody().getContent().size(), 2);
 		}
 		
 		@Test
@@ -818,6 +893,12 @@ public class BankDemoBootApplicationIT {
 				.andExpect(content().bytes(new byte[0]));
 		}
 		
+		@AfterAll void clear() {
+			populator.setScripts(new ClassPathResource("test-clean-data-h2.sql"));
+			populator.execute(dataSource);
+			populator = null;
+		}
+		
 	}
 	
 //	@Sql(statements = "INSERT INTO bankdemo.bills(is_active, balance, currency, account_id)"
@@ -835,7 +916,7 @@ public class BankDemoBootApplicationIT {
 		
 		@Value("${server.address}")
 		private String uri;
-		@Value("${server.port}")
+		@Value("${local.server.port}")
 		private int port;
 		@Value("${external.payment-service}")
 		private String externalURL;
