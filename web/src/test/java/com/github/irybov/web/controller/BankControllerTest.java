@@ -499,7 +499,7 @@ class BankControllerTest {
 					("New password should be 10-60 symbols length")))
 		    .andExpect(result -> 
 		      	assertTrue(result.getResolvedException() 
-		      		instanceof MethodArgumentNotValidException));
+		      		instanceof MethodArgumentNotValidException).isTrue());
 //		    .andExpect(result -> 
 //		      	assertEquals("resource not found", result.getResolvedException().getMessage()));
 /*			.andExpect(model().size(1))

@@ -493,7 +493,7 @@ class AuthControllerTest {
 			.andExpect(content().string(containsString("Bad credentials")))
 			.andExpect(jsonPath("$").isString())
 			.andExpect(result -> assertThat
-				(result.getResolvedException() instanceof BadCredentialsException))
+				(result.getResolvedException() instanceof BadCredentialsException).isTrue())
 			.andExpect(result -> assertEquals
 				("Bad credentials", result.getResolvedException().getMessage()))
 			.andDo(print());
@@ -513,7 +513,7 @@ class AuthControllerTest {
 			.andExpect(content().string(containsString("User is disabled")))
 			.andExpect(jsonPath("$").isString())
 			.andExpect(result -> assertThat
-				(result.getResolvedException() instanceof DisabledException))
+				(result.getResolvedException() instanceof DisabledException).isTrue())
 			.andExpect(result -> assertEquals
 				("User is disabled", result.getResolvedException().getMessage()))
 			.andDo(print());
@@ -546,7 +546,7 @@ class AuthControllerTest {
 			.andExpect(content().string(containsString("User " + loginRequest.getPhone() + " not found")))
 			.andExpect(jsonPath("$").isString())
 			.andExpect(result -> assertThat
-				(result.getResolvedException() instanceof UsernameNotFoundException))
+				(result.getResolvedException() instanceof UsernameNotFoundException).isTrue())
 			.andExpect(result -> assertEquals
 				("User " + loginRequest.getPhone() + " not found", result.getResolvedException().getMessage()))
 			.andDo(print());
@@ -568,7 +568,7 @@ class AuthControllerTest {
 			.andExpect(jsonPath("$.length()", equalTo(2)))
 			.andExpect(jsonPath("$").isArray())
 		    .andExpect(result -> assertTrue
-		    		(result.getResolvedException() instanceof MethodArgumentNotValidException));
+		    		(result.getResolvedException() instanceof MethodArgumentNotValidException).isTrue());
 	}
 	
     @AfterAll

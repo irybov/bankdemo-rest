@@ -621,7 +621,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(content().string(containsString("Bad credentials")))
 				.andExpect(jsonPath("$").isString())
 				.andExpect(result -> assertThat
-					(result.getResolvedException() instanceof BadCredentialsException))
+					(result.getResolvedException() instanceof BadCredentialsException).isTrue())
 				.andExpect(result -> assertEquals
 					("Bad credentials", result.getResolvedException().getMessage()));
 			}
@@ -634,7 +634,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(content().string(containsString("User is disabled")))
 				.andExpect(jsonPath("$").isString())
 				.andExpect(result -> assertThat
-					(result.getResolvedException() instanceof DisabledException))
+					(result.getResolvedException() instanceof DisabledException).isTrue())
 				.andExpect(result -> assertEquals
 					("User is disabled", result.getResolvedException().getMessage()));
 		}
@@ -650,7 +650,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(content().string(containsString("User 4444444444 not found")))
 				.andExpect(jsonPath("$").isString())
 				.andExpect(result -> assertThat
-					(result.getResolvedException() instanceof UsernameNotFoundException))
+					(result.getResolvedException() instanceof UsernameNotFoundException).isTrue())
 				.andExpect(result -> assertEquals
 					("User 4444444444 not found", result.getResolvedException().getMessage()));
 		}
@@ -668,7 +668,7 @@ public class BankDemoBootApplicationIT {
 				.andExpect(jsonPath("$.length()", equalTo(2)))
 				.andExpect(jsonPath("$").isArray())
 			    .andExpect(result -> assertTrue
-			    		(result.getResolvedException() instanceof MethodArgumentNotValidException));
+			    		(result.getResolvedException() instanceof MethodArgumentNotValidException).isTrue());
 		}
 		
 	}
@@ -1145,7 +1145,7 @@ public class BankDemoBootApplicationIT {
 							("New password should be 10-60 symbols length")))
 				    .andExpect(result -> 
 				      	assertTrue(result.getResolvedException() 
-				      		instanceof MethodArgumentNotValidException));
+				      		instanceof MethodArgumentNotValidException).isTrue());
 /*					.andExpect(model().size(1))
 					.andExpect(model().errorCount(2))
 					.andExpect(model().attributeExists("password"))
@@ -1789,14 +1789,14 @@ public class BankDemoBootApplicationIT {
 //		    	.andExpect(jsonPath("$").isString())
 		    	.andExpect(content().string(containsString("Invalid token provided")))
 				.andExpect(error -> assertThat
-						(error.getResolvedException() instanceof AuthenticationException))
+						(error.getResolvedException() instanceof AuthenticationException).isTrue())
 				.andExpect(status().isExpectationFailed());			
 			
 		    mockMVC.perform(put("/control").header(HttpHeaders.AUTHORIZATION, "Bearer "))
 //	    		.andExpect(jsonPath("$").isString())
 	    		.andExpect(content().string(containsString("No token provided with Bearer")))
 				.andExpect(error -> assertThat
-						(error.getResolvedException() instanceof AuthenticationException))
+						(error.getResolvedException() instanceof AuthenticationException).isTrue())
 				.andExpect(status().isExpectationFailed());
 		}
 		
@@ -1807,7 +1807,7 @@ public class BankDemoBootApplicationIT {
 			mockMVC.perform(put("/token").header(HttpHeaders.AUTHORIZATION, "OTP " + "1234"))
 				.andExpect(status().isMethodNotAllowed())
 				.andExpect(result -> assertThat
-					(result.getResolvedException() instanceof AuthenticationServiceException))
+					(result.getResolvedException() instanceof AuthenticationServiceException).isTrue())
 				.andExpect(result -> assertEquals
 					("Authentication method not supported: " + result.getRequest().getMethod(), 
 								result.getResolvedException().getMessage())));
@@ -1820,7 +1820,7 @@ public class BankDemoBootApplicationIT {
 			mockMVC.perform(post("/token"))
 				.andExpect(status().isExpectationFailed())
 				.andExpect(result -> assertThat
-					(result.getResolvedException() instanceof InsufficientAuthenticationException))
+					(result.getResolvedException() instanceof InsufficientAuthenticationException).isTrue())
 				.andExpect(result -> assertEquals
 					("No OTP header present", result.getResolvedException().getMessage())));
 		}
@@ -1832,7 +1832,7 @@ public class BankDemoBootApplicationIT {
 			mockMVC.perform(post("/token").header(HttpHeaders.AUTHORIZATION, "OTP " + " "))
 				.andExpect(status().isExpectationFailed())
 				.andExpect(result -> assertThat
-					(result.getResolvedException() instanceof InsufficientAuthenticationException))
+					(result.getResolvedException() instanceof InsufficientAuthenticationException).isTrue())
 				.andExpect(result -> assertEquals
 					("No code provided with header", result.getResolvedException().getMessage())));
 		}
@@ -1844,7 +1844,7 @@ public class BankDemoBootApplicationIT {
 			mockMVC.perform(post("/token").header(HttpHeaders.AUTHORIZATION, "OTP " + "xyz"))
 				.andExpect(status().isExpectationFailed())
 				.andExpect(result -> assertThat
-					(result.getResolvedException() instanceof BadCredentialsException))
+					(result.getResolvedException() instanceof BadCredentialsException).isTrue())
 				.andExpect(result -> assertEquals
 					("Invalid format of code", result.getResolvedException().getMessage())));
 		}
@@ -1856,7 +1856,7 @@ public class BankDemoBootApplicationIT {
 			mockMVC.perform(post("/token").header(HttpHeaders.AUTHORIZATION, "OTP " + "1234"))
 				.andExpect(status().isExpectationFailed())
 				.andExpect(result -> assertThat
-					(result.getResolvedException() instanceof AuthenticationCredentialsNotFoundException))
+					(result.getResolvedException() instanceof AuthenticationCredentialsNotFoundException).isTrue())
 				.andExpect(result -> assertEquals
 					("Wrong or expired code", result.getResolvedException().getMessage())));
 			
@@ -1877,7 +1877,7 @@ public class BankDemoBootApplicationIT {
 			mockMVC.perform(post("/token").header(HttpHeaders.AUTHORIZATION, "OTP " + code))
 				.andExpect(status().isExpectationFailed())
 				.andExpect(result -> assertThat
-					(result.getResolvedException() instanceof AuthenticationCredentialsNotFoundException))
+					(result.getResolvedException() instanceof AuthenticationCredentialsNotFoundException).isTrue())
 				.andExpect(result -> assertEquals
 					("Wrong or expired code", result.getResolvedException().getMessage())));
 		}
